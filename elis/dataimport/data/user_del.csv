@@ -1,0 +1,16 @@
+action,idnumber,username,password,email,firstname,lastname,city, country, MenuOne
+disable, student0,student0,Student0+, olav.jordan+s00@gmail.com,Student,zero,Waterloo,CA,three
+disable, student1,student1,Student1+, olav.jordan+s01@gmail.com,Student,one,Toronto,CA,one
+disable, student2,student2,Student2+, olav.jordan+s02@gmail.com,Student,two,Woolerton,CA,two
+disable, student3,student3,Student3+, olav.jordan+s03@gmail.com,Student,three, Rouleau,CA,three
+disable, student4,student4,Student4+, olav.jordan+s04@gmail.com,Student,four,Sarnia,CA,four
+disable, student5,student5,Student5+, olav.jordan+s05@gmail.com,Student,five,Dog River,CA,five
+disable, student6,student6,Student6+, olav.jordan+s06@gmail.com,Student,six,Chicago,US,six
+disable, student7,student7,Student7+, olav.jordan+s07@gmail.com,Student,seven,Kitchener,CN,seven
+disable, student8,student8,Student8+, olav.jordan+s08@gmail.com,Student,eight,Winipeg,GB,eight
+disable, student9,student9,Student9+, olav.jordan+s09@gmail.com,Student,nine,Washington,US,nine
+disable, teacher0,teacher0,Teacher0+, olav.jordan+t00@gmail.com,Teacher,zero,Waterloo,CA,ten
+disable, teacher1,teacher1,Teacher1+, olav.jordan+t01@gmail.com,Teacher,one,Cambridge,GB,ten
+disable, teacher2,teacher2,Teacher2+, olav.jordan+t02@gmail.com,Teacher,two,Brantford,CN,three
+disable, teacher3,teacher3,Teacher3+, olav.jordan+t03@gmail.com,Teacher,three,New York,US,eight
+disable, teacher4,teacher4,Teacher4+, olav.jordan+t04@gmail.com,TSeacher,four,Brampton,CA,four
