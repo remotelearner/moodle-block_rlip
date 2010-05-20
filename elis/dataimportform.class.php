@@ -156,9 +156,9 @@ class coursesimport_form extends cmform {
 
         $mform = &$this->_form;
 
-        $mform->addElement('text', 'impcourse_filename', get_string('filename', 'block_rlip') . ': ');
+        $mform->addElement('text', 'block_rlip_impcourse_filename', get_string('filename', 'block_rlip') . ': ');
         $plugins = get_import_plugins();
-        $mform->addElement('select', 'impcourse_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        $mform->addElement('select', 'block_rlip_impcourse_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
 
         $mform->addElement('header', 'course_properties', get_string('course_properties', 'block_rlip'));
         $data = course_import::get_properties_map();
@@ -207,9 +207,9 @@ class enrolmentimport_form extends cmform {
         require_once(CURMAN_DIRLOCATION . '/lib/student.class.php');
         $mform = &$this->_form;
 
-        $mform->addElement('text', 'impenrolment_filename', get_string('filename', 'block_rlip') . ': ');
+        $mform->addElement('text', 'block_rlip_impenrolment_filename', get_string('filename', 'block_rlip') . ': ');
         $plugins = get_import_plugins();
-        $mform->addElement('select', 'impenrolment_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        $mform->addElement('select', 'block_rlip_impenrolment_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
 
         $mform->addElement('header', 'enrol_properties', get_string('enrol_properties', 'block_rlip'));
         $data = student_import::get_properties_map();
