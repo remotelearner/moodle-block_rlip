@@ -24,6 +24,8 @@
  *
  */
 
+define('RLIP_DIRLOCATION', $CFG->dirroot . '/blocks/rlip');
+
 require_once (CURMAN_DIRLOCATION . '/lib/user.class.php');
 
 define('logfile', 'logfile.log');
@@ -67,7 +69,7 @@ abstract class elis_import {
         $retval = false;
         $context = get_context_instance(CONTEXT_SYSTEM);
 
-        if(has_capability('block/curr_admin:config', $context)) {
+        if(has_capability('block/rlip:config', $context)) {
             try {
                 is_file($file) OR throwException("file $file not found");
 
@@ -1587,7 +1589,6 @@ class cmclass_import extends import {
 
         $course = course::get_by_idnumber($record[$properties_map['assignment']]);
         $item_record['courseid'] = $course->id;
-
 
         $temp = new object();
 

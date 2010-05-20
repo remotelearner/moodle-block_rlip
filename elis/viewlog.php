@@ -23,12 +23,13 @@
  * @copyright  (C) 2008-2009 Remote Learner.net Inc http://www.remote-learner.net
  *
  */
- 
-require_once('../config.php');
+
+require_once ('../../../config.php');
+require_once ('../../../curriculum/config.php');
 
 $context = get_context_instance(CONTEXT_SYSTEM);
 
-require_capability('block/curr_admin:config', $context);
+require_capability('block/rlip:config', $context);
 
 $filename = optional_param('file', '', PARAM_CLEAN);
 

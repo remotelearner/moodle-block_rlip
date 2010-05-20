@@ -1,5 +1,0 @@
-action, user_idnumber, role, context, enrolmenttime, completetime, completestatusid, grade,credits,locked,endtime
-enrol,teacher0,Student,class_classid1, april 26, April 30, 2, 50,1,0,april 30
-enrol,student1,Student,class_classid2, April 25,,,,,,may 1
-enrol,student2,Student,class_classid3, April 27,,,,,,may 2
-enrol,teacher1,parent,user_student3,,,,,,,

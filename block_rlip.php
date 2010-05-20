@@ -42,7 +42,7 @@ class block_rlip extends block_base {
      */
     public function init() {
         $this->title   = get_string('title', 'block_rlip');
-        $this->version = 2010051700;
+        $this->version = 2010051702;
     }
 
     /**
@@ -57,64 +57,16 @@ class block_rlip extends block_base {
         }
 
         $this->content = new stdClass();
-        $this->content->text = '<a href="' . $CFG->wwwroot . '/blocks/rlip/dataimportpage.class.php' . '">' . get_string('ip_link', 'block_rlip') . '</a>';
+
+        if(!file_exists($CFG->dirroot . '/curriculum/config.php')) {
+            $this->content->text = '<a href="' . $CFG->wwwroot . '/blocks/rlip/dataimportpage.class.php' . '">' . get_string('ip_link', 'block_rlip') . '</a>';
+        } else {
+            $this->content->text = '';
+        }
+
         $this->content->footer = '';
 
         return $this->content;
-    }
-
-    /**
-     * allow the block to have a configuration page
-     *
-     * @return boolean
-     */
-    public function has_config() {
-        return false;
-    }
-
-    /**
-     * allow more than one instance of the block on a page
-     *
-     * @return boolean
-     */
-    public function instance_allow_multiple() {
-        //allow more than one instance on a page
-        return false;
-    }
-
-    /**
-     * allow instances to have their own configuration
-     *
-     * @return boolean
-     */
-    function instance_allow_config() {
-        //allow instances to have their own configuration
-        return false;
-    }
-
-    /**
-     * instance specialisations (must have instance allow config true)
-     *
-     */
-    public function specialization() {
-    }
-
-    /**
-     * displays instance configuration form
-     *
-     * @return boolean
-     */
-    function instance_config_print() {
-        if (!$this->instance_allow_config()) {
-            return false;
-        }
-
-        global $CFG;
-
-        $form = new block_integration_pointConfigForm(null, array($this->config));
-        $form->display();
-
-        return true;
     }
 
     /**
@@ -126,11 +78,32 @@ class block_rlip extends block_base {
         return array('all'=>true);
     }
 
+    public function has_config() {
+        return true;
+    }
+
     /**
      * post install configurations
      *
      */
     public function after_install() {
+        /*            //file import
+            'filelocation' => '',
+            'logfilelocation' => '',
+            'emailnotification' => '',
+
+            //user import
+            'impuser_filename' => 'user.csv',
+            'impuser_filetype' => 'csv',
+
+            //enrolment import
+            'impenrolment_filename' => 'enroll.csv',
+            'impenrolment_filetype' => 'csv',
+
+            //course import
+            'impcourse_filename' => 'course.csv',
+            'impcourse_filetype' => 'csv',
+*/
     }
 
     /**
@@ -142,17 +115,4 @@ class block_rlip extends block_base {
 
 }
 
-/**
- * short description of block_integration_point
- *
- * [long description of block_integration_point]
- */
-class block_integration_pointConfigForm extends moodleform {
-    /**
-     * items in the form
-     */
-    function definition() {
-        $mform = &$this->_form;
-    }
-}
 ?>

@@ -1,5 +1,0 @@
-action, user_idnumber, role, context
-unenrol,teacher0,,class_classid1
-unenrol,student1,,class_classid2
-unenrol,student2,,class_classid3
-unenrol,teacher1,parent,user_student3

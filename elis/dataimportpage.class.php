@@ -20,15 +20,14 @@
  * @subpackage curriculummanagement
  * @author     Remote-Learner.net Inc
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL
- * @copyright  (C) 2008-2009 Remote Learner.net Inc http://www.remote-learner.net
+ * @copyright  (C) 2008-2010 Remote Learner.net Inc http://www.remote-learner.net
  *
  */
 
-define('RLIP_DIRLOCATION', $CFG->dirroot . '/blocks/rlip');
-
 require_once($CFG->dirroot . '/curriculum/config.php');
 require_once(CURMAN_DIRLOCATION . '/lib/newpage.class.php');
-require_once(RLIP_DIRLOCATION . '/elis/lib.php');
+
+require_once($CFG->dirroot . '/blocks/rlip/elis/lib.php');
 require_once(RLIP_DIRLOCATION . '/elis/dataimportform.class.php');
 
 class dataimportpage extends newpage {
@@ -37,10 +36,10 @@ class dataimportpage extends newpage {
 
     function __construct($params=false) {
         $this->tabs = array(
-            array('tab_id' => 'default', 'page' => get_class($this), 'params' => array('action' => 'default'), 'name' => get_string('general', 'block_curr_admin')),
-            array('tab_id' => 'user', 'page' => get_class($this), 'params' => array('action' => 'user'), 'name' => get_string('user', 'block_curr_admin')),
-            array('tab_id' => 'course', 'page' => get_class($this), 'params' => array('action' => 'course'), 'name' => get_string('course', 'block_curr_admin')),
-            array('tab_id' => 'enrolment', 'page' => get_class($this), 'params' => array('action' => 'enrolment'), 'name' => get_string('enrolment', 'block_curr_admin')),
+            array('tab_id' => 'default', 'page' => get_class($this), 'params' => array('action' => 'default'), 'name' => get_string('general', 'block_rlip')),
+            array('tab_id' => 'user', 'page' => get_class($this), 'params' => array('action' => 'user'), 'name' => get_string('user', 'block_rlip')),
+            array('tab_id' => 'course', 'page' => get_class($this), 'params' => array('action' => 'course'), 'name' => get_string('course', 'block_rlip')),
+            array('tab_id' => 'enrolment', 'page' => get_class($this), 'params' => array('action' => 'enrolment'), 'name' => get_string('enrolment', 'block_rlip')),
         );
 
         parent::__construct($params);
@@ -56,51 +55,51 @@ class dataimportpage extends newpage {
     }
 
     function get_title_default() {
-        return get_string('dataimport', 'block_curr_admin');
+        return get_string('dataimport', 'block_rlip');
     }
 
     function get_navigation_default() {
         return array(
-            array('name' => get_string('dataimport', 'block_curr_admin'),
+            array('name' => get_string('dataimport', 'block_rlip'),
                   'link' => $this->get_url()),
             );
     }
 
     function action_default() {
-        global $CFG, $USER, $CURMAN;
+        global $CFG, $USER;
 
         $target = $this->get_new_page(array('action' => 'default'));
 
         $configform = new generalimport_form($target->get_moodle_url());
-        $configform->set_data($CURMAN->config);
+        $configform->set_data($CFG);
 
         if ($configdata = $configform->get_data()) {
-            if (isset($configdata->filelocation)) {
-                cm_set_config('filelocation', stripslashes($configdata->filelocation));
+            if (isset($configdata->block_rlip_filelocation)) {
+                set_config('block_rlip_filelocation', stripslashes($configdata->block_rlip_filelocation));
             }
 
-            if (isset($configdata->exportfilelocation)) {
-                cm_set_config('exportfilelocation', stripslashes($configdata->exportfilelocation));
+            if (isset($configdata->block_rlip_exportfilelocation)) {
+                set_config('block_rlip_exportfilelocation', stripslashes($configdata->block_rlip_exportfilelocation));
             }
 
-            if (isset($configdata->exportfiletimestamp)) {
-                cm_set_config('exportfiletimestamp', $configdata->exportfiletimestamp);
+            if (isset($configdata->block_rlip_exportfiletimestamp)) {
+                set_config('block_rlip_exportfiletimestamp', $configdata->block_rlip_exportfiletimestamp);
             }
 
-            if(isset($configdata->logfilelocation)) {
-                cm_set_config('logfilelocation', stripslashes($configdata->logfilelocation));
+            if(isset($configdata->block_rlip_logfilelocation)) {
+                set_config('block_rlip_logfilelocation', stripslashes($configdata->block_rlip_logfilelocation));
             }
 
-            if(isset($configdata->emailnotification)) {
-                cm_set_config('emailnotification', $configdata->emailnotification);
+            if(isset($configdata->block_rlip_emailnotification)) {
+                set_config('block_rlip_emailnotification', $configdata->block_rlip_emailnotification);
             }
 
-            if(isset($configdata->exportallhistorical)) {
-                cm_set_config('exportallhistorical', $configdata->exportallhistorical);
+            if(isset($configdata->block_rlip_exportallhistorical)) {
+                set_config('block_rlip_exportallhistorical', $configdata->block_rlip_exportallhistorical);
             }
 
             if(isset($configdata->save_buttons['import'])) {
-                include_once(CURMAN_DIRLOCATION . '/dataimport/dataimport.php');
+                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
 
                 //run the export
                 if($completion_export_block = block_instance('completion_export')) {
@@ -146,7 +145,7 @@ class dataimportpage extends newpage {
 
             if(isset($configdata->save_buttons['import'])) {
                 $action = 'user';
-                include_once(CURMAN_DIRLOCATION . '/dataimport/dataimport.php');
+                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
             }
         }
 
@@ -202,7 +201,7 @@ class dataimportpage extends newpage {
 
             if(isset($configdata->save_buttons['import'])) {
                 $action = 'course';
-                include_once(CURMAN_DIRLOCATION . '/dataimport/dataimport.php');
+                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
             }
         }
 
@@ -242,7 +241,7 @@ class dataimportpage extends newpage {
 
             if(isset($configdata->save_buttons['import'])) {
                 $action = 'enrolment';
-                include_once(CURMAN_DIRLOCATION . '/dataimport/dataimport.php');
+                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
             }
         }
 

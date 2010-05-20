@@ -20,25 +20,17 @@
  * @subpackage curriculummanagement
  * @author     Remote-Learner.net Inc
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL
- * @copyright  (C) 2008-2009 Remote Learner.net Inc http://www.remote-learner.net
+ * @copyright  (C) 2008-2010 Remote Learner.net Inc http://www.remote-learner.net
  *
  */
- 
-    //only care about this if we have the Integration Point enabled
-    if(empty($CURMAN->config->ip_enabled)) {
-        return;
-    }
     
-    require_once (dirname(__FILE__) . '/../config.php');
-    require_once (CURMAN_DIRLOCATION . '/dataimport/lib.php');
-
     global $CURMAN, $CFG;
+    
+    require_once ($CFG->dirroot . '/blocks/rlip/elis/lib.php');
 
     $context = get_context_instance(CONTEXT_SYSTEM);
 
     require_capability('block/curr_admin:config', $context);
-
-    $basedir = CURMAN_DIRLOCATION . '/dataimport/';
 
     if(!isset($action)) {
         $action = cm_get_param('action', 'default');
@@ -61,7 +53,7 @@
         
         $variable = "imp{$i}_filetype";
         $plugin_name = 'import_' . $CURMAN->config->$variable;
-        $plugin = CURMAN_DIRLOCATION . '/dataimport/' . $plugin_name . '/lib.php';
+        $plugin = RLIP_DIRLOCATION . '/elis/dataimport/' . $plugin_name . '/lib.php';
 
         @include_once($plugin);
 
@@ -83,6 +75,6 @@
     }
 
     if($any_success === true) {
-        print '<br />view log at <a href="' . $CFG->wwwroot . '/curriculum/dataimport/viewlog.php?file=' . $logfile . '">log file</a>';
+        print '<br />view log at <a href="' . $CFG->wwwroot . '/blocks/rlip/elis/viewlog.php?file=' . $logfile . '">log file</a>';
     }
 ?>
