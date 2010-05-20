@@ -1,7 +1,7 @@
 <?php //$Id: Exp $
 /**
  * ELIS(TM): Enterprise Learning Intelligence Suite
- * Copyright (C) 2008-2009 Remote-Learner.net Inc (http://www.remote-learner.net)
+ * Copyright (C) 2008-2010 Remote-Learner.net Inc (http://www.remote-learner.net)
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  * @subpackage curriculummanagement
  * @author     Remote-Learner.net Inc
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL
- * @copyright  (C) 2008-2009 Remote Learner.net Inc http://www.remote-learner.net
+ * @copyright  (C) 2008-2010 Remote Learner.net Inc http://www.remote-learner.net
  *
  */
 
@@ -61,7 +61,7 @@ class block_rlip extends block_base {
         $context = get_context_instance(CONTEXT_SYSTEM);
 
         if(!file_exists($CFG->dirroot . '/curriculum/config.php') && has_capability('block/rlip:config', $context)) {
-            $this->content->text = '<a href="' . $CFG->wwwroot . '/blocks/rlip/moodle/dataimportpage.class.php' . '">' . get_string('ip_link', 'block_rlip') . '</a>';
+            $this->content->text = '<a href="' . $CFG->wwwroot . '/blocks/rlip/moodle/displaypage.php' . '">' . get_string('ip_link', 'block_rlip') . '</a>';
         } else {
             $this->content->text = '';
         }

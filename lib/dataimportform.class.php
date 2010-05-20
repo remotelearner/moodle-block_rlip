@@ -31,7 +31,7 @@ require_once($CFG->dirroot . '/lib/formslib.php');
  *
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class generalimport_form extends cmform {
+class generalimport_form extends moodleform {
     /**
      * defines layout for the main dataimport form
      */
@@ -112,12 +112,12 @@ class generalimport_form extends cmform {
 /**
  * display form for picking the file and format to import user records with
  */
-class userimport_form extends cmform {
+class userimport_form extends moodleform {
     /**
      * defines the layout for the user import form
      */
     public function definition() {
-        require_once(CURMAN_DIRLOCATION . '/lib/user.class.php');
+//        require_once('dataimport.php');
         $mform = &$this->_form;
 
         //just the file name not a path
@@ -127,10 +127,10 @@ class userimport_form extends cmform {
 
         $mform->addElement('header', 'user_properties', get_string('user_properties', 'block_rlip'));
 
-        $data = user_import::get_properties_map();
-        foreach($data as $key => $p) {
-            $mform->addElement('text', $key, $key . ': ');
-        }
+//        $data = user_import::get_properties_map();
+//        foreach($data as $key => $p) {
+//            $mform->addElement('text', $key, $key . ': ');
+//        }
         $mform->closeHeaderBefore('save_buttons');
 
         $group = array();
@@ -144,15 +144,15 @@ class userimport_form extends cmform {
 /**
  * display form for picking the file and format to import course, curriculum, class, track records with
  */
-class coursesimport_form extends cmform {
+class coursesimport_form extends moodleform {
     /**
      * defines layout for the course import form
      */
     public function definition() {
-        require_once(CURMAN_DIRLOCATION . '/lib/course.class.php');
-        require_once(CURMAN_DIRLOCATION . '/lib/cmclass.class.php');
-        require_once(CURMAN_DIRLOCATION . '/lib/track.class.php');
-        require_once(CURMAN_DIRLOCATION . '/lib/curriculum.class.php');
+//        require_once(CURMAN_DIRLOCATION . '/lib/course.class.php');
+//        require_once(CURMAN_DIRLOCATION . '/lib/cmclass.class.php');
+//        require_once(CURMAN_DIRLOCATION . '/lib/track.class.php');
+//        require_once(CURMAN_DIRLOCATION . '/lib/curriculum.class.php');
 
         $mform = &$this->_form;
 
@@ -161,30 +161,29 @@ class coursesimport_form extends cmform {
         $mform->addElement('select', 'block_rlip_impcourse_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
 
         $mform->addElement('header', 'course_properties', get_string('course_properties', 'block_rlip'));
-        $data = course_import::get_properties_map();
-        foreach($data as $key => $p) {
-            $mform->addElement('text', 'crs_' . $key, $key . ': ');
-        }
+//        $data = course_import::get_properties_map();
+//        foreach($data as $key => $p) {
+//            $mform->addElement('text', 'crs_' . $key, $key . ': ');
+//        }
 
         //course import form handles class, track, curriculm, and course import
         $mform->addElement('header', 'class_properties', get_string('class_properties', 'block_rlip'));
-        $data = cmclass_import::get_properties_map();
-        foreach($data as $key => $p) {
-            $mform->addElement('text', 'cls_' . $key, $key . ': ');
-        }
-
+//        $data = cmclass_import::get_properties_map();
+//        foreach($data as $key => $p) {
+//            $mform->addElement('text', 'cls_' . $key, $key . ': ');
+//        }
 
         $mform->addElement('header', 'track_properties', get_string('track_properties', 'block_rlip'));
-          $data = track_import::get_properties_map();
-        foreach($data as $key => $p) {
-            $mform->addElement('text', 'trk_' . $key, $key . ': ');
-        }
+//        $data = track_import::get_properties_map();
+//        foreach($data as $key => $p) {
+//            $mform->addElement('text', 'trk_' . $key, $key . ': ');
+//        }
 
         $mform->addElement('header', 'curr_properties', get_string('curr_properties', 'block_rlip'));
-        $data = curriculum_import::get_properties_map();
-        foreach($data as $key => $p) {
-            $mform->addElement('text', 'cur_' . $key, $key . ': ');
-        }
+//        $data = curriculum_import::get_properties_map();
+//        foreach($data as $key => $p) {
+//            $mform->addElement('text', 'cur_' . $key, $key . ': ');
+//        }
         $mform->closeHeaderBefore('save_buttons');
 
         $group = array();
@@ -199,12 +198,12 @@ class coursesimport_form extends cmform {
  * display form for picking the file and format to student and instructor association records
  * in classes and tracks
  */
-class enrolmentimport_form extends cmform {
+class enrolmentimport_form extends moodleform {
     /**
      * defines layout for the enrolment import form
      */
     public function definition() {
-        require_once(CURMAN_DIRLOCATION . '/lib/student.class.php');
+//        require_once(CURMAN_DIRLOCATION . '/lib/student.class.php');
         $mform = &$this->_form;
 
         $mform->addElement('text', 'block_rlip_impenrolment_filename', get_string('filename', 'block_rlip') . ': ');
@@ -212,10 +211,10 @@ class enrolmentimport_form extends cmform {
         $mform->addElement('select', 'block_rlip_impenrolment_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
 
         $mform->addElement('header', 'enrol_properties', get_string('enrol_properties', 'block_rlip'));
-        $data = student_import::get_properties_map();
-        foreach($data as $key => $p) {
-            $mform->addElement('text', $key, $key . ': ');
-        }
+//        $data = student_import::get_properties_map();
+//        foreach($data as $key => $p) {
+//            $mform->addElement('text', $key, $key . ': ');
+//        }
         $mform->closeHeaderBefore('save_buttons');
 
         $group = array();
