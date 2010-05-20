@@ -66,7 +66,7 @@ class dataimportpage extends newpage {
     }
 
     function action_default() {
-        global $CFG, $USER;
+        global $CFG;
 
         $target = $this->get_new_page(array('action' => 'default'));
 
@@ -114,14 +114,14 @@ class dataimportpage extends newpage {
     }
 
     function action_user() {
-        global $CURMAN;
+        global $CFG;
 
         $target = $this->get_new_page(array('action' => 'user'));
 
         $usermap = user_import::get_properties_map();
 
         $configform = new userimport_form($target->get_moodle_url());
-        $configform->set_data($CURMAN->config);
+        $configform->set_data($CFG);
         $configform->set_data($usermap);
 
         if($configdata = $configform->get_data()) {
@@ -135,12 +135,12 @@ class dataimportpage extends newpage {
                 }
             }
 
-            if(!empty($configdata->impuser_filename)) {
-                cm_set_config('impuser_filename', $configdata->impuser_filename);
+            if(!empty($configdata->block_rlip_impuser_filename)) {
+                set_config('block_rlip_impuser_filename', $configdata->impuser_filename);
             }
 
-            if(!empty($configdata->impuser_filetype)) {
-                cm_set_config('impuser_filetype', $configdata->impuser_filetype);
+            if(!empty($configdata->block_rlip_impuser_filetype)) {
+                set_config('block_rlip_impuser_filetype', $configdata->impuser_filetype);
             }
 
             if(isset($configdata->save_buttons['import'])) {
@@ -154,7 +154,7 @@ class dataimportpage extends newpage {
     }
 
     function action_course() {
-        global $CURMAN;
+        global $CFG;
 
         $target = $this->get_new_page(array('action' => 'course'));
 
@@ -164,7 +164,7 @@ class dataimportpage extends newpage {
         $map['trk_'] = $this->array_prefix('trk_', track_import::get_properties_map());
 
         $configform = new coursesimport_form($target->get_moodle_url());
-        $configform->set_data($CURMAN->config);
+        $configform->set_data($CFG);
         $configform->set_data($map['crs_']);
         $configform->set_data($map['cls_']);
         $configform->set_data($map['cur_']);
@@ -191,12 +191,12 @@ class dataimportpage extends newpage {
                 }
             }
 
-            if(!empty($configdata->impcourse_filename)) {
-                cm_set_config('impcourse_filename', $configdata->impcourse_filename);
+            if(!empty($configdata->block_rlip_impcourse_filename)) {
+                set_config('block_rlip_impcourse_filename', $configdata->impcourse_filename);
             }
 
-            if(!empty($configdata->impcourse_filetype)) {
-                cm_set_config('impcourse_filetype', $configdata->impcourse_filetype);
+            if(!empty($configdata->block_rlip_impcourse_filetype)) {
+                set_config('block_rlip_impcourse_filetype', $configdata->impcourse_filetype);
             }
 
             if(isset($configdata->save_buttons['import'])) {
@@ -210,14 +210,14 @@ class dataimportpage extends newpage {
     }
 
     function action_enrolment() {
-        global $CURMAN;
+        global $CFG;
 
         $target = $this->get_new_page(array('action' => 'enrolment'));
 
         $student_map = student_import::get_properties_map();
 
         $configform = new enrolmentimport_form($target->get_moodle_url());
-        $configform->set_data($CURMAN->config);
+        $configform->set_data($CFG);
         $configform->set_data($student_map);
 
         if($configdata = $configform->get_data()) {
@@ -231,12 +231,12 @@ class dataimportpage extends newpage {
                 }
             }
 
-            if(!empty($configdata->impenrolment_filename)) {
-                cm_set_config('impenrolment_filename', $configdata->impenrolment_filename);
+            if(!empty($configdata->block_rlip_impenrolment_filename)) {
+                set_config('block_rlip_impenrolment_filename', $configdata->impenrolment_filename);
             }
 
-            if(!empty($configdata->impenrolment_filetype)) {
-                cm_set_config('impenrolment_filetype', $configdata->impenrolment_filetype);
+            if(!empty($configdata->block_rlip_impenrolment_filetype)) {
+                set_config('block_rlip_impenrolment_filetype', $configdata->impenrolment_filetype);
             }
 
             if(isset($configdata->save_buttons['import'])) {

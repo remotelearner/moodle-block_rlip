@@ -58,7 +58,9 @@ class block_rlip extends block_base {
 
         $this->content = new stdClass();
 
-        if(!file_exists($CFG->dirroot . '/curriculum/config.php')) {
+        $context = get_context_instance(CONTEXT_SYSTEM);
+
+        if(!file_exists($CFG->dirroot . '/curriculum/config.php') && has_capability('block/rlip:config', $context)) {
             $this->content->text = '<a href="' . $CFG->wwwroot . '/blocks/rlip/dataimportpage.class.php' . '">' . get_string('ip_link', 'block_rlip') . '</a>';
         } else {
             $this->content->text = '';
@@ -87,23 +89,14 @@ class block_rlip extends block_base {
      *
      */
     public function after_install() {
-        /*            //file import
-            'filelocation' => '',
-            'logfilelocation' => '',
-            'emailnotification' => '',
+        set_config('block_rlip_impuser_filename', 'user.csv');
+        set_config('block_rlip_impuser_filetype', 'csv');
 
-            //user import
-            'impuser_filename' => 'user.csv',
-            'impuser_filetype' => 'csv',
+        set_config('block_rlip_impcourse_filename', 'enroll.csv');
+        set_config('block_rlip_impcourse_filetype', 'csv');
 
-            //enrolment import
-            'impenrolment_filename' => 'enroll.csv',
-            'impenrolment_filetype' => 'csv',
-
-            //course import
-            'impcourse_filename' => 'course.csv',
-            'impcourse_filetype' => 'csv',
-*/
+        set_config('block_rlip_impenrolment_filename', 'course.csv');
+        set_config('block_rlip_impenrolment_filetype', 'csv');
     }
 
     /**
@@ -112,7 +105,6 @@ class block_rlip extends block_base {
      */
     public function before_delete() {
     }
-
 }
 
 ?>

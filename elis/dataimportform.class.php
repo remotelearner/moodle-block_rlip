@@ -121,9 +121,9 @@ class userimport_form extends cmform {
         $mform = &$this->_form;
 
         //just the file name not a path
-        $mform->addElement('text', 'impuser_filename', get_string('filename', 'block_rlip') . ': ');
+        $mform->addElement('text', 'block_rlip_impuser_filename', get_string('filename', 'block_rlip') . ': ');
         $plugins = get_import_plugins();
-        $mform->addElement('select', 'impuser_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        $mform->addElement('select', 'block_rlip_impuser_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
 
         $mform->addElement('header', 'user_properties', get_string('user_properties', 'block_rlip'));
 
