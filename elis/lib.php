@@ -1843,7 +1843,7 @@ abstract class import {
     public function set_property_map($key, $value) {
         global $CURMAN;
 
-        $map = $this->get_properties_map();
+        $map = self::get_properties_map();
 
         if(!$CURMAN->db->get_record('crlm_field_map', 'context', 'user', 'elis_field', $key)) {
             if(!empty($map[$key]) && strcmp($map[$key], $value) !== 0) {

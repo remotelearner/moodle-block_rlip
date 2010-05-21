@@ -121,11 +121,11 @@ class dataimportpage extends newpage {
 
         $target = $this->get_new_page(array('action' => 'user'));
 
-//        $usermap = user_import::get_properties_map();
+        $usermap = user_import::get_properties_map();
 
         $configform = new userimport_form($target->get_moodle_url());
         $configform->set_data($CFG);
-//        $configform->set_data($usermap);
+        $configform->set_data($usermap);
 
         if($configdata = $configform->get_data()) {
 //            foreach($usermap as $key=>$um) {
@@ -217,11 +217,11 @@ class dataimportpage extends newpage {
 
         $target = $this->get_new_page(array('action' => 'enrolment'));
 
-//        $student_map = student_import::get_properties_map();
+        $student_map = student_import::get_properties_map();
 
         $configform = new enrolmentimport_form($target->get_moodle_url());
         $configform->set_data($CFG);
-//        $configform->set_data($student_map);
+        $configform->set_data($student_map);
 
         if($configdata = $configform->get_data()) {
 //            foreach($student_map as $key=>$um) {
@@ -278,47 +278,5 @@ class dataimportpage extends newpage {
 
         return $retval;
     }
-}
-
-
-function get_user_fields() {
-    $retval = array('idnumber',
-                    'auth',
-                    'username',
-                    'password',
-                    'email',
-                    'firstname',
-                    'lastname',
-                    'mi',
-                    'city',
-                    'country',
-                    'maildigest',
-                    'autosubscribe',
-                    'trackforums',
-                    'timezone',
-                    'language',
-                    'theme',
-                    'screen_reader',
-                    'description',
-                    'id_number',
-                    'institution',
-                    'department');
-
-    $retval = array_combine($retval, $retval);
-    
-    $custom_fields = get_records('user_info_field');
-    foreach($custom_fields as $cf) {
-        $retval[$cf->shortname] = $cf->name;
-    }
-
-    return $retval;
-}
-
-function get_course_fields() {
-
-}
-
-function get_enrolment_fields() {
-
 }
 ?>

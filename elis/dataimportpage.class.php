@@ -127,7 +127,8 @@ class dataimportpage extends newpage {
             foreach($usermap as $key=>$um) {
                 if(!empty($configdata->$key)) {
                     if(strcmp($um, $configdata->$key) !== 0) {
-                        user_import::set_property_map($key, $configdata->$key);
+                        $ui = new user_import();
+                        $ui->set_property_map($key, $configdata->$key);
                     }
                 } else {
                     //something has gone terribly wrong everybody panic

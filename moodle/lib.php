@@ -1270,7 +1270,45 @@ class user_import extends import {
      * @return <type>
      */
     public function get_properties_map() {
-        return array();
+        $retval = array('action',
+                        'idnumber',
+                        'auth',
+                        'username',
+                        'password',
+                        'email',
+                        'firstname',
+                        'lastname',
+                        'mi',
+                        'city',
+                        'country',
+                        'maildigest',
+                        'autosubscribe',
+                        'trackforums',
+                        'timezone',
+                        'language',
+                        'theme',
+                        'screen_reader',
+                        'description',
+                        'id_number',
+                        'institution',
+                        'department');
+
+        $retval = array_combine($retval, $retval);
+
+        $custom_fields = get_records('user_info_field');
+        foreach($custom_fields as $cf) {
+            $retval[$cf->shortname] = $cf->shortname;
+        }
+
+        $properties_map = get_records('block_rlip_fieldmap', 'context', 'user');
+
+        if(!empty($properties_map)) {
+            foreach($properties_map as $pm) {
+                $retval[$pm->fieldname] = $pm->fieldmap;
+            }
+        }
+
+        return $retval;
     }
 }
 
@@ -1368,15 +1406,6 @@ class student_import extends import {
 
     /**
      *
-     * @global <type> $CURMAN
-     * @return <type>
-     */
-    public function get_properties_map() {
-        return array();
-    }
-
-    /**
-     *
      * @param <type> $columns
      * @return <type>
      */
@@ -1400,6 +1429,22 @@ class student_import extends import {
         }
         
         return true;
+    }
+
+    /**
+     *
+     * @global <type> $CURMAN
+     * @return <type>
+     */
+    public function get_properties_map() {
+        $retval = array('action',
+                        'username',
+                        'userrole',
+                        'useridnumber',
+                        'course_idnumber',
+                        'starttime',
+                        'endtime');
+        return $retval;
     }
 }
 
