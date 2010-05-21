@@ -61,8 +61,8 @@
             $importer = new $plugin_name($logfile);
 
             if(is_subclass_of($importer, 'elis_import')) {
-                $variable = "imp{$i}_filename";
-                $success = $importer->import_records($CURMAN->config->filelocation . '/' . $CURMAN->config->$variable, $i);
+                $variable = "block_rlip_imp{$i}_filename";
+                $success = $importer->import_records($CFG->block_rlip_filelocation . '/' . $CFG->$variable, $i);
                 $any_success = true;
             }
         }
@@ -75,6 +75,6 @@
     }
 
     if($any_success === true) {
-        print '<br />view log at <a href="' . $CFG->wwwroot . '/blocks/rlip/elis/viewlog.php?file=' . $logfile . '">log file</a>';
+        print '<br />view log at <a href="' . $CFG->wwwroot . '/blocks/rlip/lib/viewlog.php?file=' . $logfile . '">log file</a>';
     }
 ?>
