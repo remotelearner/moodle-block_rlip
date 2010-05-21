@@ -25,7 +25,6 @@
  */
 
 require_once ('../../../config.php');
-require_once ('../../../curriculum/config.php');
 
 $context = get_context_instance(CONTEXT_SYSTEM);
 
@@ -33,7 +32,7 @@ require_capability('block/rlip:config', $context);
 
 $filename = optional_param('file', '', PARAM_CLEAN);
 
-$file_location = $CURMAN->config->logfilelocation;
+$file_location = $CFG->block_rlip_logfilelocation;
 
 //since we can't include files that are not in a web viewable directory
 if(empty($filename)) {

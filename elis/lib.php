@@ -54,9 +54,9 @@ abstract class elis_import {
      * @param string $logfile name of the log file
      */
     public function __construct($logfile=null) {
-        global $CURMAN;
+        global $CFG;
         
-        $this->log_filer = new log_filer($CURMAN->config->logfilelocation, $logfile);
+        $this->log_filer = new log_filer($CFG->block_rlip_logfilelocation, $logfile);
     }
 
     /**
@@ -1151,7 +1151,7 @@ class log_filer {
      * @param object $file name of the file to log to
      */
     function output_log($file=null) {
-        global $CURMAN, $USER;
+        global $CFG, $USER;
 
         if(empty($file)) {
             $file = $this->file;
@@ -1164,7 +1164,7 @@ class log_filer {
                 $message .= $log . "\n";
             }
 
-            $idnumbers = explode(',', $CURMAN->config->emailnotification);
+            $idnumbers = explode(',', $CFG->block_rlip_emailnotification);
 
             $subject = 'integration point log';
 
