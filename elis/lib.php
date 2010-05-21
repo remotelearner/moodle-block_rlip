@@ -1837,7 +1837,7 @@ abstract class import {
     public function set_property_map($key, $value) {
         global $CURMAN;
 
-        $map = self::get_properties_map();
+        $map = $this->get_properties_map();
 
         if(!$CURMAN->db->get_record('block_rlip_fieldmap', 'context', $this->context, 'fieldname', $key)) {
             if(!empty($map[$key]) && strcmp($map[$key], $value) !== 0) {
