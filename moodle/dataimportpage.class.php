@@ -29,11 +29,16 @@ require_once('newpage.class.php');
 
 require_once($CFG->dirroot . '/blocks/rlip/lib/dataimportform.class.php');
 
+require_once('lib.php');
+
 class dataimportpage extends newpage {
     var $pagename = 'dim';
-    var $section = 'admn';
+    var $section = 'admn';    
+    var $folder; //set in constructor
 
     function __construct($params=false) {
+        $this->folder = RLIP_DIRLOCATION . '/moodle';
+        
         $this->tabs = array(
             array('tab_id' => 'default', 'page' => get_class($this), 'params' => array('action' => 'default'), 'name' => get_string('general', 'block_rlip')),
             array('tab_id' => 'user', 'page' => get_class($this), 'params' => array('action' => 'user'), 'name' => get_string('user', 'block_rlip')),
@@ -49,8 +54,7 @@ class dataimportpage extends newpage {
 
         $context = get_context_instance(CONTEXT_SYSTEM);
 
-//        return has_capability('block/curr_admin:dataimport', $context);
-        return true;
+        return has_capability('block/rlip:config', $context);
     }
 
     function get_title_default() {
@@ -98,7 +102,7 @@ class dataimportpage extends newpage {
             }
 
             if(isset($configdata->save_buttons['import'])) {
-                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
+                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
 
                 //run the export
                 if($completion_export_block = block_instance('completion_export')) {
@@ -123,7 +127,7 @@ class dataimportpage extends newpage {
         $configform->set_data($CFG);
 //        $configform->set_data($usermap);
 
-//        if($configdata = $configform->get_data()) {
+        if($configdata = $configform->get_data()) {
 //            foreach($usermap as $key=>$um) {
 //                if(!empty($configdata->$key)) {
 //                    if(strcmp($um, $configdata->$key) !== 0) {
@@ -133,20 +137,20 @@ class dataimportpage extends newpage {
 //                    //something has gone terribly wrong everybody panic
 //                }
 //            }
-//
-//            if(!empty($configdata->block_rlip_impuser_filename)) {
-//                set_config('block_rlip_impuser_filename', $configdata->impuser_filename);
-//            }
-//
-//            if(!empty($configdata->block_rlip_impuser_filetype)) {
-//                set_config('block_rlip_impuser_filetype', $configdata->impuser_filetype);
-//            }
-//
-//            if(isset($configdata->save_buttons['import'])) {
-//                $action = 'user';
-//                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
-//            }
-//        }
+
+            if(!empty($configdata->block_rlip_impuser_filename)) {
+                set_config('block_rlip_impuser_filename', $configdata->block_rlip_impuser_filename);
+            }
+
+            if(!empty($configdata->block_rlip_impuser_filetype)) {
+                set_config('block_rlip_impuser_filetype', $configdata->block_rlip_impuser_filetype);
+            }
+
+            if(isset($configdata->save_buttons['import'])) {
+                $action = 'user';
+                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
+            }
+        }
 
         $this->print_tabs('user');
         $configform->display();
@@ -168,8 +172,8 @@ class dataimportpage extends newpage {
 //        $configform->set_data($map['cls_']);
 //        $configform->set_data($map['cur_']);
 //        $configform->set_data($map['trk_']);
-//
-//        if($configdata = $configform->get_data()) {
+
+        if($configdata = $configform->get_data()) {
 //            foreach($map as $prefix=>$value) {
 //                foreach($value as $key=>$um) {
 //                    if(!empty($configdata->$key)) {
@@ -189,20 +193,20 @@ class dataimportpage extends newpage {
 //                    }
 //                }
 //            }
-//
-//            if(!empty($configdata->block_rlip_impcourse_filename)) {
-//                set_config('block_rlip_impcourse_filename', $configdata->impcourse_filename);
-//            }
-//
-//            if(!empty($configdata->block_rlip_impcourse_filetype)) {
-//                set_config('block_rlip_impcourse_filetype', $configdata->impcourse_filetype);
-//            }
-//
-//            if(isset($configdata->save_buttons['import'])) {
-//                $action = 'course';
-//                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
-//            }
-//        }
+
+            if(!empty($configdata->block_rlip_impcourse_filename)) {
+                set_config('block_rlip_impcourse_filename', $configdata->block_rlip_impcourse_filename);
+            }
+
+            if(!empty($configdata->block_rlip_impcourse_filetype)) {
+                set_config('block_rlip_impcourse_filetype', $configdata->block_rlip_impcourse_filetype);
+            }
+
+            if(isset($configdata->save_buttons['import'])) {
+                $action = 'course';
+                include_once(RLIP_DIRLOCATION. '/lib/dataimport.php');
+            }
+        }
 
         $this->print_tabs('course');
         $configform->display();
@@ -219,7 +223,7 @@ class dataimportpage extends newpage {
         $configform->set_data($CFG);
 //        $configform->set_data($student_map);
 
-//        if($configdata = $configform->get_data()) {
+        if($configdata = $configform->get_data()) {
 //            foreach($student_map as $key=>$um) {
 //                if(!empty($configdata->$key)) {
 //                    if(strcmp($um, $configdata->$key) !== 0) {
@@ -229,20 +233,20 @@ class dataimportpage extends newpage {
 //                    //something has gone terribly wrong everybody panic
 //                }
 //            }
-//
-//            if(!empty($configdata->block_rlip_impenrolment_filename)) {
-//                set_config('block_rlip_impenrolment_filename', $configdata->impenrolment_filename);
-//            }
-//
-//            if(!empty($configdata->block_rlip_impenrolment_filetype)) {
-//                set_config('block_rlip_impenrolment_filetype', $configdata->impenrolment_filetype);
-//            }
-//
-//            if(isset($configdata->save_buttons['import'])) {
-//                $action = 'enrolment';
-//                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
-//            }
-//        }
+
+            if(!empty($configdata->block_rlip_impenrolment_filename)) {
+                set_config('block_rlip_impenrolment_filename', $configdata->block_rlip_impenrolment_filename);
+            }
+
+            if(!empty($configdata->block_rlip_impenrolment_filetype)) {
+                set_config('block_rlip_impenrolment_filetype', $configdata->block_rlip_impenrolment_filetype);
+            }
+
+            if(isset($configdata->save_buttons['import'])) {
+                $action = 'enrolment';
+                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
+            }
+        }
 
         $this->print_tabs('enrolment');
         $configform->display();

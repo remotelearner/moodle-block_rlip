@@ -108,16 +108,6 @@ abstract class newpage {
 
         $this->pageblocks = blocks_setup($PAGE,BLOCKS_PINNED_BOTH);
 
-
-        /// Make sure that the curriculum block is actually on this
-        /// user's My Moodle page instance.
-        if ($cablockid = get_field('block', 'id', 'name', 'curr_admin')) {
-            if (!record_exists('block_pinned', 'blockid', $cablockid, 'pagetype', 'my-index')) {
-                blocks_execute_action($PAGE, $this->pageblocks, 'add', (int)$cablockid, true, false);
-            }
-        }
-
-
         if (($edit != -1) and $PAGE->user_allowed_editing()) {
             $USER->editing = $edit;
         }

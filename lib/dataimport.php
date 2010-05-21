@@ -24,16 +24,16 @@
  *
  */
     
-    global $CURMAN, $CFG;
+    global $CFG;
     
 //    require_once ($CFG->dirroot . '/blocks/rlip/lib/lib.php');
 
     $context = get_context_instance(CONTEXT_SYSTEM);
 
-    require_capability('block/curr_admin:config', $context);
+    require_capability('block/rlip:config', $context);
 
     if(!isset($action)) {
-        $action = cm_get_param('action', 'default');
+        $action = optional_param('action', 'default');
     }
 
     if(empty($action) || strcmp($action, 'default') === 0) {
@@ -51,9 +51,9 @@
     foreach($imports as $i) {
         $success = false;
         
-        $variable = "imp{$i}_filetype";
-        $plugin_name = 'import_' . $CURMAN->config->$variable;
-        $plugin = RLIP_DIRLOCATION . '/elis/dataimport/' . $plugin_name . '/lib.php';
+        $variable = "block_rlip_imp{$i}_filetype";
+        $plugin_name = 'import_' . $CFG->$variable;
+        $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib.php';
 
         @include_once($plugin);
 

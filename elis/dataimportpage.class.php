@@ -50,8 +50,7 @@ class dataimportpage extends newpage {
 
         $context = get_context_instance(CONTEXT_SYSTEM);
 
-//        return has_capability('block/curr_admin:dataimport', $context);
-        return true;
+        return has_capability('block/rlip:config', $context);
     }
 
     function get_title_default() {
@@ -99,7 +98,7 @@ class dataimportpage extends newpage {
             }
 
             if(isset($configdata->save_buttons['import'])) {
-                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
+                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
 
                 //run the export
                 if($completion_export_block = block_instance('completion_export')) {
@@ -145,7 +144,7 @@ class dataimportpage extends newpage {
 
             if(isset($configdata->save_buttons['import'])) {
                 $action = 'user';
-                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
+                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
             }
         }
 
@@ -201,7 +200,7 @@ class dataimportpage extends newpage {
 
             if(isset($configdata->save_buttons['import'])) {
                 $action = 'course';
-                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
+                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
             }
         }
 
@@ -241,7 +240,7 @@ class dataimportpage extends newpage {
 
             if(isset($configdata->save_buttons['import'])) {
                 $action = 'enrolment';
-                include_once(RLIP_DIRLOCATION . '/elis/dataimport.php');
+                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
             }
         }
 

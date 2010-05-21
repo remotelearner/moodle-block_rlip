@@ -30,7 +30,7 @@
 
     $context = get_context_instance(CONTEXT_SYSTEM);
 
-    require_capability('block/curr_admin:config', $context);
+    require_capability('block/rlip:config', $context);
 
     if(!isset($action)) {
         $action = cm_get_param('action', 'default');
