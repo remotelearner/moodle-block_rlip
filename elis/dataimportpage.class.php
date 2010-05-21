@@ -28,7 +28,7 @@ require_once($CFG->dirroot . '/curriculum/config.php');
 require_once(CURMAN_DIRLOCATION . '/lib/newpage.class.php');
 
 require_once($CFG->dirroot . '/blocks/rlip/elis/lib.php');
-require_once(RLIP_DIRLOCATION . '/elis/dataimportform.class.php');
+require_once(RLIP_DIRLOCATION . '/lib/dataimportform.class.php');
 
 class dataimportpage extends newpage {
     var $pagename = 'dim';
@@ -136,11 +136,11 @@ class dataimportpage extends newpage {
             }
 
             if(!empty($configdata->block_rlip_impuser_filename)) {
-                set_config('block_rlip_impuser_filename', $configdata->impuser_filename);
+                set_config('block_rlip_impuser_filename', $configdata->block_rlip_impuser_filename);
             }
 
             if(!empty($configdata->block_rlip_impuser_filetype)) {
-                set_config('block_rlip_impuser_filetype', $configdata->impuser_filetype);
+                set_config('block_rlip_impuser_filetype', $configdata->block_rlip_impuser_filetype);
             }
 
             if(isset($configdata->save_buttons['import'])) {
@@ -192,11 +192,11 @@ class dataimportpage extends newpage {
             }
 
             if(!empty($configdata->block_rlip_impcourse_filename)) {
-                set_config('block_rlip_impcourse_filename', $configdata->impcourse_filename);
+                set_config('block_rlip_impcourse_filename', $configdata->block_rlip_impcourse_filename);
             }
 
             if(!empty($configdata->block_rlip_impcourse_filetype)) {
-                set_config('block_rlip_impcourse_filetype', $configdata->impcourse_filetype);
+                set_config('block_rlip_impcourse_filetype', $configdata->block_rlip_impcourse_filetype);
             }
 
             if(isset($configdata->save_buttons['import'])) {
@@ -232,11 +232,11 @@ class dataimportpage extends newpage {
             }
 
             if(!empty($configdata->block_rlip_impenrolment_filename)) {
-                set_config('block_rlip_impenrolment_filename', $configdata->impenrolment_filename);
+                set_config('block_rlip_impenrolment_filename', $configdata->block_rlip_impenrolment_filename);
             }
 
             if(!empty($configdata->block_rlip_impenrolment_filetype)) {
-                set_config('block_rlip_impenrolment_filetype', $configdata->impenrolment_filetype);
+                set_config('block_rlip_impenrolment_filetype', $configdata->block_rlip_impenrolment_filetype);
             }
 
             if(isset($configdata->save_buttons['import'])) {

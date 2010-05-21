@@ -27,7 +27,6 @@
 require_once('../../../config.php');
 require_once('newpage.class.php');
 
-//require_once($CFG->dirroot . '/blocks/rlip/elis/lib.php');
 require_once($CFG->dirroot . '/blocks/rlip/lib/dataimportform.class.php');
 
 class dataimportpage extends newpage {

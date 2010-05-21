@@ -24,11 +24,6 @@
  *
  */
 
-define('usercsv', 'user.csv');
-define('inputcsv', 'input.csv');
-define('enrollcsv', 'enroll.csv');
-define('coursecsv', 'course.csv');
-
 /*
  Add:
     * If user exists, add to log - "username exists"
