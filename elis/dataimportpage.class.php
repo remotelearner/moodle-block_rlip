@@ -176,13 +176,17 @@ class dataimportpage extends newpage {
                     if(!empty($configdata->$key)) {
                         if(strcmp($um, $configdata->$key) !== 0) {
                             if(strcmp($prefix, 'crs_') === 0) {
-                                course_import::set_property_map(str_replace($prefix, '', $key), $configdata->$key);
+                                $ci = new course_import();
+                                $ci->set_property_map(str_replace($prefix, '', $key), $configdata->$key);
                             } else if(strcmp($prefix, 'cls_') === 0) {
-                                cmclass_import::set_property_map(str_replace($prefix, '', $key), $configdata->$key);
+                                $ci = new cmclass_import();
+                                $ci->set_property_map(str_replace($prefix, '', $key), $configdata->$key);
                             } else if(strcmp($prefix, 'cur_') === 0) {
-                                curriculum_import::set_property_map(str_replace($prefix, '', $key), $configdata->$key);
+                                $ci = new curriculum_import();
+                                $ci->set_property_map(str_replace($prefix, '', $key), $configdata->$key);
                             } else if(strcmp($prefix, 'trk_') === 0) {
-                                track_import::set_property_map(str_replace($prefix, '', $key), $configdata->$key);
+                                $ci = new track_import();
+                                $ci->set_property_map(str_replace($prefix, '', $key), $configdata->$key);
                             }
                         }
                     } else {
@@ -224,7 +228,8 @@ class dataimportpage extends newpage {
             foreach($student_map as $key=>$um) {
                 if(!empty($configdata->$key)) {
                     if(strcmp($um, $configdata->$key) !== 0) {
-                        student_import::set_property_map($key, $configdata->$key);
+                        $si = new student_import();
+                        $si->set_property_map($key, $configdata->$key);
                     }
                 } else {
                     //something has gone terribly wrong everybody panic
