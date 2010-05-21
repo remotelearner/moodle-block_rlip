@@ -1198,7 +1198,7 @@ class log_filer {
  */
 class user_import extends import {
     protected $data_object = 'user';
-
+    protected $context = 'user';
     /**
      *
      * @param <type> $records
@@ -1299,11 +1299,11 @@ class user_import extends import {
             }
         }
 
-        $properties_map = $CURMAN->db->get_records('crlm_field_map', 'context', 'user');
+        $properties_map = $CURMAN->db->get_records('block_rlip_fieldmap', 'context', 'user');
 
         if(!empty($properties_map)) {
             foreach($properties_map as $pm) {
-                $map[$pm->elis_field] = $pm->data_field;
+                $map[$pm->fieldname] = $pm->fieldmap;
             }
         }
 
@@ -1316,22 +1316,7 @@ class user_import extends import {
  */
 class student_import extends import {
     protected $data_object = 'student';
-
-    public function __get($name) {
-        if(empty($this->properties)) {
-            $this->properties = $this->get_properties_map();
-            
-            if(strcmp($name, 'properties') === 0) {
-                return $this->properties;
-            }
-        }
-
-        if(!empty($this->properties[$name])) {
-            return $this->properties[$name];
-        }
-
-        return null;
-    }
+    protected $context = 'student';
 
     /**
      *
@@ -1339,21 +1324,25 @@ class student_import extends import {
      * @return <type>
      */
     public function get_item($record) {
-        $item = new student();                                  //dynamic student class
-        $retval = array();
+        global $USER;
 
-        foreach($item->properties as $p=>$type) {
-            if($this->$p !== null && !empty($record[$this->$p])) {
+        $properties_map = $this->get_properties_map();
+        $item = new $this->data_object();
+        
+        $item_record = array();
+
+        foreach($item->properties as $p=>$null) {
+            if(!empty($properties_map[$p]) && !empty($record[$properties_map[$p]])) {
                 if(strcmp($p, 'completetime') === 0 || strcmp($p, 'enrolmenttime') === 0 || strcmp($p, 'endtime') === 0) {
-                    $item_record[$p] = strtotime($record[$this->$p]);
+                    $item_record[$p] = strtotime($record[$properties_map[$p]]);
                 } else {
-                    $item_record[$p] = $record[$this->$p];
+                    $item_record[$p] = $record[$properties_map[$p]];
                 }
             }
         }
 
-        if($this->user_idnumber !== null && !empty($record[$this->user_idnumber])) {
-            $user = user::get_by_idnumber($record[$this->user_idnumber]);
+        if(!empty($properties_map['user_idnumber']) && !empty($record[$properties_map['user_idnumber']])) {
+            $user = user::get_by_idnumber($record[$properties_map['user_idnumber']]);
 
             if(!empty($user)) {
                 $item_record['userid'] = $user->id;
@@ -1361,8 +1350,8 @@ class student_import extends import {
         }
 
                 //no error checking since it would of been done earlier in the process
-        if($this->context !== null && !empty($record[$this->context])) {
-            $context = explode('_', $record[$this->context], 2);
+        if(!empty($properties_map['context']) && !empty($record[$properties_map['context']])) {
+            $context = explode('_', $record[$properties_map['context']], 2);
 
             $location = current($context);
             next($context);
@@ -1371,11 +1360,11 @@ class student_import extends import {
 
         $temp = new object();
 
-        $temp->action = empty($record['action'])? '': $record['action'];
+        $temp->action = empty($record[$properties_map['execute']])? '': $record[$properties_map['execute']];
 
         $temp->item = null;
 
-        if(!empty($record[$this->role]) && strcmp($record[$this->role], 'instructor') === 0) {
+        if(!empty($record[$properties_map['role']]) && strcmp($record[$properties_map['role']], 'instructor') === 0) {
             $cmclass = cmclass::get_by_idnumber($id);
 
             if(!empty($cmclass)) {
@@ -1425,11 +1414,11 @@ class student_import extends import {
         $map['context'] = 'context';
         $map['execute'] = 'action';
 
-        $properties_map = $CURMAN->db->get_records('crlm_field_map', 'context', 'student');
+        $properties_map = $CURMAN->db->get_records('block_rlip_fieldmap', 'context', 'student');
 
         if(!empty($properties_map)) {
             foreach($properties_map as $pm) {
-                $map[$pm->elis_field] = $pm->data_field;
+                $map[$pm->fieldname] = $pm->fieldmap;
             }
         }
 
@@ -1469,6 +1458,7 @@ class student_import extends import {
  */
 class course_import extends import {
     protected $data_object = 'course';
+    protected $context = 'course';
 
     /**
      *
@@ -1539,11 +1529,11 @@ class course_import extends import {
         $map['assignment'] = 'assignment';
         $map['link'] = 'link';
         
-        $properties_map = $CURMAN->db->get_records('crlm_field_map', 'context', 'course');
+        $properties_map = $CURMAN->db->get_records('block_rlip_fieldmap', 'context', 'course');
 
         if(!empty($properties_map)) {
             foreach($properties_map as $pm) {
-                $map[$pm->elis_field] = $pm->data_field;
+                $map[$pm->fieldname] = $pm->fieldmap;
             }
         }
 
@@ -1556,7 +1546,8 @@ class course_import extends import {
  */
 class cmclass_import extends import {
     protected $data_object = 'cmclass';
-
+    protected $context = 'class';
+    
     /**
      *
      * @param <type> $record
@@ -1624,11 +1615,11 @@ class cmclass_import extends import {
         $map['moodlecourseid'] = 'moodlecourseid';
         $map['autocreate'] = 'autocreate';
         
-        $properties_map = $CURMAN->db->get_records('crlm_field_map', 'context', 'class');
+        $properties_map = $CURMAN->db->get_records('block_rlip_fieldmap', 'context', 'class');
 
         if(!empty($properties_map)) {
             foreach($properties_map as $pm) {
-                $map[$pm->elis_field] = $pm->data_field;
+                $map[$pm->fieldname] = $pm->fieldmap;
             }
         }
 
@@ -1641,6 +1632,7 @@ class cmclass_import extends import {
  */
 class curriculum_import extends import {
     protected $data_object = 'curriculum';
+    protected $context = 'curriculum';
 
     /**
      *
@@ -1686,11 +1678,11 @@ class curriculum_import extends import {
         unset($map['timemodified']);
         unset($map['iscustom']);
         
-        $properties_map = $CURMAN->db->get_records('crlm_field_map', 'context', 'curriculum');
+        $properties_map = $CURMAN->db->get_records('block_rlip_fieldmap', 'context', 'curriculum');
 
         if(!empty($properties_map)) {
             foreach($properties_map as $pm) {
-                $map[$pm->elis_field] = $pm->data_field;
+                $map[$pm->fieldname] = $pm->fieldmap;
             }
         }
 
@@ -1703,7 +1695,8 @@ class curriculum_import extends import {
  */
 class track_import extends import {
     protected $data_object = 'track';
-
+    protected $context = 'track';
+    
     /**
      *
      * @param <type> $record
@@ -1758,11 +1751,11 @@ class track_import extends import {
         $map['assignment'] = 'assignment';
         $map['autocreate'] = 'autocreate';
 
-        $properties_map = $CURMAN->db->get_records('crlm_field_map', 'context', 'track');
+        $properties_map = $CURMAN->db->get_records('block_rlip_fieldmap', 'context', 'track');
 
         if(!empty($properties_map)) {
             foreach($properties_map as $pm) {
-                $map[$pm->elis_field] = $pm->data_field;
+                $map[$pm->fieldname] = $pm->fieldmap;
             }
         }
 
@@ -1772,6 +1765,7 @@ class track_import extends import {
 
 abstract class import {
     protected $data_object;
+    protected $context;
 
     public abstract function get_properties_map();
     public abstract function get_item($record);
@@ -1845,19 +1839,19 @@ abstract class import {
 
         $map = $this->get_properties_map();
 
-        if(!$CURMAN->db->get_record('crlm_field_map', 'context', 'user', 'elis_field', $key)) {
+        if(!$CURMAN->db->get_record('block_rlip_fieldmap', 'context', $this->context, 'fieldname', $key)) {
             if(!empty($map[$key]) && strcmp($map[$key], $value) !== 0) {
-                $dataobject->context = 'user';
-                $dataobject->elis_field = $key;
-                $dataobject->data_field = $value;
+                $dataobject->context = $this->context;
+                $dataobject->fieldname = $key;
+                $dataobject->fieldmap = $value;
 
-                return $CURMAN->db->insert_record('crlm_field_map', $dataobject);
+                return $CURMAN->db->insert_record('block_rlip_fieldmap', $dataobject);
             } else {
                 //invalid key value
                 return false;
             }
         } else {
-            return $CURMAN->db->set_field('crlm_field_map', 'data_field', $value, 'context', 'user', 'elis_field', $key);
+            return $CURMAN->db->set_field('block_rlip_fieldmap', 'fieldmap', $value, 'context', $this->context, 'fieldname', $key);
         }
     }
 }
