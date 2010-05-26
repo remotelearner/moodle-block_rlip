@@ -27,7 +27,8 @@
 require_once('../../../config.php');
 require_once('newpage.class.php');
 
-require_once($CFG->dirroot . '/blocks/rlip/lib/dataimportform.class.php');
+        //TODO: change to lib/dataimportform.class.php once more compatible
+require_once($CFG->dirroot . '/blocks/rlip/moodle/dataimportform.class.php');
 
 require_once('lib.php');
 
@@ -117,138 +118,57 @@ class dataimportpage extends newpage {
     }
 
     function action_user() {
-        global $CFG;
-
-        $target = $this->get_new_page(array('action' => 'user'));
-
-        $usermap = user_import::get_properties_map();
-
-        $configform = new userimport_form($target->get_moodle_url());
-        $configform->set_data($CFG);
-        $configform->set_data($usermap);
-
-        if($configdata = $configform->get_data()) {
-//            foreach($usermap as $key=>$um) {
-//                if(!empty($configdata->$key)) {
-//                    if(strcmp($um, $configdata->$key) !== 0) {
-//                        user_import::set_property_map($key, $configdata->$key);
-//                    }
-//                } else {
-//                    //something has gone terribly wrong everybody panic
-//                }
-//            }
-
-            if(!empty($configdata->block_rlip_impuser_filename)) {
-                set_config('block_rlip_impuser_filename', $configdata->block_rlip_impuser_filename);
-            }
-
-            if(!empty($configdata->block_rlip_impuser_filetype)) {
-                set_config('block_rlip_impuser_filetype', $configdata->block_rlip_impuser_filetype);
-            }
-
-            if(isset($configdata->save_buttons['import'])) {
-                $action = 'user';
-                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
-            }
-        }
-
-        $this->print_tabs('user');
-        $configform->display();
+        $this->do_action(new user_import(), 'user');
     }
 
     function action_course() {
+        $this->do_action(new course_import(), 'course');
+    }
+
+    function action_enrolment() {
+        $this->do_action(new student_import(), 'enrolment');
+    }
+
+    private function do_action($import, $action) {
         global $CFG;
+        
+        $target = $this->get_new_page(array('action' => $action));
 
-        $target = $this->get_new_page(array('action' => 'course'));
+        $map = $import->get_properties_map();
 
-//        $map['crs_'] = $this->array_prefix('crs_', course_import::get_properties_map());
-//        $map['cls_'] = $this->array_prefix('cls_', cmclass_import::get_properties_map());
-//        $map['cur_'] = $this->array_prefix('cur_', curriculum_import::get_properties_map());
-//        $map['trk_'] = $this->array_prefix('trk_', track_import::get_properties_map());
+        $form_class = "{$action}import_form";
+        $configform = new $form_class($target->get_moodle_url());
 
-        $configform = new coursesimport_form($target->get_moodle_url());
         $configform->set_data($CFG);
-//        $configform->set_data($map['crs_']);
-//        $configform->set_data($map['cls_']);
-//        $configform->set_data($map['cur_']);
-//        $configform->set_data($map['trk_']);
+        $configform->set_data($map);
 
         if($configdata = $configform->get_data()) {
-//            foreach($map as $prefix=>$value) {
-//                foreach($value as $key=>$um) {
-//                    if(!empty($configdata->$key)) {
-//                        if(strcmp($um, $configdata->$key) !== 0) {
-//                            if(strcmp($prefix, 'crs_') === 0) {
-//                                course_import::set_property_map(str_replace($prefix, '', $key), $configdata->$key);
-//                            } else if(strcmp($prefix, 'cls_') === 0) {
-//                                cmclass_import::set_property_map(str_replace($prefix, '', $key), $configdata->$key);
-//                            } else if(strcmp($prefix, 'cur_') === 0) {
-//                                curriculum_import::set_property_map(str_replace($prefix, '', $key), $configdata->$key);
-//                            } else if(strcmp($prefix, 'trk_') === 0) {
-//                                track_import::set_property_map(str_replace($prefix, '', $key), $configdata->$key);
-//                            }
-//                        }
-//                    } else {
-//                        //something has gone terribly wrong everybody panic
-//                    }
-//                }
-//            }
-
-            if(!empty($configdata->block_rlip_impcourse_filename)) {
-                set_config('block_rlip_impcourse_filename', $configdata->block_rlip_impcourse_filename);
+            foreach($map as $key=>$value) {
+                if(!empty($configdata->$key)) {
+                    if(strcmp($value, $configdata->$key) !== 0) {
+                        $import->set_property_map($key, $configdata->$key);
+                    }
+                } else {
+                    //something has gone terribly wrong everybody panic
+                }
             }
 
-            if(!empty($configdata->block_rlip_impcourse_filetype)) {
-                set_config('block_rlip_impcourse_filetype', $configdata->block_rlip_impcourse_filetype);
+            $property = "block_rlip_imp{$action}_filename";
+            if(!empty($configdata->$property)) {
+                set_config($property, $configdata->$property);
+            }
+
+            $property = "block_rlip_imp{$action}_filetype";
+            if(!empty($configdata->$property)) {
+                set_config($property, $configdata->$property);
             }
 
             if(isset($configdata->save_buttons['import'])) {
-                $action = 'course';
                 include_once(RLIP_DIRLOCATION. '/lib/dataimport.php');
             }
         }
 
-        $this->print_tabs('course');
-        $configform->display();
-    }
-
-    function action_enrolment() {
-        global $CFG;
-
-        $target = $this->get_new_page(array('action' => 'enrolment'));
-
-        $student_map = student_import::get_properties_map();
-
-        $configform = new enrolmentimport_form($target->get_moodle_url());
-        $configform->set_data($CFG);
-        $configform->set_data($student_map);
-
-        if($configdata = $configform->get_data()) {
-//            foreach($student_map as $key=>$um) {
-//                if(!empty($configdata->$key)) {
-//                    if(strcmp($um, $configdata->$key) !== 0) {
-//                        student_import::set_property_map($key, $configdata->$key);
-//                    }
-//                } else {
-//                    //something has gone terribly wrong everybody panic
-//                }
-//            }
-
-            if(!empty($configdata->block_rlip_impenrolment_filename)) {
-                set_config('block_rlip_impenrolment_filename', $configdata->block_rlip_impenrolment_filename);
-            }
-
-            if(!empty($configdata->block_rlip_impenrolment_filetype)) {
-                set_config('block_rlip_impenrolment_filetype', $configdata->block_rlip_impenrolment_filetype);
-            }
-
-            if(isset($configdata->save_buttons['import'])) {
-                $action = 'enrolment';
-                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
-            }
-        }
-
-        $this->print_tabs('enrolment');
+        $this->print_tabs($action);
         $configform->display();
     }
 

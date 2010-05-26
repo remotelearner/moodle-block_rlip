@@ -75,11 +75,14 @@ abstract class elis_import {
 
                 $method = "get_$type";
                 method_exists($this,$method) OR throwException("unimplemented get $type");
-                $this->$method($data);      //processes the records and inserts them in the database
+                $records = $this->$method($data);      //gets all the records in a proper form to insert
+
+                $this->process($records, $type);
+
                 $retval = true;
                 
                 if(!empty($file) && is_file($file)) {
-                    unlink($file);
+//                    unlink($file);
                 }
             } catch(Exception $e) {
                 $this->log_filer->add_error($e->getMessage());
@@ -96,46 +99,20 @@ abstract class elis_import {
      * @param array $data user records to be placed in the database
      */
     private function get_user($data) {
-        $columns = $data->header;
-        $records = $data->records;
-
-        $ui = new user_import();
-        $properties = $ui->get_properties_map();
-
-        in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
-
-        if(!$ui->check_required_columns($columns)) {
-            $missing_fields = $ui->get_missing_fields($columns);
-            $missing = implode(', ', $missing_fields);
-
-            throwException("missing required fields $missing");
-        }
-
-        $this->user_handler($records, count($columns));
+        return $this->get(new user_import(), $data);
     }
 
     /**
      * gets user records and send them to processing
-     * @param array $data enrolment records 
+     * @param array $data enrolment records
      */
     private function get_enrolment($data) {
-        $columns = $data->header;
-        $records = $data->records;
-
         $si = new student_import();
-        $properties = student_import::get_properties_map();
+        $properties = $si->get_properties_map();
 
-        in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
         in_array($properties['context'], $columns) OR throwException('header must contain a context field');
 
-        if(!$si->check_required_columns($columns)) {
-            $missing_fields = $si->get_missing_fields($columns);
-
-            $missing = implode(', ', $missing_fields);
-            throwException("missing required fields $missing");
-        }
-
-        $this->enrolment_handler($records, count($columns));
+        return $this->get($si, $data);
     }
 
     /**
@@ -143,35 +120,27 @@ abstract class elis_import {
      * @param  array $data course records
      */
     private function get_course($data) {
+        return $this->get(new course_import(), $data);
+    }
+
+    private function get($import, $data) {
         $columns = $data->header;
         $records = $data->records;
 
-        $cmi = new cmclass_import();
-        $ti = new track_import();
-        $ci = new course_import();
-        $cui = new curriculum_import();
+        $properties = $import->get_properties_map();
 
-        in_array('action', $columns) OR throwException('header must contain an action field');          //action and context fields can not be renamed
-        in_array('context', $columns) OR throwException('header must contain a context field');
-        
-        if(!$ci->check_required_columns($columns) ||
-            !$cmi->check_required_columns($columns) ||
-            !$ti->check_required_columns($columns) ||
-            !$cui->check_required_columns($columns)) {
+        in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
 
-            $missing_fields = array_merge($ci->get_missing_fields($columns),
-                $cmi->get_missing_fields($columns),
-                $ti->get_missing_fields($columns),
-                $cui->get_missing_fields($columns));
-
-            $missing_fields = array_unique($missing_fields);
-
+        $missing_fields = $import->get_missing_fields($columns);
+        if(!empty($missing_fields)) {
             $missing = implode(', ', $missing_fields);
-            
+
             throwException("missing required fields $missing");
         }
 
-        $this->course_handler($records, count($columns));
+        $items = $import->get_items($records);
+
+        return $items;
     }
 
     /**
@@ -199,20 +168,20 @@ abstract class elis_import {
         }
     }
 
-    public function user_handler($records, $num) {
-        $user_imp = new user_import();
-        $users = $user_imp->get_items($records);
+    public function process($records, $type) {
+        foreach($records as $record) {
+            $obj = (object)$record;
 
-        foreach($users as $ui) {
-            if(!empty($ui->action)) {
-                if(!empty($ui->item)) {
-                    $method = "user_{$ui->action}";
-                    $this->$method($ui->item);
+            try {
+                if(empty($obj->execute)) {
+
+                    throwException('missing action');
                 } else {
-                    $this->log_filer->add_error_record();
+                    $method = "{$type}_$obj->execute";
+                    $this->$method($obj);
                 }
-            } else {
-                $this->log_filer->add_error_record('action required');
+            } catch(Exception $e) {
+                $this->log_filer->add_error_record($e->getMessage());
             }
         }
     }
@@ -648,58 +617,14 @@ abstract class elis_import {
      * @param object $user user object
      */
     public function user_add($user) {
-        global $CURMAN;
-
-        if($user->has_required_fields() === true) {
-            if($user->duplicate_check() === false) {
-                if($user->add()) {
-                    $this->log_filer->add_success("user {$user->to_string()} added");
-
-                    if(!empty($user->theme)) {
-                        $CURMAN->db->set_field('user', 'theme', $user->theme, 'id', cm_get_moodleuserid($user->id));
-                    }
-
-                    if(!empty($user->auth)) {
-                        $CURMAN->db->set_field('user', 'auth', $user->auth, 'id', cm_get_moodleuserid($user->id));
-                    }
-                } else {
-                    $this->log_filer->add_error_record("user {$user->to_string()} to database");
-                }
-            } else {
-                $this->log_filer->add_error_record("{$user->to_string()} record already exists");
-            }
+        if (!record_exists('user', 'username', $user->username)) {
+            /// Add a new user
+            $user->password   = hash_internal_user_password($user->password);
+            $user->timemodified   = time();
+            $user->id = insert_record('user', $user);
+            $this->log_filer->add_success("user {$user->username} added");
         } else {
-            $required = $user->get_missing_required_fields();
-            $required = implode(', ', $required);
-
-            $this->log_filer->add_error_record("missing required fields $required");
-        }
-    }
-
-    /**
-     * delete given user
-     * @param object $user user to be deleted
-     */
-    public function user_disable($user) {
-        if(!empty($user->idnumber)) {
-            $old_user = $user;
-            $user = user::get_by_idnumber($user->idnumber); //save to different variable to extra properties checking
-
-            if(!empty($user)) {
-                if(strcmp($old_user->username, $user->username) !== 0) {
-                    $this->log_filer->add_warning("user name does not match");
-                }
-
-                if($user->delete()) {
-                    $this->log_filer->add_success("user {$user->to_string()} successfully disabled");
-                } else {
-                    $this->log_filer->add_error_record("updating user {$user->to_string()}");
-                }
-            } else {
-                $this->log_filer->add_error_record("no user with idnumber {$old_user->idnumber}");
-            }
-        } else {
-            $this->log_filer->add_error_record("missing idnumber field in record");
+            throwException("add failed user $user->username already exists");
         }
     }
 
@@ -708,49 +633,30 @@ abstract class elis_import {
      * @param object $user user to be updated
      */
     public function user_update($user) {
-        global $CURMAN;
-
-        if(!empty($user->idnumber)) {
-            $old_user = $user;
-            $user = user::get_by_idnumber($user->idnumber);
-            
-            if(!empty($user)) {
-                if(!empty($user)) {
-                    foreach($old_user->properties as $key=>$null) {
-                        if(!empty($old_user->$key)) {
-                            $user->$key = $old_user->$key;
-                        }
-                    }
-
-                    if($user->has_required_fields() === true) {
-                        if($user->update()) {
-                            if(!empty($old_user->theme)) {
-                                $CURMAN->db->set_field('user', 'theme', $old_user->theme, 'id', cm_get_moodleuserid($user->id));
-                            }
-
-                            if(!empty($old_user->auth)) {
-                                $CURMAN->db->set_field('user', 'auth', $old_user->auth, 'id', cm_get_moodleuserid($user->id));
-                            }
-                            
-                            $this->log_filer->add_success("user {$user->to_string()} successfully updated");
-                        } else {
-                            $this->log_filer->add_error_record("failed to update user {$user->to_string()}");
-                        }
-                    } else {
-                        $required = $user->get_missing_required_fields();
-                        $required = implode(', ', $required);
-
-                        $this->log_filer->add_error_record("failed to update, missing required fields $required");
-                    }
-                } else {
-                $this->log_filer->add_error_record("user with idnumber $old_user->idnumber not found");
-                }
-            } else {
-                $this->log_filer->add_error_record("failed to update, no user with idnumber {$old_user->idnumber}");
-            }
+        if(record_exists('user', 'username', $user->username)) {
+            /// Update an existing user
+            $user->password   = hash_internal_user_password($user->password);
+            $user->timemodified   = time();
+            update_record('user', $user);
+            $this->log_filer->add_success("user {$user->username} added");
         } else {
-            $this->log_filer->add_error_record("failed to update, missing idnumber field");
+            throwException("update failed user $user->username not found");
         }
+    }
+
+    /**
+     * delete given user
+     * @param object $user user to be deleted
+     */
+    public function user_disable($user) {
+        $userid = get_record('user', 'username', $user->username, 'deleted', '0');
+
+        if(!empty($userid)) {
+            delete_user($userid);
+        } else {
+            throwException("delete failed user $user->username not found");
+        }
+
     }
 
     /**
@@ -1191,87 +1097,21 @@ class log_filer {
  *
  */
 class user_import extends import {
-    protected $data_object = 'user';
-
-    /**
-     *
-     * @param <type> $records
-     * @return <type>
-     */
-    public function get_items($records) {
-        global $USER;
-        
-        $properties_map = $this->get_properties_map();
-        $user = new user();
-        $retval = array();
-
-        foreach($records as $rec) {
-            $user_record = array();
-            
-            foreach($user->properties as $p=>$null) {
-                if(!empty($properties_map[$p])) {
-                    if(!empty($rec[$properties_map[$p]])) {
-                        $user_record[$p] = $rec[$properties_map[$p]];
-                    }
-                }
-            }
-
-            if(!empty($user_record['password'])) {
-                $user_record['password'] = hash_internal_user_password($user_record['password']);
-            }
-
-            $temp = new object();
-
-            $temp->action = empty($rec[$properties_map['execute']])? '': $rec[$properties_map['execute']];
-
-            if(!empty($user_record)) {
-                if(!empty($user_record[$properties_map['country']])) {
-                    if(!in_array($user_record[$properties_map['country']], get_list_of_countries())) {
-                        $user_record[$properties_map['country']] = $USER->country;
-                    }
-                }
-
-                $temp->item = new user($user_record);
-
-                if(!empty($rec[$properties_map['theme']])) {
-                    $temp->item->theme = $rec[$properties_map['theme']];
-                }
-
-                if(!empty($rec[$properties_map['auth']])) {
-                    $temp->item->auth = $rec[$properties_map['auth']];
-                }
-
-                $custom_fields = field::get_for_context_level('user');
-
-                if(!empty($custom_fields)) {
-                    foreach($custom_fields as $cf) {
-                        if(!empty($rec[$properties_map[$cf->shortname]])) {
-                            $property = 'field_' . $cf->shortname;
-                            $temp->item->$property = $rec[$properties_map[$cf->shortname]];
-                        }
-                    }
-                }
-            } else {
-                $temp->item = null;
-            }
-
-            $retval[] = $temp;
-        }
-
-        return $retval;
-    }
-
-    public function get_item($record) {
-    }
-
+    protected $context = 'user';
+    protected $required = array('username',
+                                'password',
+                                'firstname',
+                                'lastname',
+                                'email',
+                                'city',
+                                'country');
     /**
      *
      * @global <type> $CURMAN
      * @return <type>
      */
-    public function get_properties_map() {
-        $retval = array('action',
-                        'idnumber',
+    protected function get_fields() {
+        $retval = array('idnumber',
                         'auth',
                         'username',
                         'password',
@@ -1295,17 +1135,11 @@ class user_import extends import {
 
         $retval = array_combine($retval, $retval);
 
+        $retval['execute'] = 'action';
+
         $custom_fields = get_records('user_info_field');
         foreach($custom_fields as $cf) {
             $retval[$cf->shortname] = $cf->shortname;
-        }
-
-        $properties_map = get_records('block_rlip_fieldmap', 'context', 'user');
-
-        if(!empty($properties_map)) {
-            foreach($properties_map as $pm) {
-                $retval[$pm->fieldname] = $pm->fieldmap;
-            }
         }
 
         return $retval;
@@ -1316,119 +1150,17 @@ class user_import extends import {
  *
  */
 class student_import extends import {
-    protected $data_object = 'student';
-
-    public function __get($name) {
-        if(empty($this->properties)) {
-            $this->properties = $this->get_properties_map();
-            
-            if(strcmp($name, 'properties') === 0) {
-                return $this->properties;
-            }
-        }
-
-        if(!empty($this->properties[$name])) {
-            return $this->properties[$name];
-        }
-
-        return null;
-    }
-
+    protected $context = 'student';
+    protected $required = array('roleid',
+                                'userid',
+                                'contextid');
     /**
      *
      * @param <type> $record
      * @return <type>
      */
     public function get_item($record) {
-        $item = new student();                                  //dynamic student class
-        $retval = array();
-
-        foreach($item->properties as $p=>$type) {
-            if($this->$p !== null && !empty($record[$this->$p])) {
-                if(strcmp($p, 'completetime') === 0 || strcmp($p, 'enrolmenttime') === 0 || strcmp($p, 'endtime') === 0) {
-                    $item_record[$p] = strtotime($record[$this->$p]);
-                } else {
-                    $item_record[$p] = $record[$this->$p];
-                }
-            }
-        }
-
-        if($this->user_idnumber !== null && !empty($record[$this->user_idnumber])) {
-            $user = user::get_by_idnumber($record[$this->user_idnumber]);
-
-            if(!empty($user)) {
-                $item_record['userid'] = $user->id;
-            }
-        }
-
-                //no error checking since it would of been done earlier in the process
-        if($this->context !== null && !empty($record[$this->context])) {
-            $context = explode('_', $record[$this->context], 2);
-
-            $location = current($context);
-            next($context);
-            $id = current($context);
-        }
-
-        $temp = new object();
-
-        $temp->action = empty($record['action'])? '': $record['action'];
-
-        $temp->item = null;
-
-        if(!empty($record[$this->role]) && strcmp($record[$this->role], 'instructor') === 0) {
-            $cmclass = cmclass::get_by_idnumber($id);
-
-            if(!empty($cmclass)) {
-                $item_record['classid'] = $cmclass->id;
-                $temp->item = new instructor($item_record);
-            }
-        }else {
-            if(strcmp($location, 'class') === 0) {
-                $cmclass = cmclass::get_by_idnumber($id);
-                
-                if(!empty($cmclass)) {
-                    $item_record['classid'] = $cmclass->id;
-                    $temp->item = new student($item_record);            //dynamic student class
-                }
-            } else {
-                $track = track::get_by_idnumber($id);
-
-                if(!empty($track)) {
-                    $item_record['trackid'] = $track->id;
-                    $temp->item = new usertrack($item_record);
-                }
-            }
-        }
-
-        return $temp;
-    }
-
-    /**
-     *
-     * @param <type> $columns
-     * @return <type>
-     */
-    public function check_required_columns($columns) {
-        $map = $this->get_properties_map();
-        $u = new student();             //reaplace student with something more dynamic
-        $columnkeys = array_flip($columns);
-
-        foreach($u->_required as $r) {
-            if(!empty($map[$r]) && empty($columnkeys[$map[$r]])) {
-                return false;
-            }
-        }
-
-        if(empty($map['context']) || empty($columnkeys[$map['context']])) {
-            return false;
-        }
-
-        if(empty($map['user_idnumber']) || empty($columnkeys[$map['user_idnumber']])) {
-            return false;
-        }
-        
-        return true;
+        return null;
     }
 
     /**
@@ -1436,14 +1168,17 @@ class student_import extends import {
      * @global <type> $CURMAN
      * @return <type>
      */
-    public function get_properties_map() {
-        $retval = array('action',
-                        'username',
+    protected function get_fields() {
+        $retval = array('username',
                         'userrole',
                         'useridnumber',
                         'course_idnumber',
                         'starttime',
                         'endtime');
+
+        $retval = array_combine($retval, $retval);
+        $retval['execute'] = 'action';
+
         return $retval;
     }
 }
@@ -1452,8 +1187,10 @@ class student_import extends import {
  *
  */
 class course_import extends import {
-    protected $data_object = 'course';
-
+    protected $context = 'course';
+    protected $required = array('category',
+                                'fullname',
+                                'shortname');
     /**
      *
      * @global <type> $CURMAN
@@ -1464,208 +1201,65 @@ class course_import extends import {
         global $CURMAN;
         
         $properties_map = $this->get_properties_map();
-        $item = new course();
         $item_record = array();
         
-        foreach($item->properties as $p=>$null) {
-            if(!empty($properties_map[$p])) {
-                if(!empty($record[$properties_map[$p]])) {
-                    $item_record[$p] = $record[$properties_map[$p]];
-                }
-            }
-        }
-
-
-        if(!empty($record['assignment'])) {
-            $curriculum = curriculum::get_by_idnumber($record['assignment']);
-
-            $item_record['curriculum'] = array();
-            $item_record['curriculum'][] = $curriculum->id;
-        }
-
-        if(!empty($record['link'])) {
-            $mcourseid = $CURMAN->db->get_field('course', 'id', 'shortname', $record['link']);
-
-            $item_record['location'] = $mcourseid;
-            $item_record['templateclass'] = 'moodlecourseurl';
-        }
-
-        if(!empty($record['environmentid'])) {
-            $item_record['environmentid'] = $record['environmentid'];
-        }
-
-        $temp = new object();
-
-        $temp->action = empty($record['action'])? '': $record['action'];
-        $item->set_from_data((object)$item_record);
-        $temp->item = $item;
-
-        return $temp;
-    }
-
-    /**
-     *
-     * @global <type> $CURMAN
-     * @return <type>
-     */
-    public function get_properties_map() {
-        return array();
-    }
-}
-
-/**
- *
- */
-class cmclass_import extends import {
-    protected $data_object = 'cmclass';
-
-    /**
-     *
-     * @param <type> $record
-     * @return <type>
-     */
-    public function get_item($record) {
-        $properties_map = $this->get_properties_map();
-        $item = new cmclass();
-
-        $item_record = array();
-        foreach($item->properties as $p=>$null) {
-            if(!empty($properties_map[$p])) {
-                if(!empty($record[$properties_map[$p]])) {
-                    $item_record[$p] = $record[$properties_map[$p]];
-                }
-            }
-        }
-
-        if(!empty($record[$properties_map['autocreate']])) {
-            $item_record['moodleCourses']['autocreate'] = $record['autocreate'];
-        }
-
-        if(!empty($record[$properties_map['moodlecourseid']])) {
-            $item_record['moodleCourses']['moodlecourseid'] = $record['moodlecourseid'];
-        }
-
-        if(!empty($record['environmentid'])) {
-            $item_record['environmentid'] = $record['environmentid'];
-        }
-
-        $course = course::get_by_idnumber($record[$properties_map['assignment']]);
-        $item_record['courseid'] = $course->id;
-
-        $temp = new object();
-
-        $temp->action = empty($record['action'])? '': $record['action'];
-        $item->set_from_data((object)$item_record);
-        $temp->item = $item;
-
-        return $temp;
-    }
-    
-    /**
-     *
-     * @global <type> $CURMAN
-     * @return <type>
-     */
-    public function get_properties_map() {
-        return array();
-    }
-}
-
-/**
- *
- */
-class curriculum_import extends import {
-    protected $data_object = 'curriculum';
-
-    /**
-     *
-     * @param <type> $record
-     * @return <type>
-     */
-    public function get_item($record) {
-        $properties_map = $this->get_properties_map();
-        $item = new curriculum();
-
-        $item_record = array();
-        foreach($item->properties as $p=>$null) {
-            if(!empty($properties_map[$p])) {
-                if(!empty($record[$properties_map[$p]])) {
-                    $item_record[$p] = $record[$properties_map[$p]];
-                }
-            }
-        }
-
-        $temp = new object();
-
-        $temp->action = empty($record['action'])? '': $record['action'];
-        $temp->item = new curriculum($item_record);
-
-        return $temp;
-    }
-
-    /**
-     *
-     * @global <type> $CURMAN
-     * @return <type>
-     */
-    public function get_properties_map() {
-        return array();
-    }
-}
-
-/**
- *
- */
-class track_import extends import {
-    protected $data_object = 'track';
-
-    /**
-     *
-     * @param <type> $record
-     * @return <type>
-     */
-    public function get_item($record) {
-        $properties_map = $this->get_properties_map();
-        $item = new track();
-        $item_record = array();
         
-        foreach($item->properties as $p=>$null) {
-            if(!empty($properties_map[$p])) {
-                if(!empty($record[$properties_map[$p]])) {
-                    $item_record[$p] = $record[$properties_map[$p]];
-                }
-            }
-        }
-
-        $curriculum = curriculum::get_by_idnumber($record[$properties_map['assignment']]);
-
-        $item_record['curid'] = $curriculum->id;
-
-        $temp = new object();
-
-        $temp->action = empty($record['action'])? '': $record['action'];
-        $item->set_from_data((object)$item_record);
-        $temp->item = $item;
-
         return $temp;
     }
 
     /**
-     * used for mapping user defined fields to elis properties
-     * 
-     * @global <type> $CURMAN
-     * @return <type>
+     *
+     * @return array    user fields
      */
-    public function get_properties_map() {
-        return array();
+    protected function get_fields() {
+        $retval = array('category',
+                'format',
+                'fullname',
+                'guest',
+                'idnumber',
+                'lang',
+                'maxbytes',
+                'metacourse',
+                'newsitems',
+                'notifystudents',
+                'numsections',
+                'password',
+                'shortname',
+                'showgrades',
+                'showreports',
+                'sortorder',
+                'startdate',
+                'summary',
+                'timecreated',
+                'topic0',
+                'visible',
+                'link');
+
+        $retval = array_combine($retval, $retval);
+
+        $retval['execute'] = 'action';
+
+        return $retval;
     }
 }
 
 abstract class import {
-    protected $data_object;
+    protected $context;
 
-    public abstract function get_properties_map();
-    public abstract function get_item($record);
+    protected abstract function get_fields();
+
+    protected function get_item($record) {
+        $retval = array();
+        $properties = $this->get_properties_map();
+
+        foreach($properties as $key=>$p) {
+            if(!empty($record[$p])) {
+                $retval[$key] = $record[$p];
+            }
+        }
+
+        return $retval;
+    }
 
     /**
      *
@@ -1674,16 +1268,14 @@ abstract class import {
      */
     public function check_required_columns($columns) {
         $map = $this->get_properties_map();
-        $temp = $this->data_object;
-        $u = new $temp();
-        $columnkeys = array_flip($columns);
-
-        foreach($u->_required as $r) {
-            if(!empty($map[$r]) && empty($columnkeys[$map[$r]])) {
+        
+        foreach($this->required as $r) {
+            if(empty($columns[$map[$r]])) {
                 return false;
             }
         }
 
+        //decide and check wich properties must be present to process an item
         return true;
     }
 
@@ -1693,14 +1285,12 @@ abstract class import {
      * @return <type>
      */
     public function get_missing_fields($columns) {
-        $map = $this->get_properties_map();
-        $item = new $this->data_object();
-        $columnkeys = array_flip($columns);
-
         $retval = array();
+        
+        $map = $this->get_properties_map();
 
-        foreach($item->_required as $r) {
-            if(!empty($map[$r]) && empty($columnkeys[$map[$r]])) {
+        foreach($this->required as $r) {
+            if(!in_array($map[$r], $columns)) {
                 $retval[] = $map[$r];
             }
         }
@@ -1722,7 +1312,25 @@ abstract class import {
 
         return $retval;
     }
+    
+    /**
+     *
+     * @global <type> $CURMAN
+     * @return <type>
+     */
+    public function get_properties_map() {
+        $retval = $this->get_fields();
 
+        $properties_map = get_records('block_rlip_fieldmap', 'context', $this->context);
+
+        if(!empty($properties_map)) {
+            foreach($properties_map as $pm) {
+                $retval[$pm->fieldname] = $pm->fieldmap;
+            }
+        }
+
+        return $retval;
+    }
 
     /**
      *
@@ -1732,23 +1340,21 @@ abstract class import {
      * @return object
      */
     public function set_property_map($key, $value) {
-        global $CURMAN;
-
         $map = $this->get_properties_map();
 
-        if(!$CURMAN->db->get_record('crlm_field_map', 'context', 'user', 'elis_field', $key)) {
+        if(!record_exists('block_rlip_fieldmap', 'context', $this->context, 'fieldname', $key)) {
             if(!empty($map[$key]) && strcmp($map[$key], $value) !== 0) {
-                $dataobject->context = 'user';
-                $dataobject->elis_field = $key;
-                $dataobject->data_field = $value;
+                $dataobject->context = $this->context;
+                $dataobject->fieldname = $key;
+                $dataobject->fieldmap = $value;
 
-                return $CURMAN->db->insert_record('crlm_field_map', $dataobject);
+                return insert_record('block_rlip_fieldmap', $dataobject);
             } else {
                 //invalid key value
                 return false;
             }
         } else {
-            return $CURMAN->db->set_field('crlm_field_map', 'data_field', $value, 'context', 'user', 'elis_field', $key);
+            return set_field('block_rlip_fieldmap', 'fieldmap', $value, 'context', $this->context, 'fieldname', $key);
         }
     }
 }
