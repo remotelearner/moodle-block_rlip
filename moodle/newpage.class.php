@@ -131,7 +131,7 @@ abstract class newpage {
         echo '<td valign="top" id="middle-column">';
 
         if (blocks_have_content($this->pageblocks, 'c') || $PAGE->user_is_editing()) {
-            blocks_print_group($PAGE, $this->pageblocks, BLOCK_POS_CENTRE);
+            blocks_print_group($PAGE, $this->pageblocks, 'c');
         }
     }
 
