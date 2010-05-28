@@ -75,9 +75,13 @@ abstract class elis_import {
                 method_exists($this, $method) OR throwException("unimplemented import $type");
                 $data = $this->$method($file);  //calls import_<import type> on the import file
 
-                $method = "get_$type";
-                method_exists($this,$method) OR throwException("unimplemented get $type");
-                $records = $this->$method($data);      //gets all the records in a proper form to insert
+                $get_class = "{$type}_import";
+                class_exists($get_class) OR throwException("unimplemented improt $type");
+                $records = $this->get(new $get_class(), $data);
+
+//                $method = "get_$type";
+//                method_exists($this,$method) OR throwException("unimplemented get $type");
+//                $records = $this->$method($data);      //gets all the records in a proper form to insert
 
                 $this->process($records, $type);
 
@@ -94,35 +98,6 @@ abstract class elis_import {
         }
 
         return $retval;
-    }
-
-    /**
-     * gets user records and send them to processing
-     * @param array $data user records to be placed in the database
-     */
-    private function get_user($data) {
-        return $this->get(new user_import(), $data);
-    }
-
-    /**
-     * gets user records and send them to processing
-     * @param array $data enrolment records
-     */
-    private function get_enrolment($data) {
-        $si = new student_import();
-        $properties = $si->get_properties_map();
-
-        in_array($properties['context'], $columns) OR throwException('header must contain a context field');
-
-        return $this->get($si, $data);
-    }
-
-    /**
-     * get course records and send them to processing
-     * @param  array $data course records
-     */
-    private function get_course($data) {
-        return $this->get(new course_import(), $data);
     }
 
     private function get($import, $data) {
@@ -143,31 +118,6 @@ abstract class elis_import {
         $items = $import->get_items($records);
 
         return $items;
-    }
-
-    /**
-     * does some checking of enrolment records then calls apropriate action on each record
-     * to enrol/unenrol
-     * @global object $CURMAN
-     * @param array $records records to upload to db
-     * @param int $num number of columns each record should have
-     */
-    public function enrolment_handler($records, $num) {
-        global $CURMAN;
-
-        $properties = student_import::get_properties_map();
-
-        foreach($records as $r) {
-            if(count($r) === $num) {
-                $context = current(explode('_', $r[$properties['context']], 2));
-                $method = "handle_{$context}_{$r[$properties['execute']]}";
-                $this->$method($r);
-            } else if(count($r) < $num) {
-                $this->log_filer->add_error_record("not enough fields");
-            } else if(count($r) > $num) {
-                $this->log_filer->add_error_record("too many fields");
-            }
-        }
     }
 
     public function process($records, $type) {
@@ -298,157 +248,71 @@ abstract class elis_import {
     }
 
     /**
-     * used to support alternate spelling of enrol when retrieving an action
-     * @param array $item class enrolment record
-     * @see handle_class_enroll
-     */
-    public function handle_class_enrol($item) {
-    	$this->handle_class_enroll($item);
-    }
-
-    /**
-     * enroll students in a class or track based on the return value from student_import
+     * enroll students in a class or track based on the return value from enrolment_import
      * @param array $item student record to enrol
      */
-    public function handle_class_enroll($item) {
-        $si = new student_import();
-        $record = $si->get_item($item);
-        if(!empty($record->item)) {
-            $item = $record->item;
+    public function enrolment_add($item) {
+        if(strcmp($item['context'], 'course') === 0) {
+            $course = get_record('course', 'shortname', $item['instance']);
+            $context = get_context_instance(CONTEXT_COURSE, $course->id);
 
-            if($item->has_required_fields() === true) {
-                if($item->duplicate_check() === false) {
-                    if($item->add()) {
-                        $this->log_filer->add_success("{$item->to_string()} added");
-                    } else {
-                        $this->log_filer->add_error_record("{$item->to_string()} to database");
-                    }
-                } else {
-                    $this->log_filer->add_error_record("{$item->to_string()} already exists");
-                }
-            } else {
-                $required = $item->get_missing_required_fields();
-                $required = implode(', ', $required);
+            $userid = get_field('user', 'id', 'username', $item['username']);
+            $roleid = get_field('role', 'id', 'shortname', $item['role']);
 
-                $this->log_filer->add_error_record("missing required fields $required");
-            }
+            $timestart = empty($item['timestart'])?0:$item['timestart'];
+            $timeend = empty($item['timeend'])?0:$item['timeend'];
+            role_assign($roleid, $userid, 0, $context->id, $timestart, $timeend, 0, 'manual');
+            build_context_path();
+            $this->log_filer->add_success("user {$item['username']} enroled in {$item['instance']}");
         } else {
-            $this->log_filer->add_error_record('unable to get record');
+            throwException("invalid context");
         }
-    }
-
-    /**
-     * used for alternate spelling of unenroll
-     * @see handle_class_unenroll
-     */
-    public function handle_class_unenrol($item) {
-    	$this->handle_class_unenroll($item);
     }
 
     /**
      * unenroll a student from a class
      * @param array $item record of student to enrol
      */
-    public function handle_class_unenroll($item) {
-        $properties = student_import::get_properties_map();
+    public function enrolment_delete($item) {
+        if(strcmp($item['context'], 'course') === 0) {
+            $course = get_record('course', 'shortname', $item['instance']);
+            $context = get_context_instance(CONTEXT_COURSE, $course->id);
 
-        $temp= user::get_by_idnumber($item[$properties['user_idnumber']]);
+            $userid = get_field('user', 'id', 'username', $item['username']);
+            $roleid = get_field('role', 'id', 'shortname', $item['role']);
 
-        if(!empty($temp->id)) {
-            $userid = $temp->id;
+            $timestart = empty($item['timestart'])?0:$item['timestart'];
+            $timeend = empty($item['timeend'])?0:$item['timeend'];
+            
+            role_unassign($roleid, $userid, 0, $context->id);
 
-            $context = explode('_', $item['context'], 2);
-            next($context);
-            $idnumber = current($context);
-            $temp = cmclass::get_by_idnumber($idnumber);
-
-            if(!empty($temp->id)) {
-                $classid = $temp->id;
-                $cmclass = student::get_userclass($userid, $classid);
-
-                if(!empty($cmclass)) {
-                    if($cmclass->has_required_fields() === true) {
-                        if($cmclass->duplicate_check() === true) {
-                            if($cmclass->delete()) {
-                                $this->log_filer->add_success("{$cmclass->to_string()} removed");
-                            } else {
-                                $this->log_filer->add_error_record("inserting {$cmclass->to_string()} to database");
-                            }
-                        } else {
-                            $this->log_filer->add_error_record("{$cmclass->to_string()} does not exist");
-                        }
-                    } else {
-                        $required = $cmclass->get_missing_required_fields();
-                        $required = implode(', ', $required);
-
-                        $this->log_filer->add_error_record("missing required fields $required");
-                    }
-                } else {
-                    $this->log_filer->add_error_record("no enrolment for student {$item[$properties['user_idnumber']]} in class {$idnumber}");
-                }
-            } else {
-                $this->log_filer->add_error_record("class $idnumber not found");
-            }
+            build_context_path();
+            $this->log_filer->add_success("user {$item['username']} unenroled from {$item['instance']}");
         } else {
-            $this->log_filer->add_error_record("user {$item[$properties['user_idnumber']]} not found");
+            throwException("invalid context");
         }
     }
 
-    public function handle_user_enroll($item) {
-        $this->handle_user_enrol($item);
-    }
+    /**
+     *
+     * @param <type> $item
+     */
+    public function enrolment_update($item) {
+        if(strcmp($item['context'], 'course') === 0) {
+            $course = get_record('course', 'shortname', $item['instance']);
+            $context = get_context_instance(CONTEXT_COURSE, $course->id);
 
-    public function handle_user_enrol($item) {
-        $properties = student_import::get_properties_map();
+            $userid = get_field('user', 'id', 'username', $item['username']);
+            $roleid = get_field('role', 'id', 'shortname', $item['role']);
 
-        $record_context = explode('_', $item[$properties['context']], 2);
-        next($record_context);
-        $idnumber = current($record_context);
-        $temp = user::get_by_idnumber($idnumber);
+            $timestart = empty($item['timestart'])?0:$item['timestart'];
+            $timeend = empty($item['timeend'])?0:$item['timeend'];
+            
+            role_unassign($roleid, $userid, 0, $context->id);
 
-        if(!empty($temp)) {
-            $muserid = cm_get_moodleuserid($temp->id);
-
-            if(!empty($muserid)) {
-                $context = get_context_instance(CONTEXT_USER, $muserid);
-
-                if(!empty($context)) {
-                    $parent_recordid = $item[$properties['user_idnumber']];
-                    $temp = user::get_by_idnumber($parent_recordid);
-
-                    if(!empty($temp)) {
-                        $parentid  = cm_get_moodleuserid($temp->id);
-
-                        if(!empty($parentid)) {
-                //        $assignableroles = get_assignable_roles($context, 'name', ROLENAME_BOTH);
-                            $roleid = get_field('role', 'id', 'shortname', $item[$properties['role']]);
-
-                            if(!empty($roleid)) {
-                                $starttime = empty($item[$properties['enrolmenttime']])? 0: $item[$properties['enrolmenttime']];
-                                $endtime = empty($item[$properties['completetime']])? 0: $item[$properties['completetime']];
-                                
-                                if(role_assign($roleid, $parentid, 0, $context->id, $starttime, $endtime)) {
-                                    $this->log_filer->add_success("$parent_recordid made {$item[$properties['role']]} of  $idnumber");
-                                } else {
-                                    $this->log_filer->add_error_record("can not assign role to user");
-                                }
-                            } else {
-                                $this->log_filer->add_error_record("invalid role short name {$item[$properties['role']]}");
-                            }
-                        } else {
-                            $this->log_filer->add_error_record("$parent_recordid not associated with a moodle user");
-                        }
-                    } else {
-                        $this->log_filer->add_error_record("invalid idnumber $parent_recordid");
-                    }
-                } else {
-                    $this->log_filer->add_error_record("userid not associated with a moodle user");
-                }
-            } else {
-                $this->log_filer->add_error_record("$idnumber not associated with a moodle user");
-            }
+            update_record('assignments', (object)$item);
         } else {
-            $this->log_filer->add_error_record("invalid idnumber $idnumber");
+            throwException("invalid context");
         }
     }
 }
@@ -696,20 +560,12 @@ class user_import extends import {
 /**
  *
  */
-class student_import extends import {
+class enrolment_import extends import {
     protected $context = 'student';
-    protected $required = array('roleid',
-                                'userid',
-                                'contextid');
-    /**
-     *
-     * @param <type> $record
-     * @return <type>
-     */
-    public function get_item($record) {
-        return null;
-    }
-
+    protected $required = array('role',
+                                'username',
+                                'context',
+                                'instance');
     /**
      *
      * @global <type> $CURMAN
@@ -717,16 +573,25 @@ class student_import extends import {
      */
     protected function get_fields() {
         $retval = array('username',
-                        'userrole',
+                        'role',
                         'useridnumber',
-                        'course_idnumber',
-                        'starttime',
-                        'endtime');
+                        'context',
+                        'timestart',        //date to unix timestamp
+                        'timeend',
+                        'instance');         //date to unix timestamp
 
         $retval = array_combine($retval, $retval);
         $retval['execute'] = 'action';
 
         return $retval;
+    }
+
+    protected function get_timestart($timestart) {
+        return strtotime($timestart);
+    }
+
+    protected function get_timeend($timeend) {
+        return strtotime($timeend);
     }
 }
 

@@ -189,7 +189,7 @@ class enrolmentimport_form extends moodleform {
 
         $mform->addElement('header', 'enrol_properties', get_string('enrol_properties', 'block_rlip'));
         
-        $si = new student_import();
+        $si = new enrolment_import();
         $data = $si->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', $key, $key . ': ');

@@ -126,7 +126,7 @@ class dataimportpage extends newpage {
     }
 
     function action_enrolment() {
-        $this->do_action(new student_import(), 'enrolment');
+        $this->do_action(new enrolment_import(), 'enrolment');
     }
 
     private function do_action($import, $action) {
