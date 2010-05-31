@@ -79,16 +79,12 @@ abstract class elis_import {
                 class_exists($get_class) OR throwException("unimplemented improt $type");
                 $records = $this->get(new $get_class(), $data);
 
-//                $method = "get_$type";
-//                method_exists($this,$method) OR throwException("unimplemented get $type");
-//                $records = $this->$method($data);      //gets all the records in a proper form to insert
-
                 $this->process($records, $type);
 
                 $retval = true;
                 
                 if(!empty($file) && is_file($file)) {
-//                    unlink($file);
+                    unlink($file);
                 }
             } catch(Exception $e) {
                 $this->log_filer->add_error($e->getMessage());
@@ -154,8 +150,15 @@ abstract class elis_import {
         $ci = new course_import();
 
         $missing = $ci->get_missing_required_fields($r);
-        if(empty($missing)) {
-                    //$courseId is the course id for the template of the course to be copied
+        if(!empty($missing)){
+            $required = implode(', ', $missing);
+
+            throwException("missing required fields $required");
+        }
+        
+        $ci->check_new($r);
+                   
+        if(!empty($r['link'])) {
             $courseid = get_field('course', 'id', 'shortname', $r['link']);
 
             if(!empty($courseid)) {
@@ -164,12 +167,18 @@ abstract class elis_import {
 
             // Rename the fullname, shortname and idnumber of the restored course
 
-            update_record('course', (object)$r);
-            $this->log_filer->add_success("course {$r['fullname']} added");
+            if(update_record('course', (object)$r)) {
+                $this->log_filer->add_success("course {$r['fullname']} added");
+            } else {
+                throwException("failed to create coruse {$r['fullname']}");
+            }
         } else {
-            $required = implode(', ', $missing);
+            if(create_course((object)$r)) {
+                $this->log_filer->add_success("course {$r['fullname']} added");
+            } else {
+                throwException("failed to create course {$r['fullname']}");
+            }
 
-            $this->log_filer->add_error_record("missing required fields $required");
         }
     }
 
@@ -180,12 +189,15 @@ abstract class elis_import {
      * @param array $r 
      */
     public function course_update($r) {
-        $r['id'] = get_field('course', 'id', 'shortname', $r['link']);
+        $ci = new course_import();
+        $ci->check_old($r);
+
+        $r['id'] = get_field('course', 'id', 'shortname', $r['shortname']);
         
         if(update_record('course', (object)$r)) {
             $this->log_filer->add_success("course {$r['fullname']} updated");
         } else {
-            $this->log_filer->add_error_record("something went wrong");
+            throwException("something went wrong");
         }
     }
 
@@ -194,9 +206,16 @@ abstract class elis_import {
      * @param array $r record to be deleted from the db
      */
     public function course_delete($r) {
+        $ci = new course_import();
+        $ci->check_old($r);
+        
         $course = get_record('course', 'shortname', $r['shortname']);
-    	delete_course($course, false);
-        $this->log_filer->add_success("course {$r['fullname']} deleted");
+    	
+        if(delete_course($course, false)) {
+            $this->log_filer->add_success("course {$r['fullname']} deleted");
+        } else {
+            throwException("failed to delete course {$r['fullname']}");
+        }
     }
 
     /**
@@ -204,15 +223,14 @@ abstract class elis_import {
      * @param object $user user object
      */
     public function user_add($user) {
-        if (!record_exists('user', 'username', $user['username'])) {
-            /// Add a new user
-            $user['password']   = hash_internal_user_password($user['password']);
-            $user['timemodified']   = time();
-            $user['id'] = insert_record('user', (object)$user);
-            $this->log_filer->add_success("user {$user['username']} added");
-        } else {
-            throwException("add failed user {$user['username']} already exists");
-        }
+        $ui = new user_import();
+        $ui->check_new($user);
+        
+        /// Add a new user
+        $user['password']   = hash_internal_user_password($user['password']);
+        $user['timemodified']   = time();
+        $user['id'] = insert_record('user', (object)$user);
+        $this->log_filer->add_success("user {$user['username']} added");
     }
 
     /**
@@ -220,14 +238,19 @@ abstract class elis_import {
      * @param object $user user to be updated
      */
     public function user_update($user) {
-        if(record_exists('user', 'username', $user['username'])) {
-            /// Update an existing user
-            $user['password']   = hash_internal_user_password($user['password']);
-            $user['timemodified']   = time();
-            update_record('user', (object)$user);
+        $ui = new user_import();
+        $ui->check_old($user);
+        
+        /// Update an existing user
+        $user['password']   = hash_internal_user_password($user['password']);
+        $user['timemodified']   = time();
+
+        $user['id'] = get_field('user', 'id', 'username', $user['username']);
+
+        if(update_record('user', (object)$user)) {
             $this->log_filer->add_success("user {$user['username']} updated");
         } else {
-            throwException("update failed user {$user['username']} not found");
+            throwException("user {$user['username']} not updated");
         }
     }
 
@@ -236,15 +259,13 @@ abstract class elis_import {
      * @param object $user user to be deleted
      */
     public function user_disable($user) {
+        $ui = new user_import();
+        $ui->check_old($user);
+        
         $userid = get_record('user', 'username', $user['username'], 'deleted', '0');
 
-        if(!empty($userid)) {
-            delete_user($userid);
-            $this->log_filer->add_success("user {$user['username']} deleted");
-        } else {
-            throwException("delete failed user {$user['username']} not found");
-        }
-
+        delete_user($userid);
+        $this->log_filer->add_success("user {$user['username']} deleted");
     }
 
     /**
@@ -252,21 +273,20 @@ abstract class elis_import {
      * @param array $item student record to enrol
      */
     public function enrolment_add($item) {
-        if(strcmp($item['context'], 'course') === 0) {
-            $course = get_record('course', 'shortname', $item['instance']);
-            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+        $ei = new enrolment_import();
+        $ei->check_new($item);
 
-            $userid = get_field('user', 'id', 'username', $item['username']);
-            $roleid = get_field('role', 'id', 'shortname', $item['role']);
+        $course = get_record('course', 'shortname', $item['instance']);
+        $context = get_context_instance(CONTEXT_COURSE, $course->id);
 
-            $timestart = empty($item['timestart'])?0:$item['timestart'];
-            $timeend = empty($item['timeend'])?0:$item['timeend'];
-            role_assign($roleid, $userid, 0, $context->id, $timestart, $timeend, 0, 'manual');
-            build_context_path();
-            $this->log_filer->add_success("user {$item['username']} enroled in {$item['instance']}");
-        } else {
-            throwException("invalid context");
-        }
+        $userid = get_field('user', 'id', 'username', $item['username']);
+        $roleid = get_field('role', 'id', 'shortname', $item['role']);
+
+        $timestart = empty($item['timestart'])?0:$item['timestart'];
+        $timeend = empty($item['timeend'])?0:$item['timeend'];
+        role_assign($roleid, $userid, 0, $context->id, $timestart, $timeend, 0, 'manual');
+        build_context_path();
+        $this->log_filer->add_success("user {$item['username']} enroled in {$item['instance']}");
     }
 
     /**
@@ -274,23 +294,22 @@ abstract class elis_import {
      * @param array $item record of student to enrol
      */
     public function enrolment_delete($item) {
-        if(strcmp($item['context'], 'course') === 0) {
-            $course = get_record('course', 'shortname', $item['instance']);
-            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+        $ei = new enrolment_import();
+        $ei->check_old($item);
 
-            $userid = get_field('user', 'id', 'username', $item['username']);
-            $roleid = get_field('role', 'id', 'shortname', $item['role']);
+        $course = get_record('course', 'shortname', $item['instance']);
+        $context = get_context_instance(CONTEXT_COURSE, $course->id);
 
-            $timestart = empty($item['timestart'])?0:$item['timestart'];
-            $timeend = empty($item['timeend'])?0:$item['timeend'];
-            
-            role_unassign($roleid, $userid, 0, $context->id);
+        $userid = get_field('user', 'id', 'username', $item['username']);
+        $roleid = get_field('role', 'id', 'shortname', $item['role']);
 
-            build_context_path();
-            $this->log_filer->add_success("user {$item['username']} unenroled from {$item['instance']}");
-        } else {
-            throwException("invalid context");
-        }
+        $timestart = empty($item['timestart'])?0:$item['timestart'];
+        $timeend = empty($item['timeend'])?0:$item['timeend'];
+
+        role_unassign($roleid, $userid, 0, $context->id);
+
+        build_context_path();
+        $this->log_filer->add_success("user {$item['username']} unenroled from {$item['instance']}");
     }
 
     /**
@@ -298,22 +317,21 @@ abstract class elis_import {
      * @param <type> $item
      */
     public function enrolment_update($item) {
-        if(strcmp($item['context'], 'course') === 0) {
-            $course = get_record('course', 'shortname', $item['instance']);
-            $context = get_context_instance(CONTEXT_COURSE, $course->id);
+        $ei = new enrolment_import();
+        $ei->check_old($item);
 
-            $userid = get_field('user', 'id', 'username', $item['username']);
-            $roleid = get_field('role', 'id', 'shortname', $item['role']);
+        $course = get_record('course', 'shortname', $item['instance']);
+        $context = get_context_instance(CONTEXT_COURSE, $course->id);
 
-            $timestart = empty($item['timestart'])?0:$item['timestart'];
-            $timeend = empty($item['timeend'])?0:$item['timeend'];
-            
-            role_unassign($roleid, $userid, 0, $context->id);
+        $userid = get_field('user', 'id', 'username', $item['username']);
+        $roleid = get_field('role', 'id', 'shortname', $item['role']);
 
-            update_record('assignments', (object)$item);
-        } else {
-            throwException("invalid context");
-        }
+        $timestart = empty($item['timestart'])?0:$item['timestart'];
+        $timeend = empty($item['timeend'])?0:$item['timeend'];
+
+        role_unassign($roleid, $userid, 0, $context->id);
+
+        update_record('assignments', (object)$item);
     }
 }
 
@@ -555,6 +573,25 @@ class user_import extends import {
     protected function get_screenreader($screenreader) {
         return $this->boolean_get($screenreader);
     }
+
+    public function check_new($record) {
+        $retval = true;
+
+        $retval = $retval && !record_exists('user', 'username', $record['username'], 'deleted', 0) or
+                    throwException("user {$record['username']} already exists");
+
+        return $retval;
+    }
+
+    public function check_old($record) {
+        $retval = true;
+
+        $retval = $retval && 
+                    record_exists('user', 'username', $record['username'], 'deleted', 0) or
+                    throwException("user {$record['username']} does not exist");
+
+        return $retval;
+    }
 }
 
 /**
@@ -593,6 +630,53 @@ class enrolment_import extends import {
     protected function get_timeend($timeend) {
         return strtotime($timeend);
     }
+
+     public function check_new($record) {
+        //check username exists
+        //check context exists
+        //check instance exists
+        $retval = true;
+
+        $retval = $retval && record_exists('user', 'username', $record['username'], 'deleted', 0) or
+                    throwException("invalid user {$record['username']} does not exist");
+
+        $retval = $retval && (strcmp($record['context'], 'course') === 0) or
+                    throwException("invalid context {$record['context']} does not exist");
+
+        $retval = $retval && record_exists('course', 'shortname', $record['instance']) or
+                    throwException("invalid course {$record['instance']} does not exist");
+
+        $instanceid = get_field('course', 'id', 'shortname', $record['instance']);
+        $contextid = get_field('context', 'id', 'contextlevel', CONTEXT_COURSE, 'instanceid', $instanceid);
+        $userid = get_field('user', 'id', 'username', $record['username']);
+        $roleid = get_field('role', 'id', 'shortname', $record['role']);
+        $retval = $retval && !record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
+                    throwException("{$record['username']} already a {$reocrd['role']} in {$record['instance']}");
+
+        return $retval;
+    }
+
+    public function check_old($record) {
+        $retval = true;
+
+        $retval = $retval && record_exists('user', 'username', $record['username'], 'deleted', 0) or
+                    throwException("invalid user {$record['username']} does not exist");
+
+        $retval = $retval && (strcmp($record['context'], 'course') === 0);
+                    throwException("invalid context {$record['context']} does not exist") or
+
+        $retval = $retval && record_exists('course', 'shortname', $record['instance']) or
+                    throwException("invalid course {$record['instance']} does not exist");
+
+        $instanceid = get_field('course', 'id', 'shortname', $record['instance']);
+        $contextid = get_field('context', 'id', 'contextlevel', CONTEXT_COURSE, 'instanceid', $instanceid);
+        $userid = get_field('user', 'id', 'username', $record['username']);
+        $roleid = get_field('role', 'id', 'shortname', $record['role']);
+        $retval = $retval && record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
+                    throwException("{$record['username']} already a {$reocrd['role']} in {$record['instance']}");
+
+        return $retval;
+    }
 }
 
 /**
@@ -602,8 +686,7 @@ class course_import extends import {
     protected $context = 'course';
     protected $required = array('category',
                                 'fullname',
-                                'shortname',
-                                'link');
+                                'shortname');
 
     /**
      *
@@ -706,11 +789,41 @@ class course_import extends import {
         }
         return null;
     }
+
+    public function check_new($record) {
+        //check shortname doesn't exist
+        //check link is empty or does exist
+        $retval = true;
+
+        if(!empty($record['link'])) {
+            $retval = $retval && record_exists('course', 'shortname', $record['link']) or
+                        throwException("course {$record['link']} does not exist");
+        }
+
+        $retval = $retval && !record_exists('course', 'shortname', $record['shortname']) or
+                    throwException("course {$record['shortname']} already exists");
+
+        return $retval;
+    }
+
+    public function check_old($record) {
+        $retval = true;
+
+        //don't need to check the link when updating or deleting a coures only when creating
+
+        $retval = $retval && record_exists('course', 'shortname', $record['shortname']) or
+                    throwException("course {$record['shortname']} does not exist");
+
+        return $retval;
+    }
 }
 
 abstract class import {
     protected $context;
 
+    public abstract function check_new($record);
+    public abstract function check_old($record);
+    
     protected abstract function get_fields();
 
     protected function __call($name, $args) {
