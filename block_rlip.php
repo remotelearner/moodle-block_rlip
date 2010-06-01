@@ -42,7 +42,7 @@ class block_rlip extends block_base {
      */
     public function init() {
         $this->title   = get_string('title', 'block_rlip');
-        $this->version = 2010051702;
+        $this->version = 2010051703;
         $this->cron = DAYSECS;
 
         $this->log_filer = null;
@@ -110,12 +110,18 @@ class block_rlip extends block_base {
     }
 
     function cron($manual = false) {
-        if(file_exists($CFG->dirroot . '/curriculum/config.php') && record_exists('block', 'name', 'cur_admin')) {
+        global $CFG;
+        
+        if(file_exists($CFG->dirroot . '/curriculum/config.php') && record_exists('block', 'name', 'curr_admin')) {
+            require_once('ElisExport.class.php');
+            
             $elis_export = new ElisExport();
-            $elis_export->cron($manual);
+            return $elis_export->cron($manual);
         } else {
+            require_once('MoodleExport.class.php');
+            
             $moodle_export = new MoodleExport();
-            $moodle_export->cron($manual);
+            return $moodle_export->cron($manual);
         }
     }
 }

@@ -71,19 +71,19 @@ abstract class elis_import {
 
         if(has_capability('block/rlip:config', $context)) {
             try {
-                is_file($file) OR throwException("file $file not found");
+                if(is_file($file)) {
+                    $method = "import_$type";
+                    method_exists($this, $method) OR throwException("unimplemented import $type");
+                    $data = $this->$method($file);  //calls import_<import type> on the import file
 
-                $method = "import_$type";
-                method_exists($this, $method) OR throwException("unimplemented import $type");
-                $data = $this->$method($file);  //calls import_<import type> on the import file
+                    $method = "get_$type";
+                    method_exists($this,$method) OR throwException("unimplemented get $type");
+                    $this->$method($data);      //processes the records and inserts them in the database
+                    $retval = true;
 
-                $method = "get_$type";
-                method_exists($this,$method) OR throwException("unimplemented get $type");
-                $this->$method($data);      //processes the records and inserts them in the database
-                $retval = true;
-                
-                if(!empty($file) && is_file($file)) {
-                    unlink($file);
+                    if(!empty($file) && is_file($file)) {
+                        unlink($file);
+                    }
                 }
             } catch(Exception $e) {
                 $this->log_filer->add_error($e->getMessage());
