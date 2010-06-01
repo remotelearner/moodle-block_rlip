@@ -237,7 +237,6 @@ class ElisExport {
     }
 
     private function add_timestamp_to_filename($filename) {
-
         $timestamp = time();
 
         $last_slash_position = strrpos($filename, '/');
@@ -255,7 +254,6 @@ class ElisExport {
         } else {
             return substr($filename, 0, $last_dot_position) . '_' . $timestamp . substr($filename, $last_dot_position);
         }
-
     }
 }
 ?>
