@@ -32,4 +32,19 @@ $string['user_properties'] = 'User properties map';
 $string['ip_enabled_off'] = 'Disabled';
 $string['ip_enabled_on'] = 'Enabled';
 $string['ip_export_timespan'] = 'Note: When running a test export from this page, only class completions from up to one day ago will be included, unless the \"Save and process all\" button is used.';
+
+$string['blockname'] = 'Course Completion Export';
+$string['createdata'] = 'Create user completion data';
+$string['createdemptyfile'] = 'Created export file $a with no data';
+$string['filenotdefined'] = 'Export file not defined';
+$string['filerecordwriteerror'] = 'Unable to write line $a';
+$string['filewriteerror'] = 'Unable to write header to local file $a';
+$string['localfileexists'] = 'Local file $a exists, removing local file before proceeding';
+$string['localfileremoved'] = 'Local file $a removed';
+$string['localfilenotremoved'] = 'Unable to remove old local file $a';
+$string['nouserdata'] = 'No user data to process';
+$string['nodata'] = 'No user completion data to create';
+$string['noparams'] = 'Parameters not initialized, cannot create local csv file for upload';
+$string['recordadded'] = 'User Data: User idnumber $a->userno - Course idnumber $a->coursecode has been added';
+$string['skiprecord'] = 'Either the user idnumber $a->usridnumber or course idnumber $a->crsidnumber was empty - skipping record because of missing required field(s)';
 ?>

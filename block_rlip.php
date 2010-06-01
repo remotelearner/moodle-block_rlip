@@ -43,6 +43,9 @@ class block_rlip extends block_base {
     public function init() {
         $this->title   = get_string('title', 'block_rlip');
         $this->version = 2010051702;
+        $this->cron = DAYSECS;
+
+        $this->log_filer = null;
     }
 
     /**
@@ -104,6 +107,16 @@ class block_rlip extends block_base {
      *
      */
     public function before_delete() {
+    }
+
+    function cron($manual = false) {
+        if(file_exists($CFG->dirroot . '/curriculum/config.php') && record_exists('block', 'name', 'cur_admin')) {
+            $elis_export = new ElisExport();
+            $elis_export->cron($manual);
+        } else {
+            $moodle_export = new MoodleExport();
+            $moodle_export->cron($manual);
+        }
     }
 }
 
