@@ -229,6 +229,8 @@ abstract class elis_import {
         /// Add a new user
         $user['password']   = hash_internal_user_password($user['password']);
         $user['timemodified']   = time();
+        $user['mnethostid'] = $CFG->mnet_localhost_id;
+        $user['confirmed'] = 1;
         $user['id'] = insert_record('user', (object)$user);
         $this->log_filer->add_success("user {$user['username']} added");
     }

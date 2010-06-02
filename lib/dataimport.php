@@ -26,8 +26,6 @@
     
     global $CFG;
     
-//    require_once ($CFG->dirroot . '/blocks/rlip/elis/lib.php');
-
     $context = get_context_instance(CONTEXT_SYSTEM);
 
     require_capability('block/rlip:config', $context);
