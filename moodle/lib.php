@@ -212,7 +212,7 @@ abstract class elis_import {
         $course = get_record('course', 'shortname', $r['shortname']);
     	
         if(delete_course($course, false)) {
-            $this->log_filer->add_success("course {$r['fullname']} deleted");
+            $this->log_filer->add_success("course {$course->fullname} deleted");
         } else {
             throwException("failed to delete course {$r['fullname']}");
         }
