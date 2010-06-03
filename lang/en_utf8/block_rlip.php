@@ -36,9 +36,9 @@ $string['configlogfilelocation'] = 'This defines the directory to store all impo
 $string['configemailnotification'] = 'A comma-separated list of idnumbers of users to be sent the log of actions via email (blank for no notification).';
 $string['configexportallhistorical'] = 'Selecting this option will include all historical completion information in both the manual and scheduled executions of the export. If not selected, only data modified within the last day will be included during manual executions, and only data modified since the last scheduled execution is included for scheduled executions.';
 
-$string['ip_enabled_off'] = 'Disabled';
-$string['ip_enabled_on'] = 'Enabled';
 $string['ip_export_timespan'] = 'Note: When running a test export from this page, only class completions from up to one day ago will be included, unless the \"Save and process all\" button is used.';
+
+$string['ip_description'] = 'ip description to fill in';
 
 $string['blockname'] = 'Course Completion Export';
 $string['createdata'] = 'Create user completion data';
