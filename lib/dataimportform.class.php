@@ -40,12 +40,6 @@ class generalimport_form extends moodleform {
 
         $mform->addElement('static', 'description', '', get_string('generalimportinfo', 'block_rlip'));
 
-        $ip_enabled_options = array('on'  => get_string('enabled', 'block_rlip'),
-                                    'off' => get_string('disabled', 'block_rlip'));
-        $ip_enabled_attributes = array('disabled' => true);
-        $mform->addElement('select', 'ip_enabled', get_string('ip_enabled', 'block_rlip'), $ip_enabled_options, $ip_enabled_attributes);
-        $mform->setHelpButton('ip_enabled', array('dataimportform/ip_enabled', get_string('ip_enabled', 'block_rlip'), 'block_rlip'));
-
         //file locations should just be a path not a file name
         $mform->addElement('text', 'block_rlip_filelocation', get_string('filelocation', 'block_rlip') . ': ');
         $mform->setHelpButton('block_rlip_filelocation', array('dataimportform/filelocation', get_string('filelocation', 'block_rlip'), 'block_rlip'));
@@ -73,40 +67,6 @@ class generalimport_form extends moodleform {
 
         $mform->addElement('html', '<br /><br /><p>' . get_string('ip_instructions', 'block_rlip', 'http://remote-learner.net/contactme') . '</p>');
     }
-
-    function set_data($default_values, $slashed=false) {
-
-        $default_values = clone $default_values;
-
-        if(!empty($default_values->ip_enabled)) {
-            $default_values->ip_enabled = 'on';
-        } else {
-            //if rlip is installed then this is always on and enabled leaving this in case it needs to be able to disable
-            $default_values->ip_enabled = 'on';
-        }
-
-        parent::set_data($default_values, $slashed);
-    }
-
-    function definition_after_data() {
-        global $CURMAN;
-
-        $mform =& $this->_form;
-
-        $value = $mform->getElementValue('ip_enabled');
-        if(is_array($value)) {
-            foreach($value as $k => $v) {
-                $value = $v;
-                break;
-            }
-        }
-
-        if($value == 'off') {
-            $warning_element =& $mform->createElement('static', '', '', '<span class="ip_warning">' . get_string('ip_disabled_warning', 'block_rlip') . '</span>');
-            $mform->insertElementBefore($warning_element, 'block_rlip_filelocation');
-        }
-    }
-
 }
 
 /**
@@ -126,7 +86,8 @@ class userimport_form extends moodleform {
 
         $mform->addElement('header', 'user_properties', get_string('user_properties', 'block_rlip'));
 
-        $data = user_import::get_properties_map();
+        $ui = new user_import();
+        $data = $ui->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', $key, $key . ': ');
         }
@@ -162,19 +123,22 @@ class coursesimport_form extends moodleform {
 
         //course import form handles class, track, curriculm, and course import
         $mform->addElement('header', 'class_properties', get_string('class_properties', 'block_rlip'));
-        $data = cmclass_import::get_properties_map();
+        $cmi = new cmclass_import();
+        $data = $cmi->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', 'cls_' . $key, $key . ': ');
         }
 
         $mform->addElement('header', 'track_properties', get_string('track_properties', 'block_rlip'));
-        $data = track_import::get_properties_map();
+        $ti = new track_import();
+        $data = $ti->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', 'trk_' . $key, $key . ': ');
         }
 
         $mform->addElement('header', 'curr_properties', get_string('curr_properties', 'block_rlip'));
-        $data = curriculum_import::get_properties_map();
+        $ci = new curriculum_import();
+        $data = $ci->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', 'cur_' . $key, $key . ': ');
         }
@@ -205,7 +169,8 @@ class enrolmentimport_form extends moodleform {
         $mform->addElement('select', 'block_rlip_impenrolment_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
 
         $mform->addElement('header', 'enrol_properties', get_string('enrol_properties', 'block_rlip'));
-        $data = student_import::get_properties_map();
+        $si = new student_import();
+        $data = $si->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', $key, $key . ': ');
         }

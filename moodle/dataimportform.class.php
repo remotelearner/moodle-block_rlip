@@ -40,12 +40,6 @@ class generalimport_form extends moodleform {
 
         $mform->addElement('static', 'description', '', get_string('generalimportinfo', 'block_rlip'));
 
-        $ip_enabled_options = array('on'  => get_string('enabled', 'block_rlip'),
-                                    'off' => get_string('disabled', 'block_rlip'));
-        $ip_enabled_attributes = array('disabled' => true);
-        $mform->addElement('select', 'ip_enabled', get_string('ip_enabled', 'block_rlip'), $ip_enabled_options, $ip_enabled_attributes);
-        $mform->setHelpButton('ip_enabled', array('dataimportform/ip_enabled', get_string('ip_enabled', 'block_rlip'), 'block_rlip'));
-
         //file locations should just be a path not a file name
         $mform->addElement('text', 'block_rlip_filelocation', get_string('filelocation', 'block_rlip') . ': ');
         $mform->setHelpButton('block_rlip_filelocation', array('dataimportform/filelocation', get_string('filelocation', 'block_rlip'), 'block_rlip'));
@@ -73,40 +67,6 @@ class generalimport_form extends moodleform {
 
         $mform->addElement('html', '<br /><br /><p>' . get_string('ip_instructions', 'block_rlip', 'http://remote-learner.net/contactme') . '</p>');
     }
-
-    function set_data($default_values, $slashed=false) {
-
-        $default_values = clone $default_values;
-
-        if(!empty($default_values->ip_enabled)) {
-            $default_values->ip_enabled = 'on';
-        } else {
-            //if rlip is installed then this is always on and enabled leaving this in case it needs to be able to disable
-            $default_values->ip_enabled = 'on';
-        }
-
-        parent::set_data($default_values, $slashed);
-    }
-
-    function definition_after_data() {
-        global $CURMAN;
-
-        $mform =& $this->_form;
-
-        $value = $mform->getElementValue('ip_enabled');
-        if(is_array($value)) {
-            foreach($value as $k => $v) {
-                $value = $v;
-                break;
-            }
-        }
-
-        if($value == 'off') {
-            $warning_element =& $mform->createElement('static', '', '', '<span class="ip_warning">' . get_string('ip_disabled_warning', 'block_rlip') . '</span>');
-            $mform->insertElementBefore($warning_element, 'block_rlip_filelocation');
-        }
-    }
-
 }
 
 /**
