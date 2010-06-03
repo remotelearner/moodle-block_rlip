@@ -133,70 +133,62 @@ class MoodleExport {
     }
 
     private function get_user_data($manual = false, $include_all = false) {
+        global $CFG;
         $return = array();
         $i      = 0;
 
-        $courses = get_records('course');
+        $sql = "SELECT u.id, u.firstname, u.lastname, u.username usridnumber, c.shortname crsidnumber, gg.finalgrade usergrade, c.startdate timestart
+                FROM {$CFG->prefix}grade_items as gi
+                JOIN {$CFG->prefix}grade_grades as gg ON gg.itemid = gi.id
+                JOIN {$CFG->prefix}user as u ON gg.userid = u.id
+                JOIN {$CFG->prefix}course as c ON c.id = gi.courseid
+                WHERE itemtype = 'course'
+                AND u.deleted = 0";
+        
+        $users = get_records_sql($sql);
+        $now = time();
+        
+        foreach($users as $userdata) {
+            $userdata->timeend = $now;
 
-        if(!empty($courses)) {
-            foreach($courses as $course) {
-                $sql = "SELECT u.firstname, u.lastname, u.idnumber usridnumber, c.idnumber as crsidnumber, 
-                        FROM grade_items as gi
-                        JOIN user as u ON gi.userid = u.id
-                        JOIN course as c ON c.id = gi.courseid
-                        WHERE itemtype = 'course'
-                        AND u.deleted = 0";
-                $users = get_records('user', 'deleted', 0);
-
-                foreach($users as $userdata) {
-                    // Get course grade_item
-                    $grade_item_id = get_field('grade_items', 'id', 'itemtype',
-                                              'course', 'courseid', $course->id);
-
-                    // Get the grade
-                    $finalgrade = get_field('grade_grades', 'finalgrade', 'itemid', 
-                                       $grade_item_id, 'userid', $this->user->id);
-
-
-                        // Check for required fields
-                        if (empty($userdata->usridnumber) or empty($userdata->crsidnumber)) {
-                            $this->log_filer->lfprintln(get_string('skiprecord', 'block_rlip', $userdata));
-                            if($manual !== true) {
-                                mtrace(get_string('skiprecord', 'block_rlip', $userdata));
-                            }
-                            continue;
-                        }
-
-                        $firstname      = $userdata->firstname;
-                        $lastname       = $userdata->lastname;
-                        $username       = empty($userdata->username) ? '' : $userdata->username;
-                        $userno         = $userdata->usridnumber;
-                        $coursecode     = $userdata->crsidnumber;
-                        $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
-                        $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
-                        $usergrade      = $userdata->usergrade;
-
-                        $return[$i] = array();
-                        array_push($return[$i],
-                                   $firstname,
-                                   $lastname,
-                                   $username,
-                                   $userno,
-                                   $coursecode,
-                                   $userstartdate,
-                                   $userenddate,
-                                   $usergrade);
-
-                        $i++;
-
-                        $a = new stdClass;
-                        $a->userno = $userno;
-                        $a->coursecode = $coursecode;
-
-                        $this->log_filer->lfprintln(get_string('recordadded', 'block_rlip', $a));
+            // Check for required fields
+            if (empty($userdata->usridnumber) or empty($userdata->crsidnumber)) {
+                $this->log_filer->lfprintln(get_string('skiprecord', 'block_rlip', $userdata));
+                if($manual !== true) {
+                    mtrace(get_string('skiprecord', 'block_rlip', $userdata));
                 }
+                continue;
             }
+
+            $firstname      = $userdata->firstname;
+            $lastname       = $userdata->lastname;
+            $username       = empty($userdata->username) ? '' : $userdata->username;
+            $userno         = $userdata->usridnumber;
+            $coursecode     = $userdata->crsidnumber;
+            $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
+            $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
+            $usergrade      = $userdata->usergrade;
+
+            $return[$i] = array();
+            array_push($return[$i],
+                       $firstname,
+                       $lastname,
+                       $username,
+                       $userno,
+                       $coursecode,
+                       $userstartdate,
+                       $userenddate,
+                       $usergrade);
+
+            $i++;
+
+            $a = new stdClass;
+            $a->userno = $userno;
+            $a->coursecode = $coursecode;
+
+            $this->log_filer->lfprintln(get_string('recordadded', 'block_rlip', $a));
         }
+
 
         if (empty($return)) {
             if($manual !== true) {
