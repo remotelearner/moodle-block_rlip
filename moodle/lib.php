@@ -508,8 +508,10 @@ class user_import extends import {
         $retval['execute'] = 'action';
 
         $custom_fields = get_records('user_info_field');
-        foreach($custom_fields as $cf) {
-            $retval[$cf->shortname] = $cf->shortname;
+        if(!empty($custom_fields)) {
+            foreach($custom_fields as $cf) {
+                $retval[$cf->shortname] = $cf->shortname;
+            }
         }
 
         return $retval;
@@ -828,7 +830,7 @@ abstract class import {
     
     protected abstract function get_fields();
 
-    protected function __call($name, $args) {
+    public function __call($name, $args) {
         if(strncmp($name, 'get_', 4) === 0) {
             if(!empty($args[0])) {
                 return $args[0];
