@@ -36,9 +36,11 @@ $string['configlogfilelocation'] = 'This defines the directory to store all impo
 $string['configemailnotification'] = 'A comma-separated list of idnumbers of users to be sent the log of actions via email (blank for no notification).';
 $string['configexportallhistorical'] = 'Selecting this option will include all historical completion information in both the manual and scheduled executions of the export. If not selected, only data modified within the last day will be included during manual executions, and only data modified since the last scheduled execution is included for scheduled executions.';
 
-$string['ip_enabled_off'] = 'Disabled';
-$string['ip_enabled_on'] = 'Enabled';
 $string['ip_export_timespan'] = 'Note: When running a test export from this page, only class completions from up to one day ago will be included, unless the \"Save and process all\" button is used.';
+
+$string['ip_description'] = 'Integration Point is used to import data in a CSV format from a back end system, in a standard, documented, tested, and supported (upgrade safe) manner. Integration Point is pluggable and standardized and enables incremental data import. <br />
+Integration Point sets input data as profile fields and assigns roles from the imported data, as well as providing a logging interface to enable Remote-Learner support and client side testing and ongoing QA and failure recovery processes. The User, Course, and Enrollment tabs contain a filename input field, which determines the name of the file used for the import, within the “Import File Location” (set in the Integration Point global block configuration options) directory. <br />
+Each tab also specifies the mapping between each moodle fields and the fields within the import file. The import is done on a regular schedule every 24 hours or whenever save and import is selected, and export is run every 24 hours. For sample file formats and examples please contact Remote-Learner.';
 
 $string['blockname'] = 'Course Completion Export';
 $string['createdata'] = 'Create user completion data';

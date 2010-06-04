@@ -163,7 +163,7 @@ class dataimportpage extends newpage {
         $map['cur_'] = $this->array_prefix('cur_', curriculum_import::get_properties_map());
         $map['trk_'] = $this->array_prefix('trk_', track_import::get_properties_map());
 
-        $configform = new coursesimport_form($target->get_moodle_url());
+        $configform = new courseimport_form($target->get_moodle_url());
         $configform->set_data($CFG);
         $configform->set_data($map['crs_']);
         $configform->set_data($map['cls_']);

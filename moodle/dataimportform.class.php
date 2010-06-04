@@ -38,32 +38,7 @@ class generalimport_form extends moodleform {
     public function definition() {
         $mform = &$this->_form;
 
-        $mform->addElement('static', 'description', '', get_string('generalimportinfo', 'block_rlip'));
-
-        //file locations should just be a path not a file name
-        $mform->addElement('text', 'block_rlip_filelocation', get_string('filelocation', 'block_rlip') . ': ');
-        $mform->setHelpButton('block_rlip_filelocation', array('dataimportform/filelocation', get_string('filelocation', 'block_rlip'), 'block_rlip'));
-
-        $mform->addElement('text', 'block_rlip_exportfilelocation', get_string('exportfilelocation', 'block_rlip') . ': ');
-        $mform->setHelpButton('block_rlip_exportfilelocation', array('dataimportform/exportfilelocation', get_string('exportfilelocation', 'block_rlip'), 'block_rlip'));
-
-        $mform->addElement('advcheckbox', 'block_rlip_exportfiletimestamp', get_string('exportfiletimestamp', 'block_rlip') . ': ', null, array('group' => null), array(0, 1));
-        $mform->setHelpButton('block_rlip_exportfiletimestamp', array('dataimportform/exportfiletimestamp', get_string('exportfiletimestamp', 'block_rlip'), 'block_rlip'));
-
-        $mform->addElement('text', 'block_rlip_logfilelocation', get_string('logfilelocation', 'block_rlip') . ': ');
-        $mform->setHelpButton('block_rlip_logfilelocation', array('dataimportform/logfilelocation', get_string('logfilelocation', 'block_rlip'), 'block_rlip'));
-
-        $mform->addElement('text', 'block_rlip_emailnotification', get_string('emailnotification', 'block_rlip') . ': ');
-        $mform->setHelpButton('block_rlip_emailnotification', array('dataimportform/emailnotification', get_string('emailnotification', 'block_rlip'), 'block_rlip'));
-
-        $mform->addElement('advcheckbox', 'block_rlip_exportallhistorical', get_string('exportallhistorical', 'block_rlip') . ': ', null, array('group' => null), array(0, 1));
-        $mform->setHelpButton('block_rlip_exportallhistorical', array('dataimportform/exportallhistorical', get_string('exportallhistorical', 'block_rlip'), 'block_rlip'));
-
-        $group = array();
-        $group[] = $mform->createElement('submit', 'save', get_string('save', 'block_rlip'));
-        $group[] = $mform->createElement('submit', 'import', get_string('import_save', 'block_rlip'));
-
-        $mform->addGroup($group, 'save_buttons');
+        $mform->addElement('html', '<p>' . get_string('ip_description', 'block_rlip') . '</p>');
 
         $mform->addElement('html', '<br /><br /><p>' . get_string('ip_instructions', 'block_rlip', 'http://remote-learner.net/contactme') . '</p>');
     }
@@ -122,6 +97,7 @@ class courseimport_form extends moodleform {
         foreach($data as $key => $p) {
             $mform->addElement('text', $key, $key . ': ');
         }
+
         $mform->closeHeaderBefore('save_buttons');
 
         $group = array();

@@ -38,32 +38,7 @@ class generalimport_form extends moodleform {
     public function definition() {
         $mform = &$this->_form;
 
-        $mform->addElement('static', 'description', '', get_string('generalimportinfo', 'block_rlip'));
-
-        //file locations should just be a path not a file name
-        $mform->addElement('text', 'block_rlip_filelocation', get_string('filelocation', 'block_rlip') . ': ');
-        $mform->setHelpButton('block_rlip_filelocation', array('dataimportform/filelocation', get_string('filelocation', 'block_rlip'), 'block_rlip'));
-
-        $mform->addElement('text', 'block_rlip_exportfilelocation', get_string('exportfilelocation', 'block_rlip') . ': ');
-        $mform->setHelpButton('block_rlip_exportfilelocation', array('dataimportform/exportfilelocation', get_string('exportfilelocation', 'block_rlip'), 'block_rlip'));
-
-        $mform->addElement('advcheckbox', 'block_rlip_exportfiletimestamp', get_string('exportfiletimestamp', 'block_rlip') . ': ', null, array('group' => null), array(0, 1));
-        $mform->setHelpButton('block_rlip_exportfiletimestamp', array('dataimportform/exportfiletimestamp', get_string('exportfiletimestamp', 'block_rlip'), 'block_rlip'));
-
-        $mform->addElement('text', 'block_rlip_logfilelocation', get_string('logfilelocation', 'block_rlip') . ': ');
-        $mform->setHelpButton('block_rlip_logfilelocation', array('dataimportform/logfilelocation', get_string('logfilelocation', 'block_rlip'), 'block_rlip'));
-
-        $mform->addElement('text', 'block_rlip_emailnotification', get_string('emailnotification', 'block_rlip') . ': ');
-        $mform->setHelpButton('block_rlip_emailnotification', array('dataimportform/emailnotification', get_string('emailnotification', 'block_rlip'), 'block_rlip'));
-
-        $mform->addElement('advcheckbox', 'block_rlip_exportallhistorical', get_string('exportallhistorical', 'block_rlip') . ': ', null, array('group' => null), array(0, 1));
-        $mform->setHelpButton('block_rlip_exportallhistorical', array('dataimportform/exportallhistorical', get_string('exportallhistorical', 'block_rlip'), 'block_rlip'));
-
-        $group = array();
-        $group[] = $mform->createElement('submit', 'save', get_string('save', 'block_rlip'));
-        $group[] = $mform->createElement('submit', 'import', get_string('import_save', 'block_rlip'));
-
-        $mform->addGroup($group, 'save_buttons');
+        $mform->addElement('html', '<p>' . get_string('ip_description', 'block_rlip') . '</p>');
 
         $mform->addElement('html', '<br /><br /><p>' . get_string('ip_instructions', 'block_rlip', 'http://remote-learner.net/contactme') . '</p>');
     }
@@ -81,8 +56,13 @@ class userimport_form extends moodleform {
 
         //just the file name not a path
         $mform->addElement('text', 'block_rlip_impuser_filename', get_string('filename', 'block_rlip') . ': ');
+
         $plugins = get_import_plugins();
-        $mform->addElement('select', 'block_rlip_impuser_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        if(count($plugins) > 1) {
+            $mform->addElement('select', 'block_rlip_impuser_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        } else {
+            $mform->addElement('hidden', 'block_rlip_impuser_filetype', current($plugins));
+        }
 
         $mform->addElement('header', 'user_properties', get_string('user_properties', 'block_rlip'));
 
@@ -104,7 +84,7 @@ class userimport_form extends moodleform {
 /**
  * display form for picking the file and format to import course, curriculum, class, track records with
  */
-class coursesimport_form extends moodleform {
+class courseimport_form extends moodleform {
     /**
      * defines layout for the course import form
      */
@@ -113,10 +93,15 @@ class coursesimport_form extends moodleform {
 
         $mform->addElement('text', 'block_rlip_impcourse_filename', get_string('filename', 'block_rlip') . ': ');
         $plugins = get_import_plugins();
-        $mform->addElement('select', 'block_rlip_impcourse_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        if(count($plugins) > 1) {
+            $mform->addElement('select', 'block_rlip_impcourse_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        } else {
+            $mform->addElement('select', 'block_rlip_impcourse_filetype', current($plugins));
+        }
 
         $mform->addElement('header', 'course_properties', get_string('course_properties', 'block_rlip'));
-        $data = course_import::get_properties_map();
+        $coi = new course_import();
+        $data = $coi->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', 'crs_' . $key, $key . ': ');
         }
