@@ -96,7 +96,7 @@ class courseimport_form extends moodleform {
         if(count($plugins) > 1) {
             $mform->addElement('select', 'block_rlip_impcourse_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
         } else {
-            $mform->addElement('select', 'block_rlip_impcourse_filetype', current($plugins));
+            $mform->addElement('hidden', 'block_rlip_impcourse_filetype', current($plugins));
         }
 
         $mform->addElement('header', 'course_properties', get_string('course_properties', 'block_rlip'));
@@ -151,7 +151,11 @@ class enrolmentimport_form extends moodleform {
 
         $mform->addElement('text', 'block_rlip_impenrolment_filename', get_string('filename', 'block_rlip') . ': ');
         $plugins = get_import_plugins();
-        $mform->addElement('select', 'block_rlip_impenrolment_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        if(count($plugins) > 1) {
+            $mform->addElement('select', 'block_rlip_impenrolment_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        } else {
+            $mform->addElement('hidden', 'block_rlip_impenrolment_filetype', current($plugins));
+        }
 
         $mform->addElement('header', 'enrol_properties', get_string('enrol_properties', 'block_rlip'));
         $si = new student_import();
