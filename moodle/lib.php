@@ -197,7 +197,7 @@ abstract class elis_import {
         if(update_record('course', (object)$r)) {
             $this->log_filer->add_success("course {$r['fullname']} updated");
         } else {
-            throwException("something went wrong");
+            throwException("course {$r['fullname']} not updated");
         }
     }
 
@@ -223,6 +223,8 @@ abstract class elis_import {
      * @param object $user user object
      */
     public function user_add($user) {
+        global $CFG;
+        
         $ui = new user_import();
         $ui->check_new($user);
         
@@ -232,7 +234,12 @@ abstract class elis_import {
         $user['mnethostid'] = $CFG->mnet_localhost_id;
         $user['confirmed'] = 1;
         $user['id'] = insert_record('user', (object)$user);
-        $this->log_filer->add_success("user {$user['username']} added");
+
+        if(!empty($user['id'])) {
+            $this->log_filer->add_success("user {$user['username']} added");
+        } else {
+            throwException("user {$user['username']} not added");
+        }
     }
 
     /**
