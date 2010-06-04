@@ -38,7 +38,7 @@ class generalimport_form extends moodleform {
     public function definition() {
         $mform = &$this->_form;
 
-        
+        $mform->addElement('html', '<p>' . get_string('ip_description', 'block_rlip') . '</p>');
 
         $mform->addElement('html', '<br /><br /><p>' . get_string('ip_instructions', 'block_rlip', 'http://remote-learner.net/contactme') . '</p>');
     }

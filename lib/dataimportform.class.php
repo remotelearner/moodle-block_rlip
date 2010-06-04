@@ -56,8 +56,13 @@ class userimport_form extends moodleform {
 
         //just the file name not a path
         $mform->addElement('text', 'block_rlip_impuser_filename', get_string('filename', 'block_rlip') . ': ');
+
         $plugins = get_import_plugins();
-        $mform->addElement('select', 'block_rlip_impuser_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        if(count($plugins) > 1) {
+            $mform->addElement('select', 'block_rlip_impuser_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        } else {
+            $mform->addElement('hidden', 'block_rlip_impuser_filetype', current($plugins));
+        }
 
         $mform->addElement('header', 'user_properties', get_string('user_properties', 'block_rlip'));
 
@@ -88,7 +93,11 @@ class courseimport_form extends moodleform {
 
         $mform->addElement('text', 'block_rlip_impcourse_filename', get_string('filename', 'block_rlip') . ': ');
         $plugins = get_import_plugins();
-        $mform->addElement('select', 'block_rlip_impcourse_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        if(count($plugins) > 1) {
+            $mform->addElement('select', 'block_rlip_impcourse_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
+        } else {
+            $mform->addElement('select', 'block_rlip_impcourse_filetype', current($plugins));
+        }
 
         $mform->addElement('header', 'course_properties', get_string('course_properties', 'block_rlip'));
         $coi = new course_import();
