@@ -98,7 +98,11 @@ class MoodleExport {
 
         }
 
-        $fp = fopen($localfile, 'w');
+        // Make sure that we can actually open the file we are attempting to write to.
+        if (($fp = fopen($localfile, 'w')) === false) {
+            mtrace(get_string('couldnotopenexportfile', 'block_rlip', $localfile));
+            return false;
+        }
 
         if (fputcsv($fp, $header)) {
             foreach ($records as $record) {
@@ -144,10 +148,10 @@ class MoodleExport {
                 JOIN {$CFG->prefix}course as c ON c.id = gi.courseid
                 WHERE itemtype = 'course'
                 AND u.deleted = 0";
-        
+
         $users = get_records_sql($sql);
         $now = time();
-        
+
         foreach($users as $userdata) {
             $userdata->timeend = $now;
 

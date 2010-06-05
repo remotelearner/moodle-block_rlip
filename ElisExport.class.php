@@ -104,7 +104,11 @@ class ElisExport {
 
         }
 
-        $fp = fopen($localfile, 'w');
+        // Make sure that we can actually open the file we are attempting to write to.
+        if (($fp = fopen($localfile, 'w')) === false) {
+            mtrace(get_string('couldnotopenexportfile', 'block_rlip', $localfile));
+            return false;
+        }
 
         if (fputcsv($fp, $header)) {
             foreach ($records as $record) {

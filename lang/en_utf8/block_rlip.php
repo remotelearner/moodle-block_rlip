@@ -1,5 +1,6 @@
 <?php
 $string['class_properties'] = 'Class properties map';
+$string['couldnotopenexportfile'] = 'Could not open export file: $a';
 $string['course'] = 'Course';
 $string['course_properties'] = 'Course properties map';
 $string['curr_properties'] = 'Curriculum properties map';
