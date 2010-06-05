@@ -51,7 +51,7 @@ class block_rlip extends block_base {
     /**
      * block contents
      *
-     * @return object 
+     * @return object
      */
     public function get_content() {
         global $CFG;
@@ -102,24 +102,27 @@ class block_rlip extends block_base {
         set_config('block_rlip_impenrolment_filetype', 'csv');
     }
 
-    /**
-     * post delete configurations
-     *
-     */
-    public function before_delete() {
-    }
-
     function cron($manual = false) {
         global $CFG;
-        
+
+        // Make sure that a file was configured for the export to run correctly.
+        if (empty($CFG->block_rlip_logfilelocation)) {
+            return false;
+        }
+
+        // Make sure that the export file location is actually a file, and not a directory path.
+        if (is_dir($CFG->block_rlip_logfilelocation)) {
+            return false;
+        }
+
         if(file_exists($CFG->dirroot . '/curriculum/config.php') && record_exists('block', 'name', 'curr_admin')) {
             require_once('ElisExport.class.php');
-            
+
             $elis_export = new ElisExport();
             return $elis_export->cron($manual);
         } else {
             require_once('MoodleExport.class.php');
-            
+
             $moodle_export = new MoodleExport();
             return $moodle_export->cron($manual);
         }

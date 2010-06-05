@@ -31,7 +31,9 @@ $string['user'] = 'User';
 $string['user_properties'] = 'User properties map';
 
 $string['configfilelocation'] = 'This defines the absolute path to the directory that is checked for import files.';
-$string['configexportfilelocation'] = 'This defines the absolute path to the directory that stores export files.';
+$string['configexportfilelocation'] = 'This defines the absolute path to the export file that you wish to use. This ' .
+                                      'is not a directory location, but the exact location of the export file itself. ' .
+                                      'If you do not with to create an export file, leave this option empty.';
 $string['configexportfiletimestamp'] = 'This allows the Integration Point export to append a unique timestamp to export files.';
 $string['configlogfilelocation'] = 'This defines the directory to store all import and export log files.';
 $string['configemailnotification'] = 'A comma-separated list of idnumbers of users to be sent the log of actions via email (blank for no notification).';
