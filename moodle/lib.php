@@ -43,7 +43,7 @@ abstract class elis_import {
     public abstract function import_user($file);
     public abstract function import_enrolment($file);
     public abstract function import_course($file);
-    
+
 //    public abstract function import_coursecategories($file = null);
 
     /**
@@ -53,7 +53,7 @@ abstract class elis_import {
      */
     public function __construct($logfile=null) {
         global $CFG;
-        
+
         $this->log_filer = new log_filer($CFG->block_rlip_logfilelocation, $logfile);
     }
 
@@ -82,7 +82,7 @@ abstract class elis_import {
                 $this->process($records, $type);
 
                 $retval = true;
-                
+
                 if(!empty($file) && is_file($file)) {
                     unlink($file);
                 }
@@ -155,9 +155,9 @@ abstract class elis_import {
 
             throwException("missing required fields $required");
         }
-        
+
         $ci->check_new($r);
-                   
+
         if(!empty($r['link'])) {
             $courseid = get_field('course', 'id', 'shortname', $r['link']);
 
@@ -184,16 +184,24 @@ abstract class elis_import {
 
     /**
      * updates an elis course
-     * 
+     *
      * @global object $CURMAN
-     * @param array $r 
+     * @param array $r
      */
     public function course_update($r) {
         $ci = new course_import();
         $ci->check_old($r);
 
         $r['id'] = get_field('course', 'id', 'shortname', $r['shortname']);
-        
+
+        // We must specify a category if one hasn't been in the file
+        if (empty($r['category'])) {
+            // Let's just use the default "first" category on the system.
+            $categories = get_categories();
+            $category = current($categories);
+            $r['category'] = $category->id;
+        }
+
         if(update_record('course', (object)$r)) {
             $this->log_filer->add_success("course {$r['fullname']} updated");
         } else {
@@ -208,9 +216,9 @@ abstract class elis_import {
     public function course_delete($r) {
         $ci = new course_import();
         $ci->check_old($r);
-        
+
         $course = get_record('course', 'shortname', $r['shortname']);
-    	
+
         if(delete_course($course, false)) {
             $this->log_filer->add_success("course {$course->fullname} deleted");
         } else {
@@ -224,10 +232,10 @@ abstract class elis_import {
      */
     public function user_add($user) {
         global $CFG;
-        
+
         $ui = new user_import();
         $ui->check_new($user);
-        
+
         /// Add a new user
         $user['password']   = hash_internal_user_password($user['password']);
         $user['timemodified']   = time();
@@ -249,7 +257,7 @@ abstract class elis_import {
     public function user_update($user) {
         $ui = new user_import();
         $ui->check_old($user);
-        
+
         /// Update an existing user
         $user['password']   = hash_internal_user_password($user['password']);
         $user['timemodified']   = time();
@@ -270,7 +278,7 @@ abstract class elis_import {
     public function user_disable($user) {
         $ui = new user_import();
         $ui->check_old($user);
-        
+
         $userid = get_record('user', 'username', $user['username'], 'deleted', '0');
 
         delete_user($userid);
@@ -597,7 +605,7 @@ class user_import extends import {
     public function check_old($record) {
         $retval = true;
 
-        $retval = $retval && 
+        $retval = $retval &&
                     record_exists('user', 'username', $record['username'], 'deleted', 0) or
                     throwException("user {$record['username']} does not exist");
 
@@ -706,7 +714,7 @@ class course_import extends import {
     protected function get_fields() {
         $retval = array('category', //list of choices
                 'format',       //topic weeks etc. get_list_of_plugins('course/format');
-                'fullname', 
+                'fullname',
                 'guest',        //yes/no
                 'idnumber',
                 'lang',         //lang shortname
@@ -764,7 +772,7 @@ class course_import extends import {
     protected function get_showreports($showreports) {
         return $this->boolean_get($showreports);
     }
-    
+
     protected function get_notifystudents($notifystudents) {
         return $this->boolean_get($notifystudents);
     }
@@ -790,12 +798,18 @@ class course_import extends import {
     }
 
     protected function get_category($category) {
-        if(is_numeric($category)) {
-            return $category;
+        if (is_numeric($category)) {
+            if (record_exists('course_categories', 'id', $category)) {
+                return $category;
+            } else {
+                return throwException('category ID: ' . $category . ' does not exist');
+            }
         } else {
             $categoryid = get_field('course_categories', 'id', 'name', $category);
-            if(!empty($categoryid)) {
+            if (!empty($categoryid)) {
                 return $categoryid;
+            } else {
+               return throwException('category "' . $category . '" does not exist');
             }
         }
         return null;
@@ -834,7 +848,7 @@ abstract class import {
 
     public abstract function check_new($record);
     public abstract function check_old($record);
-    
+
     protected abstract function get_fields();
 
     public function __call($name, $args) {
@@ -871,12 +885,12 @@ abstract class import {
     /**
      *
      * @param <type> $fields
-     * @return <type> 
+     * @return <type>
      */
     public function get_missing_required_fields($fields) {
         $retval = array();
         $map = $this->get_properties_map();
-        
+
         foreach($this->required as $r) {
             if(empty($fields[$r])) {
                 $retval[] = $map[$r];
@@ -895,7 +909,7 @@ abstract class import {
      */
     public function get_missing_required_columns($columns) {
         $retval = array();
-        
+
         $map = $this->get_properties_map();
 
         foreach($this->required as $r) {
@@ -921,7 +935,7 @@ abstract class import {
 
         return $retval;
     }
-    
+
     /**
      *
      * @global <type> $CURMAN
