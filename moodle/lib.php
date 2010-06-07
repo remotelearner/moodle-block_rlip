@@ -170,7 +170,7 @@ abstract class elis_import {
             if(update_record('course', (object)$r)) {
                 $this->log_filer->add_success("course {$r['fullname']} added");
             } else {
-                throwException("failed to create coruse {$r['fullname']}");
+                throwException("failed to create course {$r['fullname']}");
             }
         } else {
             if(create_course((object)$r)) {
@@ -196,10 +196,7 @@ abstract class elis_import {
 
         // We must specify a category if one hasn't been in the file
         if (empty($r['category'])) {
-            // Let's just use the default "first" category on the system.
-            $categories = get_categories();
-            $category = current($categories);
-            $r['category'] = $category->id;
+            throwException("invalid category provided");
         }
 
         if(update_record('course', (object)$r)) {
@@ -798,20 +795,15 @@ class course_import extends import {
     }
 
     protected function get_category($category) {
-        if (is_numeric($category)) {
-            if (record_exists('course_categories', 'id', $category)) {
-                return $category;
-            } else {
-                return throwException('category ID: ' . $category . ' does not exist');
-            }
+        if(is_numeric($category)) {
+            return $category;
         } else {
             $categoryid = get_field('course_categories', 'id', 'name', $category);
-            if (!empty($categoryid)) {
+            if(!empty($categoryid)) {
                 return $categoryid;
-            } else {
-               return throwException('category "' . $category . '" does not exist');
             }
         }
+
         return null;
     }
 

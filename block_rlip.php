@@ -106,12 +106,12 @@ class block_rlip extends block_base {
         global $CFG;
 
         // Make sure that a file was configured for the export to run correctly.
-        if (empty($CFG->block_rlip_logfilelocation)) {
+        if (empty($CFG->block_rlip_exportfilelocation)) {
             return false;
         }
 
         // Make sure that the export file location is actually a file, and not a directory path.
-        if (is_dir($CFG->block_rlip_logfilelocation)) {
+        if (is_dir($CFG->block_rlip_exportfilelocation)) {
             return false;
         }
 
