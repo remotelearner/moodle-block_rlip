@@ -95,10 +95,10 @@ class block_rlip extends block_base {
         set_config('block_rlip_impuser_filename', 'user.csv');
         set_config('block_rlip_impuser_filetype', 'csv');
 
-        set_config('block_rlip_impcourse_filename', 'enroll.csv');
+        set_config('block_rlip_impcourse_filename', 'course.csv');
         set_config('block_rlip_impcourse_filetype', 'csv');
 
-        set_config('block_rlip_impenrolment_filename', 'course.csv');
+        set_config('block_rlip_impenrolment_filename', 'enroll.csv');
         set_config('block_rlip_impenrolment_filetype', 'csv');
     }
 

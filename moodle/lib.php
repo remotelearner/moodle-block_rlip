@@ -796,7 +796,9 @@ class course_import extends import {
 
     protected function get_category($category) {
         if(is_numeric($category)) {
-            return $category;
+            if(record_exists('course_categories', 'id', $category)) {
+                return $category;
+            }
         } else {
             $categoryid = get_field('course_categories', 'id', 'name', $category);
             if(!empty($categoryid)) {
