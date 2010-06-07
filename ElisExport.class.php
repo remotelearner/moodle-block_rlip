@@ -190,49 +190,52 @@ class ElisExport {
 
         $userstatus     = 'COMPLETED';
 
-        foreach($users as $userdata) {
+        if(!empty($users)) {
+            foreach($users as $userdata) {
 
-            // Check for required fields
-            if (empty($userdata->usridnumber) or empty($userdata->crsidnumber)) {
-                $this->log_filer->lfprintln(get_string('skiprecord', 'block_rlip', $userdata));
-                if($manual !== true) {
-                    mtrace(get_string('skiprecord', 'block_rlip', $userdata));
+                // Check for required fields
+                if (empty($userdata->usridnumber) or empty($userdata->crsidnumber)) {
+                    $this->log_filer->lfprintln(get_string('skiprecord', 'block_rlip', $userdata));
+                    if($manual !== true) {
+                        mtrace(get_string('skiprecord', 'block_rlip', $userdata));
+                    }
+                    continue;
                 }
-                continue;
+
+                $firstname      = $userdata->firstname;
+                $lastname       = $userdata->lastname;
+                $username       = empty($userdata->username) ? '' : $userdata->username;
+                $userno         = $userdata->usridnumber;
+                $coursecode     = $userdata->crsidnumber;
+                $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
+                $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
+                $usergrade      = $userdata->usergrade;
+
+                $return[$i] = array();
+                array_push($return[$i],
+                           $firstname,
+                           $lastname,
+                           $username,
+                           $userno,
+                           $coursecode,
+                           $userstartdate,
+                           $userenddate,
+                           $userstatus,
+                           $usergrade);
+
+                $i++;
+
+                $a = new stdClass;
+                $a->userno = $userno;
+                $a->coursecode = $coursecode;
+
+                $this->log_filer->lfprintln(get_string('recordadded', 'block_rlip', $a));
             }
-
-            $firstname      = $userdata->firstname;
-            $lastname       = $userdata->lastname;
-            $username       = empty($userdata->username) ? '' : $userdata->username;
-            $userno         = $userdata->usridnumber;
-            $coursecode     = $userdata->crsidnumber;
-            $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
-            $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
-            $usergrade      = $userdata->usergrade;
-
-            $return[$i] = array();
-            array_push($return[$i],
-                       $firstname,
-                       $lastname,
-                       $username,
-                       $userno,
-                       $coursecode,
-                       $userstartdate,
-                       $userenddate,
-                       $userstatus,
-                       $usergrade);
-
-            $i++;
-
-            $a = new stdClass;
-            $a->userno = $userno;
-            $a->coursecode = $coursecode;
-
-            $this->log_filer->lfprintln(get_string('recordadded', 'block_rlip', $a));
         }
 
         if (empty($return)) {
             if($manual !== true) {
+                $this->log_filer->lfprintln(get_string('nouserdata', 'block_rlip'));
                 mtrace(get_string('nouserdata', 'block_rlip'));
             }
         }

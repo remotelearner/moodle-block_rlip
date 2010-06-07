@@ -16,18 +16,23 @@ class MoodleExport {
             return true;
         }
 
-        $check_empty = trim($CFG->block_rlip_exportfilelocation);
+        $exportfilelocation = trim($CFG->block_rlip_exportfilelocation);
 
-        if(empty($check_empty)) {
+        if(empty($exportfilelocation)) {
             if(manual !== true) {
                 mtrace(get_string('filenotdefined', 'block_rlip') . "\n");
             }
             $this->log_filer->lfprintln(get_string('filenotdefined', 'block_rlip'));
             $this->log_filer->output_log();
             return true;
+        } else {
+            $last_slash_position = strrpos($exportfilelocation, '/');
+
+            if($last_slash_position === count($exportfilelocation)) {
+                $exportfilelocation .= 'records_';
+            }
         }
 
-        $exportfilelocation = trim($CFG->block_rlip_exportfilelocation);
         if(!empty($CFG->block_rlip_exportfiletimestamp)) {
             $exportfilelocation = $this->add_timestamp_to_filename($exportfilelocation);
         }
@@ -152,50 +157,53 @@ class MoodleExport {
         $users = get_records_sql($sql);
         $now = time();
 
-        foreach($users as $userdata) {
-            $userdata->timeend = $now;
+        if(!empty($users)) {
+            foreach($users as $userdata) {
+                $userdata->timeend = $now;
 
-            // Check for required fields
-            if (empty($userdata->usridnumber) or empty($userdata->crsidnumber)) {
-                $this->log_filer->lfprintln(get_string('skiprecord', 'block_rlip', $userdata));
-                if($manual !== true) {
-                    mtrace(get_string('skiprecord', 'block_rlip', $userdata));
+                // Check for required fields
+                if (empty($userdata->usridnumber) or empty($userdata->crsidnumber)) {
+                    $this->log_filer->lfprintln(get_string('skiprecord', 'block_rlip', $userdata));
+                    if($manual !== true) {
+                        mtrace(get_string('skiprecord', 'block_rlip', $userdata));
+                    }
+                    continue;
                 }
-                continue;
+
+                $firstname      = $userdata->firstname;
+                $lastname       = $userdata->lastname;
+                $username       = empty($userdata->username) ? '' : $userdata->username;
+                $userno         = $userdata->usridnumber;
+                $coursecode     = $userdata->crsidnumber;
+                $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
+                $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
+                $usergrade      = $userdata->usergrade;
+
+                $return[$i] = array();
+                array_push($return[$i],
+                           $firstname,
+                           $lastname,
+                           $username,
+                           $userno,
+                           $coursecode,
+                           $userstartdate,
+                           $userenddate,
+                           $usergrade);
+
+                $i++;
+
+                $a = new stdClass;
+                $a->userno = $userno;
+                $a->coursecode = $coursecode;
+
+                $this->log_filer->lfprintln(get_string('recordadded', 'block_rlip', $a));
             }
-
-            $firstname      = $userdata->firstname;
-            $lastname       = $userdata->lastname;
-            $username       = empty($userdata->username) ? '' : $userdata->username;
-            $userno         = $userdata->usridnumber;
-            $coursecode     = $userdata->crsidnumber;
-            $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
-            $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
-            $usergrade      = $userdata->usergrade;
-
-            $return[$i] = array();
-            array_push($return[$i],
-                       $firstname,
-                       $lastname,
-                       $username,
-                       $userno,
-                       $coursecode,
-                       $userstartdate,
-                       $userenddate,
-                       $usergrade);
-
-            $i++;
-
-            $a = new stdClass;
-            $a->userno = $userno;
-            $a->coursecode = $coursecode;
-
-            $this->log_filer->lfprintln(get_string('recordadded', 'block_rlip', $a));
         }
 
 
         if (empty($return)) {
             if($manual !== true) {
+                $this->log_filer->lfprintln(get_string('nouserdata', 'block_rlip'));
                 mtrace(get_string('nouserdata', 'block_rlip'));
             }
         }

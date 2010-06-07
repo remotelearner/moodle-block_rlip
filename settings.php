@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+
+                //PARAM_PATH does not work with windows directories because it will strip away the : symbol and return an error
 $settings->add(new admin_setting_configtext('block_rlip_filelocation', get_string('filelocation', 'block_rlip'),
                    get_string('configfilelocation', 'block_rlip'), '', PARAM_PATH, 50));
 
