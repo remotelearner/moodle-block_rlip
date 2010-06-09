@@ -289,9 +289,7 @@ abstract class elis_import {
     public function enrolment_add($item) {
         $ei = new enrolment_import();
         $ei->check_new($item);
-
-        $course = get_record('course', 'shortname', $item['instance']);
-        $context = get_context_instance(CONTEXT_COURSE, $course->id);
+        $context = $ei->get_context_instance($item);
 
         $userid = get_field('user', 'id', 'username', $item['username']);
         $roleid = get_field('role', 'id', 'shortname', $item['role']);
@@ -300,7 +298,8 @@ abstract class elis_import {
         $timeend = empty($item['timeend'])?0:$item['timeend'];
         role_assign($roleid, $userid, 0, $context->id, $timestart, $timeend, 0, 'manual');
         build_context_path();
-        $this->log_filer->add_success("user {$item['username']} enroled in {$item['instance']}");
+
+        $this->log_filer->add_success("assigned user {$item['username']} to the {$item['role']} role of the {$item['context']} {$item['instance']}");
     }
 
     /**
@@ -310,9 +309,7 @@ abstract class elis_import {
     public function enrolment_delete($item) {
         $ei = new enrolment_import();
         $ei->check_old($item);
-
-        $course = get_record('course', 'shortname', $item['instance']);
-        $context = get_context_instance(CONTEXT_COURSE, $course->id);
+        $context = $ei->get_context_instance($item);
 
         $userid = get_field('user', 'id', 'username', $item['username']);
         $roleid = get_field('role', 'id', 'shortname', $item['role']);
@@ -323,7 +320,7 @@ abstract class elis_import {
         role_unassign($roleid, $userid, 0, $context->id);
 
         build_context_path();
-        $this->log_filer->add_success("user {$item['username']} unenroled from {$item['instance']}");
+        $this->log_filer->add_success("unassigned user {$item['username']} from the {$item['role']} role of the {$item['context']} {$item['instance']}");
     }
 
     /**
@@ -333,9 +330,7 @@ abstract class elis_import {
     public function enrolment_update($item) {
         $ei = new enrolment_import();
         $ei->check_old($item);
-
-        $course = get_record('course', 'shortname', $item['instance']);
-        $context = get_context_instance(CONTEXT_COURSE, $course->id);
+        $context = $ei->get_context_instance($item);
 
         $userid = get_field('user', 'id', 'username', $item['username']);
         $roleid = get_field('role', 'id', 'shortname', $item['role']);
@@ -346,6 +341,8 @@ abstract class elis_import {
         role_unassign($roleid, $userid, 0, $context->id);
 
         update_record('assignments', (object)$item);
+
+        $this->log_filer->add_success("updated user {$item['username']} from the {$item['role']} role of the {$item['context']} {$item['instance']}");
     }
 }
 
@@ -647,51 +644,169 @@ class enrolment_import extends import {
         return strtotime($timeend);
     }
 
-     public function check_new($record) {
+    public function get_context_instance($record) {
+         $contexts = array('system', 'user', 'coursecat', 'course', 'module', 'block');
         //check username exists
         //check context exists
         //check instance exists
-        $retval = true;
 
-        $retval = $retval && record_exists('user', 'username', $record['username'], 'deleted', 0) or
-                    throwException("invalid user {$record['username']} does not exist");
-
-        $retval = $retval && (strcmp($record['context'], 'course') === 0) or
+        in_array($record['context'], $contexts) or
                     throwException("invalid context {$record['context']} does not exist");
 
-        $retval = $retval && record_exists('course', 'shortname', $record['instance']) or
+        if(strcmp($record['context'], 'user') === 0) {
+            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $contextlevel = CONTEXT_USER;
+        } else if(strcmp($record['context'], 'user') === 0) {
+            record_exists('user', 'username', $record['instance']) or
+                    throwException("invalid user {$record['instance']} does not exist");
+
+            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $contextlevel = CONTEXT_USER;
+        } else if(strcmp($record['context'], 'coursecat') === 0) {
+            record_exists('course_categories', 'name', $record['instance']) or
+                    throwException("invalid course category {$record['instance']} does not exist");
+
+            $instanceid = get_field('coursecat', 'id', 'name', $record['instance']);
+            $contextlevel = CONTEXT_COURSECAT;
+        } else if(strcmp($record['context'], 'course') === 0) {
+            record_exists('course', 'shortname', $record['instance']) or
                     throwException("invalid course {$record['instance']} does not exist");
 
-        $instanceid = get_field('course', 'id', 'shortname', $record['instance']);
-        $contextid = get_field('context', 'id', 'contextlevel', CONTEXT_COURSE, 'instanceid', $instanceid);
+            $instanceid = get_field('course', 'id', 'shortname', $record['instance']);
+            $contextlevel = CONTEXT_COURSE;
+        } else if(strcmp($record['context'], 'module') === 0) {
+            record_exists('modules', 'name', $record['instance']) or
+                    throwException("invalid module {$record['instance']} does not exist");
+
+            $instanceid = get_field('module', 'id', 'name', $record['instance']);
+            $contextlevel = CONTEXT_MODULE;
+        } else if(strcmp($record['context'], 'block') === 0) {
+            record_exists('block', 'name', $record['instance']) or
+                    throwException("invalid block {$record['instance']} does not exist");
+
+            $instanceid = get_field('block', 'id', 'name', $record['instance']);
+            $contextlevel = CONTEXT_BLOCK;
+        }
+
+        $contextid = get_field('context', 'id', 'contextlevel', $contextlevel, 'instanceid', $instanceid);
         $userid = get_field('user', 'id', 'username', $record['username']);
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
-        $retval = $retval && !record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
+
+        return get_context_instance($contextlevel, $instanceid);
+    }
+
+     public function check_new($record) {
+         $contexts = array('system', 'user', 'coursecat', 'course', 'module', 'block');
+        //check username exists
+        //check context exists
+        //check instance exists
+
+        record_exists('role', 'shortname', $record['role']) or
+                    throwException("invalid role {$record['role']} does not exist");
+
+        record_exists('user', 'username', $record['username'], 'deleted', 0) or
+                    throwException("invalid user {$record['username']} does not exist");
+
+        in_array($record['context'], $contexts) or
+                    throwException("invalid context {$record['context']} does not exist");
+
+        if(strcmp($record['context'], 'user') === 0) {
+            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $contextlevel = CONTEXT_USER;
+        } else if(strcmp($record['context'], 'user') === 0) {
+            record_exists('user', 'username', $record['instance']) or
+                    throwException("invalid user {$record['instance']} does not exist");
+
+            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $contextlevel = CONTEXT_USER;
+        } else if(strcmp($record['context'], 'coursecat') === 0) {
+            record_exists('course_categories', 'name', $record['instance']) or
+                    throwException("invalid course category {$record['instance']} does not exist");
+
+            $instanceid = get_field('coursecat', 'id', 'name', $record['instance']);
+            $contextlevel = CONTEXT_COURSECAT;
+        } else if(strcmp($record['context'], 'course') === 0) {
+            record_exists('course', 'shortname', $record['instance']) or
+                    throwException("invalid course {$record['instance']} does not exist");
+
+            $instanceid = get_field('course', 'id', 'shortname', $record['instance']);
+            $contextlevel = CONTEXT_COURSE;
+        } else if(strcmp($record['context'], 'module') === 0) {
+            record_exists('modules', 'name', $record['instance']) or
+                    throwException("invalid module {$record['instance']} does not exist");
+
+            $instanceid = get_field('module', 'id', 'name', $record['instance']);
+            $contextlevel = CONTEXT_MODULE;
+        } else if(strcmp($record['context'], 'block') === 0) {
+            record_exists('block', 'name', $record['instance']) or
+                    throwException("invalid block {$record['instance']} does not exist");
+
+            $instanceid = get_field('block', 'id', 'name', $record['instance']);
+            $contextlevel = CONTEXT_BLOCK;
+        }
+
+        $contextid = get_field('context', 'id', 'contextlevel', $contextlevel, 'instanceid', $instanceid);
+        $userid = get_field('user', 'id', 'username', $record['username']);
+        $roleid = get_field('role', 'id', 'shortname', $record['role']);
+
+        !record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
                     throwException("{$record['username']} already a {$reocrd['role']} in {$record['instance']}");
 
-        return $retval;
+        return true;
     }
 
     public function check_old($record) {
-        $retval = true;
+        $contexts = array('system', 'user', 'coursecat', 'course', 'module', 'block');
 
-        $retval = $retval && record_exists('user', 'username', $record['username'], 'deleted', 0) or
+        record_exists('user', 'username', $record['username'], 'deleted', 0) or
                     throwException("invalid user {$record['username']} does not exist");
 
-        $retval = $retval && (strcmp($record['context'], 'course') === 0);
-                    throwException("invalid context {$record['context']} does not exist") or
+        in_array($record['context'], $contexts) or
+                    throwException("invalid context {$record['context']} does not exist");
 
-        $retval = $retval && record_exists('course', 'shortname', $record['instance']) or
+        if(strcmp($record['context'], 'user') === 0) {
+            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $contextlevel = CONTEXT_USER;
+        } else if(strcmp($record['context'], 'user') === 0) {
+            record_exists('user', 'username', $record['instance']) or
+                    throwException("invalid user {$record['instance']} does not exist");
+
+            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $contextlevel = CONTEXT_USER;
+        } else if(strcmp($record['context'], 'coursecat') === 0) {
+            record_exists('course_categories', 'name', $record['instance']) or
+                    throwException("invalid course category {$record['instance']} does not exist");
+
+            $instanceid = get_field('coursecat', 'id', 'name', $record['instance']);
+            $contextlevel = CONTEXT_COURSECAT;
+        } else if(strcmp($record['context'], 'course') === 0) {
+            record_exists('course', 'shortname', $record['instance']) or
                     throwException("invalid course {$record['instance']} does not exist");
 
-        $instanceid = get_field('course', 'id', 'shortname', $record['instance']);
-        $contextid = get_field('context', 'id', 'contextlevel', CONTEXT_COURSE, 'instanceid', $instanceid);
+            $instanceid = get_field('course', 'id', 'shortname', $record['instance']);
+            $contextlevel = CONTEXT_COURSE;
+        } else if(strcmp($record['context'], 'module') === 0) {
+            record_exists('modules', 'name', $record['instance']) or
+                    throwException("invalid module {$record['instance']} does not exist");
+
+            $instanceid = get_field('module', 'id', 'name', $record['instance']);
+            $contextlevel = CONTEXT_MODULE;
+        } else if(strcmp($record['context'], 'block') === 0) {
+            record_exists('block', 'name', $record['instance']) or
+                    throwException("invalid block {$record['instance']} does not exist");
+
+            $instanceid = get_field('block', 'id', 'name', $record['instance']);
+            $contextlevel = CONTEXT_BLOCK;
+        }
+
+        $contextid = get_field('context', 'id', 'contextlevel', $contextlevel, 'instanceid', $instanceid);
         $userid = get_field('user', 'id', 'username', $record['username']);
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
-        $retval = $retval && record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
+
+        record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
                     throwException("{$record['username']} already a {$reocrd['role']} in {$record['instance']}");
 
-        return $retval;
+        return true;
     }
 }
 
