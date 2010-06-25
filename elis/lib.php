@@ -1232,9 +1232,16 @@ class user_import extends import {
 
             if(!empty($user_record)) {
                 if(!empty($user_record[$properties_map['country']])) {
-                    if(!in_array($user_record[$properties_map['country']], get_list_of_countries())) {
+                    $countries = get_list_of_countries();
+                    $country = array_search($user_record[$properties_map['country']], $countries);
+
+                    if($country !== false) {
+                        $user_record[$properties_map['country']] = $country;
+                    } else if(empty($countries[$user_record[$properties_map['country']]])){
                         $user_record[$properties_map['country']] = $USER->country;
                     }
+                } else {
+                    $user_record[$properties_map['country']] = $USER->country;
                 }
 
                 $temp->item = new user($user_record);

@@ -59,15 +59,11 @@ class import_csv extends elis_import {
         $count = 0;
 
         if(!empty($file) && !feof($file)) {
-            $line = fgets($file);
-
-            $retval->header = $fields = preg_split("/\s*,\s*/", trim($line));
+            $retval->header = $fields = fgetcsv($file);
 
             while(!feof($file)) {
                 $count++;
-                $line =  fgets($file);
-
-                $record = preg_split("/\s*,\s*/", trim($line));
+                $record =  fgetcsv($file);
 
                 if(count($fields) === count($record)) {
                     $records[] = array_combine($fields, $record);
