@@ -538,7 +538,7 @@ class user_import extends import {
     }
 
     protected function get_password($password) {
-        return md5($password);
+        return hash_internal_user_password($password);
     }
 
     protected function get_country($country) {
