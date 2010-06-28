@@ -889,10 +889,6 @@ class course_import extends import {
         return $this->boolean_get($notifystudents);
     }
 
-    protected function get_password($password) {
-        return md5($password);
-    }
-
     protected function get_showgrades($showgrades) {
         return $this->boolean_get($showgrades);
     }

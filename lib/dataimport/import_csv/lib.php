@@ -80,72 +80,72 @@ class import_csv extends elis_import {
     }
 }
 
-abstract class import {
-    private $records;
-    private $columns;
-
-    protected abstract function import_records();
-    protected abstract function import_columns();
-
-
-    public function __construct($handle) {
-        $this->columns = $this->import_columns();
-        $this->records = $this->import_records();
-    }
-
-    public function current() {
-        return current($this->records);
-    }
-
-    public function next() {
-        next($this->records);
-        return current($this->records);
-    }
-
-    public function get_columns() {
-        return $this->columns;
-    }
-}
-
-class csv_import extends import {
-    public function __construct($handle) {
-        $file = fopen($handle, 'r');
-
-        if(empty($file)) {
-//            throwException("missing file $file_name");
-            return;
-        }
-
-        if(feof($file)) {
-//            throwException("no records to import in file $file_name")
-            return;
-        }
-
-        parent::__construct($file);
-        fclose($file);
-    }
-
-    protected function import_columns() {
-        return fgetcsv($file);
-    }
-
-    protected function import_records($file) {
-        $records = array();
-        
-        while(!feof($file)) {
-            $record =  fgetcsv($file);
-
-            if(count($fields) > count($record)) {
-                $records[] = "too many fields";
-            } else if(count($fields) < count($record)) {
-                $records[] = "too few fields";
-            } else {
-                $records[] = array_combine($fields, $record);
-            }
-        }
-
-        return $records;
-    }
-}
+//abstract class import {
+//    private $records;
+//    private $columns;
+//
+//    protected abstract function import_records();
+//    protected abstract function import_columns();
+//
+//
+//    public function __construct($handle) {
+//        $this->columns = $this->import_columns();
+//        $this->records = $this->import_records();
+//    }
+//
+//    public function current() {
+//        return current($this->records);
+//    }
+//
+//    public function next() {
+//        next($this->records);
+//        return current($this->records);
+//    }
+//
+//    public function get_columns() {
+//        return $this->columns;
+//    }
+//}
+//
+//abstract class csv_import extends import {
+//    public function __construct($handle) {
+//        $file = fopen($handle, 'r');
+//
+//        if(empty($file)) {
+////            throwException("missing file $file_name");
+//            return;
+//        }
+//
+//        if(feof($file)) {
+////            throwException("no records to import in file $file_name")
+//            return;
+//        }
+//
+//        parent::__construct($file);
+//        fclose($file);
+//    }
+//
+//    protected function import_columns() {
+//        return fgetcsv($file);
+//    }
+//
+//    protected function import_records($file) {
+//        $records = array();
+//
+//        while(!feof($file)) {
+//            $record =  fgetcsv($file);
+//
+//            if(count($fields) > count($record)) {
+//                $records[] = "too many fields";
+//            } else if(count($fields) < count($record)) {
+//                $records[] = "too few fields";
+//            } else {
+//                $records[] = array_combine($fields, $record);
+//            }
+//        }
+//
+//        return $records;
+//    }
+//}
 
 ?>
