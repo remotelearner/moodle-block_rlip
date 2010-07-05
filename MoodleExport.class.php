@@ -146,7 +146,7 @@ class MoodleExport {
         $return = array();
         $i      = 0;
 
-        $sql = "SELECT u.id, u.firstname, u.lastname, u.username usridnumber, c.shortname crsidnumber, gg.finalgrade usergrade, c.startdate timestart
+        $sql = "SELECT u.id, u.firstname, u.lastname, u.idnumber usridnumber, u.username, c.shortname crsidnumber, gg.finalgrade usergrade, c.startdate timestart
                 FROM {$CFG->prefix}grade_items as gi
                 JOIN {$CFG->prefix}grade_grades as gg ON gg.itemid = gi.id
                 JOIN {$CFG->prefix}user as u ON gg.userid = u.id
@@ -162,7 +162,7 @@ class MoodleExport {
                 $userdata->timeend = $now;
 
                 // Check for required fields
-                if (empty($userdata->usridnumber) or empty($userdata->crsidnumber)) {
+                if (empty($userdata->username) or empty($userdata->crsidnumber)) {
                     $this->log_filer->lfprintln(get_string('skiprecord', 'block_rlip', $userdata));
                     if($manual !== true) {
                         mtrace(get_string('skiprecord', 'block_rlip', $userdata));
@@ -172,8 +172,8 @@ class MoodleExport {
 
                 $firstname      = $userdata->firstname;
                 $lastname       = $userdata->lastname;
-                $username       = empty($userdata->username) ? '' : $userdata->username;
-                $userno         = $userdata->usridnumber;
+                $username       = $userdata->username;
+                $userno         = empty($userdata->usridnumber) ? '' : $userdata->useridnumber;
                 $coursecode     = $userdata->crsidnumber;
                 $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
                 $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
