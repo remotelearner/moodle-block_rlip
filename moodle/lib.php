@@ -234,7 +234,7 @@ abstract class elis_import {
         $ui->check_new($user);
 
         /// Add a new user
-        $user['password']   = hash_internal_user_password($user['password']);
+        $user['password']   = $user['password'];
         $user['timemodified']   = time();
         $user['mnethostid'] = $CFG->mnet_localhost_id;
         $user['confirmed'] = 1;
@@ -256,7 +256,7 @@ abstract class elis_import {
         $ui->check_old($user);
 
         /// Update an existing user
-        $user['password']   = hash_internal_user_password($user['password']);
+        $user['password']   = $user['password'];
         $user['timemodified']   = time();
 
         $user['id'] = get_field('user', 'id', 'username', $user['username']);
@@ -538,7 +538,7 @@ class user_import extends import {
     }
 
     protected function get_password($password) {
-        return md5($password);
+        return hash_internal_user_password($password);
     }
 
     protected function get_country($country) {
@@ -887,10 +887,6 @@ class course_import extends import {
 
     protected function get_notifystudents($notifystudents) {
         return $this->boolean_get($notifystudents);
-    }
-
-    protected function get_password($password) {
-        return md5($password);
     }
 
     protected function get_showgrades($showgrades) {
