@@ -5,6 +5,7 @@ $string['course'] = 'Course';
 $string['course_properties'] = 'Course properties map';
 $string['curr_properties'] = 'Curriculum properties map';
 $string['dataimport'] = 'Integration Point';
+$string['delete_failed'] = 'Unable to remove import file';
 $string['disabled'] = 'Disabled';
 $string['emailnotification'] = 'Email notification';
 $string['enabled'] = 'Enabled';

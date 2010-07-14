@@ -82,7 +82,9 @@ abstract class elis_import {
                     $retval = true;
 
                     if(!empty($file) && is_file($file)) {
-                        unlink($file);
+                        if(!@unlink($file)) {
+                            echo get_string('delete_failed', 'block_rlip');
+                        }
                     }
                 }
             } catch(Exception $e) {

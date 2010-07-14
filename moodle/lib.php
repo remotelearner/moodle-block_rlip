@@ -84,7 +84,9 @@ abstract class elis_import {
                 $retval = true;
 
                 if(!empty($file) && is_file($file)) {
-                    unlink($file);
+                    if(!@unlink($file)) {
+                        print_string('delete_failed', 'block_rlip');
+                    }
                 }
             } catch(Exception $e) {
                 $this->log_filer->add_error($e->getMessage());
