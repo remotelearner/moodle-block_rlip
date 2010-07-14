@@ -446,16 +446,18 @@ class log_filer {
                 $message .= $log . "\n";
             }
 
-            $idnumbers = explode(',', $CFG->block_rlip_emailnotification);
+            if(!empty($message)) {
+                $idnumbers = explode(',', $CFG->block_rlip_emailnotification);
 
-            $subject = 'integration point log';
+                $subject = 'integration point log';
 
-            foreach($idnumbers as $idnum) {
-                if(!empty($idnum)) {
-                    $cmuser = get_record('user', 'idnumber', $idnum, 'deleted', '0');   //have to assume that idnumbers are unique
+                foreach($idnumbers as $idnum) {
+                    if(!empty($idnum)) {
+                        $cmuser = get_record('user', 'idnumber', $idnum, 'deleted', '0');   //have to assume that idnumbers are unique
 
-                    if(!empty($cmuser)) {
-                        email_to_user($cmuser, $USER, $subject, $message);
+                        if(!empty($cmuser)) {
+                            email_to_user($cmuser, $USER, $subject, $message);
+                        }
                     }
                 }
             }

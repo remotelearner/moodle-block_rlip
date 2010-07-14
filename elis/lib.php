@@ -1164,18 +1164,20 @@ class log_filer {
                 $message .= $log . "\n";
             }
 
-            $idnumbers = explode(',', $CFG->block_rlip_emailnotification);
+            if(!empty($message)) {
+                $idnumbers = explode(',', $CFG->block_rlip_emailnotification);
 
-            $subject = 'integration point log';
+                $subject = 'integration point log';
 
-            foreach($idnumbers as $idnum) {
-                $cmuser = user::get_by_idnumber(trim($idnum));
-                
-                if(!empty($cmuser)) {
-                    $user = cm_get_moodleuser($cmuser->id);
+                foreach($idnumbers as $idnum) {
+                    $cmuser = user::get_by_idnumber(trim($idnum));
 
-                    if(!empty($user)) {
-                        email_to_user($user, $USER, $subject, $message);
+                    if(!empty($cmuser)) {
+                        $user = cm_get_moodleuser($cmuser->id);
+
+                        if(!empty($user)) {
+                            email_to_user($user, $USER, $subject, $message);
+                        }
                     }
                 }
             }
