@@ -107,25 +107,27 @@ class block_rlip extends block_base {
 
         // Make sure that a file was configured for the export to run correctly.
         if (empty($CFG->block_rlip_exportfilelocation)) {
-            return false;
+            return true;
         }
 
         // Make sure that the export file location is actually a file, and not a directory path.
         if (is_dir($CFG->block_rlip_exportfilelocation)) {
-            return false;
+            return true;
         }
 
         if(file_exists($CFG->dirroot . '/curriculum/config.php') && record_exists('block', 'name', 'curr_admin')) {
             require_once('ElisExport.class.php');
 
             $elis_export = new ElisExport();
-            return $elis_export->cron($manual);
+            $elis_export->cron($manual);
         } else {
             require_once('MoodleExport.class.php');
 
             $moodle_export = new MoodleExport();
-            return $moodle_export->cron($manual);
+            $moodle_export->cron($manual);
         }
+
+        return true;
     }
 }
 
