@@ -70,43 +70,43 @@ class dataimportpage extends newpage {
         $target = $this->get_new_page(array('action' => 'default'));
 
         $configform = new generalimport_form($target->get_moodle_url());
-        $configform->set_data($CFG);
-
-        if ($configdata = $configform->get_data()) {
-            if (isset($configdata->block_rlip_filelocation)) {
-                set_config('block_rlip_filelocation', stripslashes($configdata->block_rlip_filelocation));
-            }
-
-            if (isset($configdata->block_rlip_exportfilelocation)) {
-                set_config('block_rlip_exportfilelocation', stripslashes($configdata->block_rlip_exportfilelocation));
-            }
-
-            if (isset($configdata->block_rlip_exportfiletimestamp)) {
-                set_config('block_rlip_exportfiletimestamp', $configdata->block_rlip_exportfiletimestamp);
-            }
-
-            if(isset($configdata->block_rlip_logfilelocation)) {
-                set_config('block_rlip_logfilelocation', stripslashes($configdata->block_rlip_logfilelocation));
-            }
-
-            if(isset($configdata->block_rlip_emailnotification)) {
-                set_config('block_rlip_emailnotification', $configdata->block_rlip_emailnotification);
-            }
-
-            if(isset($configdata->block_rlip_exportallhistorical)) {
-                set_config('block_rlip_exportallhistorical', $configdata->block_rlip_exportallhistorical);
-            }
-
-            if(isset($configdata->save_buttons['import'])) {
-                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
-
-                //run the export
-                if($completion_export_block = block_instance('completion_export')) {
-                    $completion_export_block->cron(true);
-                }
-            }
-
-        }
+//        $configform->set_data($CFG);
+//
+//        if ($configdata = $configform->get_data()) {
+//            if (isset($configdata->block_rlip_filelocation)) {
+//                set_config('block_rlip_filelocation', stripslashes($configdata->block_rlip_filelocation));
+//            }
+//
+//            if (isset($configdata->block_rlip_exportfilelocation)) {
+//                set_config('block_rlip_exportfilelocation', stripslashes($configdata->block_rlip_exportfilelocation));
+//            }
+//
+//            if (isset($configdata->block_rlip_exportfiletimestamp)) {
+//                set_config('block_rlip_exportfiletimestamp', $configdata->block_rlip_exportfiletimestamp);
+//            }
+//
+//            if(isset($configdata->block_rlip_logfilelocation)) {
+//                set_config('block_rlip_logfilelocation', stripslashes($configdata->block_rlip_logfilelocation));
+//            }
+//
+//            if(isset($configdata->block_rlip_emailnotification)) {
+//                set_config('block_rlip_emailnotification', $configdata->block_rlip_emailnotification);
+//            }
+//
+//            if(isset($configdata->block_rlip_exportallhistorical)) {
+//                set_config('block_rlip_exportallhistorical', $configdata->block_rlip_exportallhistorical);
+//            }
+//
+//            if(isset($configdata->save_buttons['import'])) {
+//                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
+//
+//                //run the export
+//                if($completion_export_block = block_instance('completion_export')) {
+//                    $completion_export_block->cron(true);
+//                }
+//            }
+//
+//        }
 
         $this->print_tabs('default');
         $configform->display();
@@ -120,7 +120,12 @@ class dataimportpage extends newpage {
         $usermap = user_import::get_properties_map();
 
         $configform = new userimport_form($target->get_moodle_url());
-        $configform->set_data($CFG);
+
+        $data = new object();
+        $data->block_rlip_impuser_filename = $CFG->block_rlip_impuser_filename;
+        $data->block_rlip_impuser_filetype = $CFG->block_rlip_impuser_filetype;
+
+        $configform->set_data($data);
         $configform->set_data($usermap);
 
         if($configdata = $configform->get_data()) {
@@ -164,7 +169,12 @@ class dataimportpage extends newpage {
         $map['trk_'] = $this->array_prefix('trk_', track_import::get_properties_map());
 
         $configform = new courseimport_form($target->get_moodle_url());
-        $configform->set_data($CFG);
+        
+        $data = new object();
+        $data->block_rlip_impcourse_filename = $CFG->block_rlip_impcourse_filename;
+        $data->block_rlip_impcourse_filetype = $CFG->block_rlip_impcourse_filetype;
+
+        $configform->set_data($data);
         $configform->set_data($map['crs_']);
         $configform->set_data($map['cls_']);
         $configform->set_data($map['cur_']);
@@ -221,7 +231,12 @@ class dataimportpage extends newpage {
         $student_map = student_import::get_properties_map();
 
         $configform = new enrolmentimport_form($target->get_moodle_url());
-        $configform->set_data($CFG);
+
+        $data = new object();
+        $data->block_rlip_impenrolment_filename = $CFG->block_rlip_impenrolment_filename;
+        $data->block_rlip_impenrolment_filetype = $CFG->block_rlip_impenrolment_filetype;
+
+        $configform->set_data($data);
         $configform->set_data($student_map);
 
         if($configdata = $configform->get_data()) {
