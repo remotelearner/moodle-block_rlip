@@ -83,7 +83,7 @@ abstract class elis_import {
 
                     if(!empty($file) && is_file($file)) {
                         if(!@unlink($file)) {
-                            echo get_string('delete_failed', 'block_rlip');
+                            print_string('delete_failed', 'block_rlip');
                         }
                     }
                 }
