@@ -41,8 +41,17 @@ class generalimport_form extends moodleform {
         $mform = &$this->_form;
 
         if(!empty($CFG->block_rlip_filelocation) || !empty($CFG->block_rlip_exportfilelocation)) {
-            $mform->addElement('submit', 'import', get_string('import_all', 'block_rlip'));
-            $mform->addElement('submit', 'export', get_string('export_now', 'block_rlip'));
+            if(!empty($CFG->block_rlip_filelocation)) {
+                $mform->addElement('submit', 'import', get_string('import_all', 'block_rlip'));
+            } else {
+                $mform->addElement('html', '<p>' . get_string('import_location_missing', 'block_rlip'));
+            }
+
+            if(!empty($CFG->block_rlip_exportfilelocation)) {
+                $mform->addElement('submit', 'export', get_string('export_now', 'block_rlip'));
+            } else {
+                $mform->addElement('html', '<p>' . get_string('export_location_missing', 'block_rlip'));
+            }
         } else {
             $mform->addElement('html', '<p>' . get_string('ip_description', 'block_rlip') . '</p>');
 

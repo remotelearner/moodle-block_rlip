@@ -11,15 +11,23 @@ $string['emailnotification'] = 'Email notification';
 $string['enabled'] = 'Enabled';
 $string['enrolment'] = 'Enrollment';
 $string['enrol_properties'] = 'Enrolment properties map';
+
+$string['export_location_missing'] = 'Export file location is missing. Please ensure rlip was set up correctly.';
+$string['export_now'] = 'Export now';
 $string['exportallhistorical'] = 'Include all historical data';
 $string['exportfilelocation'] = 'Export file location';
 $string['exportfiletimestamp'] = 'Unique export file names';
+
 $string['filelocation'] = 'Import file location';
 $string['filename'] = 'File name';
 $string['filetype'] = 'File type';
 $string['general'] = 'General';
 $string['generalimportinfo'] = 'This checks for specially formatted files in a specific location and imports data into the curriculum management system.<br />';
+
+$string['import_all'] = 'Import all';
+$string['import_location_missing'] = 'Import file location is missing. Please ensure rlip was set up correctly.';
 $string['import_save'] = 'Save and process';
+
 $string['ip_disabled_warning'] = 'WARNING! Integration Point functionality is an additional paid service and has not been enabled on this site. As such, the settings in this section will not be used. Please contact Remote-Learner for assistance on this topic via the link provided below.';
 $string['ip_enabled'] = 'Integration Point Functionality';
 $string['ip_instructions'] = 'Integration Point is an additional paid service offered by Remote-Learner that allows for the import and export of completion data. If this Integration Point functionality is disabled, you may contact <a href=\"$a\" target=\"_blank\">Remote-Learner</a> to sign up. Once enabled, import and export file locations can be set up appropriately on this configuration screen.';

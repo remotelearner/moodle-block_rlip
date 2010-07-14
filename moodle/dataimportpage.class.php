@@ -75,40 +75,43 @@ class dataimportpage extends newpage {
         $target = $this->get_new_page(array('action' => 'default'));
 
         $configform = new generalimport_form($target->get_moodle_url());
-        $configform->set_data($CFG);
+//        $configform->set_data($CFG);
 
         if ($configdata = $configform->get_data()) {
-            if (isset($configdata->block_rlip_filelocation)) {
-                set_config('block_rlip_filelocation', stripslashes($configdata->block_rlip_filelocation));
-            }
+//            if (isset($configdata->block_rlip_filelocation)) {
+//                set_config('block_rlip_filelocation', stripslashes($configdata->block_rlip_filelocation));
+//            }
+//
+//            if (isset($configdata->block_rlip_exportfilelocation)) {
+//                set_config('block_rlip_exportfilelocation', stripslashes($configdata->block_rlip_exportfilelocation));
+//            }
+//
+//            if (isset($configdata->block_rlip_exportfiletimestamp)) {
+//                set_config('block_rlip_exportfiletimestamp', $configdata->block_rlip_exportfiletimestamp);
+//            }
+//
+//            if(isset($configdata->block_rlip_logfilelocation)) {
+//                set_config('block_rlip_logfilelocation', stripslashes($configdata->block_rlip_logfilelocation));
+//            }
+//
+//            if(isset($configdata->block_rlip_emailnotification)) {
+//                set_config('block_rlip_emailnotification', $configdata->block_rlip_emailnotification);
+//            }
+//
+//            if(isset($configdata->block_rlip_exportallhistorical)) {
+//                set_config('block_rlip_exportallhistorical', $configdata->block_rlip_exportallhistorical);
+//            }
 
-            if (isset($configdata->block_rlip_exportfilelocation)) {
-                set_config('block_rlip_exportfilelocation', stripslashes($configdata->block_rlip_exportfilelocation));
-            }
-
-            if (isset($configdata->block_rlip_exportfiletimestamp)) {
-                set_config('block_rlip_exportfiletimestamp', $configdata->block_rlip_exportfiletimestamp);
-            }
-
-            if(isset($configdata->block_rlip_logfilelocation)) {
-                set_config('block_rlip_logfilelocation', stripslashes($configdata->block_rlip_logfilelocation));
-            }
-
-            if(isset($configdata->block_rlip_emailnotification)) {
-                set_config('block_rlip_emailnotification', $configdata->block_rlip_emailnotification);
-            }
-
-            if(isset($configdata->block_rlip_exportallhistorical)) {
-                set_config('block_rlip_exportallhistorical', $configdata->block_rlip_exportallhistorical);
-            }
-
-            if(isset($configdata->save_buttons['import'])) {
+            if(isset($configdata->import)) {
                 include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
+            }
 
-                //run the export
-                if($completion_export_block = block_instance('completion_export')) {
-                    $completion_export_block->cron(true);
-                }
+            if(isset($configdata->export)) {
+                            //run the export
+                require_once($CFG->dirroot . '/blocks/rlip/MoodleExport.class.php');
+
+                $moodle_export = new MoodleExport();
+                $moodle_export->cron(true);
             }
 
         }
