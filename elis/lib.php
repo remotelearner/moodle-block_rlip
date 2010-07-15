@@ -1462,6 +1462,35 @@ class student_import extends import {
         
         return true;
     }
+
+    /**
+     *
+     * @param <type> $columns
+     * @return <type>
+     */
+    public function get_missing_fields($columns) {
+        $map = $this->get_properties_map();
+        $item = new $this->data_object();
+        $columnkeys = array_flip($columns);
+
+        $retval = array();
+
+        foreach($item->_required as $r) {
+            if(!empty($map[$r]) && empty($columnkeys[$map[$r]])) {
+                $retval[] = $map[$r];
+            }
+        }
+
+        if(empty($map['context']) || empty($columnkeys[$map['context']])) {
+            $retval[] = $map['context'];
+        }
+
+        if(empty($map['user_idnumber']) || empty($columnkeys[$map['user_idnumber']])) {
+            $retval[] = $map['user_idnumber'];
+        }
+
+        return $retval;
+    }
 }
 
 /**
