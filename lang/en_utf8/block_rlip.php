@@ -32,6 +32,8 @@ $string['ip_disabled_warning'] = 'WARNING! Integration Point functionality is an
 $string['ip_enabled'] = 'Integration Point Functionality';
 $string['ip_instructions'] = 'Integration Point is an additional paid service offered by Remote-Learner that allows for the import and export of completion data. If this Integration Point functionality is disabled, you may contact <a href=\"$a\" target=\"_blank\">Remote-Learner</a> to sign up. Once enabled, import and export file locations can be set up appropriately on this configuration screen.';
 $string['ip_link'] = 'Integration Point page';
+$string['ip_log'] = 'Integration point Log';
+
 $string['logfilelocation'] = 'Log file location';
 $string['save'] = 'Save';
 $string['title'] = 'Integration Point';

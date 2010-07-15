@@ -36,11 +36,27 @@ class generalimport_form extends moodleform {
      * defines layout for the main dataimport form
      */
     public function definition() {
+        global $CFG;
+
         $mform = &$this->_form;
 
-        $mform->addElement('html', '<p>' . get_string('ip_description', 'block_rlip') . '</p>');
+        if(!empty($CFG->block_rlip_filelocation) || !empty($CFG->block_rlip_exportfilelocation)) {
+            if(!empty($CFG->block_rlip_filelocation)) {
+                $mform->addElement('submit', 'import', get_string('import_all', 'block_rlip'));
+            } else {
+                $mform->addElement('html', '<p>' . get_string('import_location_missing', 'block_rlip'));
+            }
 
-        $mform->addElement('html', '<br /><br /><p>' . get_string('ip_instructions', 'block_rlip', 'http://remote-learner.net/contactme') . '</p>');
+            if(!empty($CFG->block_rlip_exportfilelocation)) {
+                $mform->addElement('submit', 'export', get_string('export_now', 'block_rlip'));
+            } else {
+                $mform->addElement('html', '<p>' . get_string('export_location_missing', 'block_rlip'));
+            }
+        } else {
+            $mform->addElement('html', '<p>' . get_string('ip_description', 'block_rlip') . '</p>');
+
+            $mform->addElement('html', '<br /><br /><p>' . get_string('ip_instructions', 'block_rlip', 'http://remote-learner.net/contactme') . '</p>');
+        }
     }
 }
 

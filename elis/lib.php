@@ -1070,7 +1070,6 @@ abstract class elis_import {
  * used to log messages to a file
  */
 class log_filer {
-    private $file = null;
     private $endl = "\n"; //new line delimiter
     private $warning = '';
     private $logs = array();
@@ -1085,7 +1084,6 @@ class log_filer {
     function __construct($file, $filename) {
         if(!empty($file) && is_dir(addslashes($file))) {
             $this->filename = addslashes($file) . '/' . $filename . '.log';
-            $this->file = fopen($this->filename, 'a');
         }
     }
 
@@ -1155,30 +1153,37 @@ class log_filer {
     function output_log($file=null) {
         global $CFG, $USER;
 
+        if(empty($this->logs)) {
+            return;
+        }
+
         if(empty($file)) {
-            $file = $this->file;
+            $file = fopen($this->filename, 'a');
         }
 
         if(!empty($file)) {
             $message = '';
             foreach($this->logs as $log) {
-                fwrite($file, $log);
                 $message .= $log . "\n";
             }
 
             if(!empty($message)) {
-                $idnumbers = explode(',', $CFG->block_rlip_emailnotification);
+                fwrite($file, $message);
 
-                $subject = 'integration point log';
+                $idnumbers = str_getcsv($CFG->block_rlip_emailnotification);
+
+                $subject = get_string('ip_log', 'block_rlip');
 
                 foreach($idnumbers as $idnum) {
-                    $cmuser = user::get_by_idnumber(trim($idnum));
+                    if(!empty($idnum)) {
+                        $cmuser = user::get_by_idnumber(trim($idnum));
 
-                    if(!empty($cmuser)) {
-                        $user = cm_get_moodleuser($cmuser->id);
+                        if(!empty($cmuser)) {
+                            $user = cm_get_moodleuser($cmuser->id);
 
-                        if(!empty($user)) {
-                            email_to_user($user, $USER, $subject, $message);
+                            if(!empty($user)) {
+                                email_to_user($user, $USER, $subject, $message);
+                            }
                         }
                     }
                 }
