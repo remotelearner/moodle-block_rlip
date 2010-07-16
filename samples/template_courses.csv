@@ -1,0 +1,3 @@
+action, category, format, fullname, guest, idnumber, lang, maxbytes, metacourse, newsitems, notifystudents, numsections,password,shortname, showgrades, showreports, sortorder, startdate, summary,timecreated, visible, link
+create, Miscellaneous, topics, Sample Course 0, yes, idnumber0 , en_utf8, 32767, no, 5, yes, 5,password,course0, 1, yes, 0, 03/01/2010, This is sample course 0 ,06/23/2010, yes,ABEN 100 Gettin
+create, Miscellaneous, topics, Sample Course 1, yes, idnumber1 , en_utf8, 32767, no, 5, yes, 5,password,course1, 1, yes, 1, 03/01/2010, This is sample course 1 ,06/23/2010, yes,ABEN 100 Gettin
