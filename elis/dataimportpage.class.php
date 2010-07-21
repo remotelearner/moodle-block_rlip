@@ -72,7 +72,7 @@ class dataimportpage extends newpage {
         $configform = new generalimport_form($target->get_moodle_url());
 //        $configform->set_data($CFG);
 //
-//        if ($configdata = $configform->get_data()) {
+        if ($configdata = $configform->get_data()) {
 //            if (isset($configdata->block_rlip_filelocation)) {
 //                set_config('block_rlip_filelocation', stripslashes($configdata->block_rlip_filelocation));
 //            }
@@ -105,8 +105,18 @@ class dataimportpage extends newpage {
 //                    $completion_export_block->cron(true);
 //                }
 //            }
-//
-//        }
+            if(isset($configdata->import)) {
+                include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
+            }
+
+            if(isset($configdata->export)) {
+                            //run the export
+                require_once($CFG->dirroot . '/blocks/rlip/MoodleExport.class.php');
+
+                $moodle_export = new MoodleExport();
+                $moodle_export->cron(true);
+            }
+        }
 
         $this->print_tabs('default');
         $configform->display();
