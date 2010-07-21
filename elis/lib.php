@@ -1170,7 +1170,7 @@ class log_filer {
             if(!empty($message)) {
                 fwrite($file, $message);
 
-                $idnumbers = str_getcsv($CFG->block_rlip_emailnotification);
+                $idnumbers = explode(',', $CFG->block_rlip_emailnotification);
 
                 $subject = get_string('ip_log', 'block_rlip');
 
