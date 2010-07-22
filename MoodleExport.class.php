@@ -146,27 +146,13 @@ class MoodleExport {
         $return = array();
         $i      = 0;
 
-        $time_condition = '';
-
-        if($manual) {
-            if(!$include_all) {
-                $one_day_ago = time() - DAYSECS;
-                $time_condition = ' AND gg.timemodified > ' . $one_day_ago;
-            }
-        } else if($last_cron_time = get_field('block', 'lastcron', 'name', 'rlip')) {
-            if(!$include_all) {
-                $time_condition = ' AND gg.timemodified > ' . $last_cron_time;
-            }
-        }
-
         $sql = "SELECT u.id, u.firstname, u.lastname, u.idnumber usridnumber, u.username, c.shortname crsidnumber, gg.finalgrade usergrade, c.startdate timestart
                 FROM {$CFG->prefix}grade_items as gi
                 JOIN {$CFG->prefix}grade_grades as gg ON gg.itemid = gi.id
                 JOIN {$CFG->prefix}user as u ON gg.userid = u.id
                 JOIN {$CFG->prefix}course as c ON c.id = gi.courseid
                 WHERE itemtype = 'course'
-                AND u.deleted = 0
-                {$time_condition}";
+                AND u.deleted = 0";
 
         $users = get_records_sql($sql);
         $now = time();
