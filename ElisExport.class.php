@@ -145,7 +145,7 @@ class ElisExport {
                 $one_day_ago = time() - DAYSECS;
                 $time_condition = ' AND clsenrol.completetime > ' . $one_day_ago;
             }
-        } else if($last_cron_time = get_field('block', 'lastcron', 'name', 'completion_export')) {
+        } else if($last_cron_time = get_field('block', 'lastcron', 'name', 'rlip')) {
             if($include_all !== true) {
                 $time_condition = ' AND clsenrol.completetime > ' . $last_cron_time;
             }
