@@ -111,9 +111,9 @@ class dataimportpage extends newpage {
 
             if(isset($configdata->export)) {
                             //run the export
-                require_once($CFG->dirroot . '/blocks/rlip/MoodleExport.class.php');
+                require_once($CFG->dirroot . '/blocks/rlip/ElisExport.class.php');
 
-                $moodle_export = new MoodleExport();
+                $moodle_export = new ElisExport();
                 $moodle_export->cron(true);
             }
         }

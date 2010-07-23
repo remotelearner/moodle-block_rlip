@@ -93,7 +93,7 @@ class ElisExport {
                 mtrace(get_string('localfileexists', 'block_rlip', $localfile));
             }
 
-            if (unlink($localfile)) {
+            if (@unlink($localfile)) {
                 $this->log_filer->lfprintln(get_string('localfileremoved', 'block_rlip', $localfile));
             } else {
                 if($manual !== true) {
