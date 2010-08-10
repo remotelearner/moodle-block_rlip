@@ -127,6 +127,8 @@ class block_rlip extends block_base {
             $moodle_export->cron($manual);
         }
 
+        include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
+
         return true;
     }
 }
