@@ -83,10 +83,8 @@ abstract class elis_import {
 
                 $retval = true;
 
-                if(!empty($file) && is_file($file)) {
-                    if(!@unlink($file)) {
-                        print_string('delete_failed', 'block_rlip');
-                    }
+                if(!@unlink($file)) {
+                    print_string('delete_failed', 'block_rlip');
                 }
             } catch(Exception $e) {
                 $this->log_filer->add_error($e->getMessage());
@@ -757,7 +755,7 @@ class enrolment_import extends import {
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
 
         !record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
-                    throwException("{$record['username']} already a {$reocrd['role']} in {$record['instance']}");
+                    throwException("{$record['username']} already a {$record['role']} in {$record['instance']}");
 
         return true;
     }
@@ -811,7 +809,7 @@ class enrolment_import extends import {
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
 
         record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
-                    throwException("{$record['username']} already a {$reocrd['role']} in {$record['instance']}");
+                    throwException("{$record['username']} already a {$record['role']} in {$record['instance']}");
 
         return true;
     }
