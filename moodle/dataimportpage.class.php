@@ -171,6 +171,9 @@ class dataimportpage extends newpage {
             }
         }
 
+        // temporary fix until I can figure out what the hell is going on here
+        $configform->set_data(array('sesskey' => sesskey()));
+
         $this->print_tabs($action);
         $configform->display();
     }
