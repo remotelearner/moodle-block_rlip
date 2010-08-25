@@ -31,6 +31,7 @@
 require_once($CFG->dirroot.'/lib/weblib.php');
 require_once($CFG->dirroot . '/lib/formslib.php');
 
+require_once($CFG->dirroot . '/blocks/rlip/sharedlib.php');
 /**
  * short description of block_integration_point
  *
@@ -63,7 +64,7 @@ class block_rlip extends block_base {
 
         $context = get_context_instance(CONTEXT_SYSTEM);
 
-        if(!file_exists($CFG->dirroot . '/curriculum/config.php') && has_capability('block/rlip:config', $context)) {
+        if(!is_elis() && has_capability('block/rlip:config', $context)) {
             $this->content->text = '<a href="' . $CFG->wwwroot . '/blocks/rlip/moodle/displaypage.php' . '">' . get_string('ip_link', 'block_rlip') . '</a>';
         } else {
             $this->content->text = '';
@@ -115,17 +116,17 @@ class block_rlip extends block_base {
             return true;
         }
 
-        if(file_exists($CFG->dirroot . '/curriculum/config.php') && record_exists('block', 'name', 'curr_admin')) {
+        if(is_elis()) {
             require_once('ElisExport.class.php');
 
-            $elis_export = new ElisExport();
-            $elis_export->cron($manual);
+            $export = new ElisExport();
         } else {
             require_once('MoodleExport.class.php');
 
-            $moodle_export = new MoodleExport();
-            $moodle_export->cron($manual);
+            $export = new MoodleExport();
         }
+
+        $export->cron($manual);
 
         include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
 
