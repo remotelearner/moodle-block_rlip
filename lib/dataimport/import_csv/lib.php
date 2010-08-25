@@ -52,6 +52,10 @@ class import_csv extends elis_import {
         return $this->import_file($file);
     }
 
+    private function sanitize_callback(&$value, $key) {
+        $value = clean_param($value, PARAM_CLEAN);
+    }
+
     private function import_file($file_name) {
         $retval = new object();
 
@@ -59,13 +63,19 @@ class import_csv extends elis_import {
         $count = 0;
 
         if(!empty($file) && !feof($file)) {
-            $retval->header = $fields = fgetcsv($file);
+            $retval->header = $fields = fgetcsv($file, 8192, ',', '"');
+            $field_count = count($fields);
 
             while(!feof($file)) {
                 $count++;
-                $record =  fgetcsv($file);
+                $record =  fgetcsv($file, 8192, ',', '"');
+                if (!is_array($record)) {
+                    continue;
+                }
+                $record_count = count($record);
+                array_walk($record, array($this, 'sanitize_callback'));
 
-                if(count($fields) === count($record)) {
+                if($field_count == $record_count) {
                     $records[] = array_combine($fields, $record);
                 } else {
                     $records[] = $record;
