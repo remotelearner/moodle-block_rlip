@@ -976,7 +976,7 @@ abstract class import {
         foreach($properties as $key=>$p) {
             if(!empty($record[$p])) {
                 $method = "get_$p";
-                $retval[$key] = addslashes($this->$method($record[$p]));
+                $retval[$key] = $this->$method($record[$p]);
             }
         }
 

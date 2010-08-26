@@ -1226,7 +1226,7 @@ class user_import extends import {
             foreach($user->properties as $p=>$null) {
                 if(!empty($properties_map[$p])) {
                     if(!empty($rec[$properties_map[$p]])) {
-                        $user_record[$p] = addslashes($rec[$properties_map[$p]]);
+                        $user_record[$p] = $rec[$properties_map[$p]];
                     }
                 }
             }
@@ -1237,7 +1237,7 @@ class user_import extends import {
 
             $temp = new object();
 
-            $temp->action = empty($rec[$properties_map['execute']])? '': addslashes($rec[$properties_map['execute']]);
+            $temp->action = empty($rec[$properties_map['execute']])? '': $rec[$properties_map['execute']];
 
             if(!empty($user_record)) {
                 if(!empty($user_record[$properties_map['country']])) {
@@ -1256,11 +1256,11 @@ class user_import extends import {
                 $temp->item = new user($user_record);
 
                 if(!empty($rec[$properties_map['theme']])) {
-                    $temp->item->theme = addslashes($rec[$properties_map['theme']]);
+                    $temp->item->theme = $rec[$properties_map['theme']];
                 }
 
                 if(!empty($rec[$properties_map['auth']])) {
-                    $temp->item->auth = addslashes($rec[$properties_map['auth']]);
+                    $temp->item->auth = $rec[$properties_map['auth']];
                 }
 
                 $custom_fields = field::get_for_context_level('user');
@@ -1269,7 +1269,7 @@ class user_import extends import {
                     foreach($custom_fields as $cf) {
                         if(!empty($rec[$properties_map[$cf->shortname]])) {
                             $property = 'field_' . $cf->shortname;
-                            $temp->item->$property = addslashes($rec[$properties_map[$cf->shortname]]);
+                            $temp->item->$property = $rec[$properties_map[$cf->shortname]];
                         }
                     }
                 }
@@ -1352,13 +1352,13 @@ class student_import extends import {
                 if(strcmp($p, 'completetime') === 0 || strcmp($p, 'enrolmenttime') === 0 || strcmp($p, 'endtime') === 0) {
                     $item_record[$p] = strtotime($record[$properties_map[$p]]);
                 } else {
-                    $item_record[$p] = addslashes($record[$properties_map[$p]]);
+                    $item_record[$p] = $record[$properties_map[$p]];
                 }
             }
         }
 
         if(!empty($properties_map['user_idnumber']) && !empty($record[$properties_map['user_idnumber']])) {
-            $user = user::get_by_idnumber(addslashes($record[$properties_map['user_idnumber']]));
+            $user = user::get_by_idnumber($record[$properties_map['user_idnumber']]);
 
             if(!empty($user)) {
                 $item_record['userid'] = $user->id;
@@ -1367,7 +1367,7 @@ class student_import extends import {
 
                 //no error checking since it would of been done earlier in the process
         if(!empty($properties_map['context']) && !empty($record[$properties_map['context']])) {
-            $context = explode('_', addslashes($record[$properties_map['context']]), 2);
+            $context = explode('_', $record[$properties_map['context']], 2);
 
             $location = current($context);
             next($context);
@@ -1376,7 +1376,7 @@ class student_import extends import {
 
         $temp = new object();
 
-        $temp->action = empty($record[$properties_map['execute']])? '': addslashes($record[$properties_map['execute']]);
+        $temp->action = empty($record[$properties_map['execute']])? '': $record[$properties_map['execute']];
 
         $temp->item = null;
 
@@ -1521,33 +1521,33 @@ class course_import extends import {
         foreach($item->properties as $p=>$null) {
             if(!empty($properties_map[$p])) {
                 if(!empty($record[$properties_map[$p]])) {
-                    $item_record[$p] = addslashes($record[$properties_map[$p]]);
+                    $item_record[$p] = $record[$properties_map[$p]];
                 }
             }
         }
 
 
         if(!empty($record['assignment'])) {
-            $curriculum = curriculum::get_by_idnumber(addslashes($record['assignment']));
+            $curriculum = curriculum::get_by_idnumber($record['assignment']);
 
             $item_record['curriculum'] = array();
             $item_record['curriculum'][] = $curriculum->id;
         }
 
         if(!empty($record['link'])) {
-            $mcourseid = $CURMAN->db->get_field('course', 'id', 'shortname', addslashes($record['link']));
+            $mcourseid = $CURMAN->db->get_field('course', 'id', 'shortname', $record['link']);
 
             $item_record['location'] = $mcourseid;
             $item_record['templateclass'] = 'moodlecourseurl';
         }
 
         if(!empty($record['environmentid'])) {
-            $item_record['environmentid'] = addslashes($record['environmentid']);
+            $item_record['environmentid'] = $record['environmentid'];
         }
 
         $temp = new object();
 
-        $temp->action = empty($record['action'])? '': addslashes($record['action']);
+        $temp->action = empty($record['action'])? '': $record['action'];
         $item->set_from_data((object)$item_record);
         $temp->item = $item;
 
@@ -1606,29 +1606,29 @@ class cmclass_import extends import {
         foreach($item->properties as $p=>$null) {
             if(!empty($properties_map[$p])) {
                 if(!empty($record[$properties_map[$p]])) {
-                    $item_record[$p] = addslashes($record[$properties_map[$p]]);
+                    $item_record[$p] = $record[$properties_map[$p]];
                 }
             }
         }
 
         if(!empty($record[$properties_map['autocreate']])) {
-            $item_record['moodleCourses']['autocreate'] = addslashes($record['autocreate']);
+            $item_record['moodleCourses']['autocreate'] = $record['autocreate'];
         }
 
         if(!empty($record[$properties_map['moodlecourseid']])) {
-            $item_record['moodleCourses']['moodlecourseid'] = addslashes($record['moodlecourseid']);
+            $item_record['moodleCourses']['moodlecourseid'] = $record['moodlecourseid'];
         }
 
         if(!empty($record['environmentid'])) {
-            $item_record['environmentid'] = addslashes($record['environmentid']);
+            $item_record['environmentid'] = $record['environmentid'];
         }
 
-        $course = course::get_by_idnumber(addslashes($record[$properties_map['assignment']]));
+        $course = course::get_by_idnumber($record[$properties_map['assignment']]);
         $item_record['courseid'] = $course->id;
 
         $temp = new object();
 
-        $temp->action = empty($record['action'])? '': addslashes($record['action']);
+        $temp->action = empty($record['action'])? '': $record['action'];
         $item->set_from_data((object)$item_record);
         $temp->item = $item;
 
@@ -1692,14 +1692,14 @@ class curriculum_import extends import {
         foreach($item->properties as $p=>$null) {
             if(!empty($properties_map[$p])) {
                 if(!empty($record[$properties_map[$p]])) {
-                    $item_record[$p] = addslashes($record[$properties_map[$p]]);
+                    $item_record[$p] = $record[$properties_map[$p]];
                 }
             }
         }
 
         $temp = new object();
 
-        $temp->action = empty($record['action'])? '': addslashes($record['action']);
+        $temp->action = empty($record['action'])? '': $record['action'];
         $temp->item = new curriculum($item_record);
 
         return $temp;
@@ -1755,18 +1755,18 @@ class track_import extends import {
         foreach($item->properties as $p=>$null) {
             if(!empty($properties_map[$p])) {
                 if(!empty($record[$properties_map[$p]])) {
-                    $item_record[$p] = addslashes($record[$properties_map[$p]]);
+                    $item_record[$p] = $record[$properties_map[$p]];
                 }
             }
         }
 
-        $curriculum = curriculum::get_by_idnumber(addslashes($record[$properties_map['assignment']]));
+        $curriculum = curriculum::get_by_idnumber($record[$properties_map['assignment']]);
 
         $item_record['curid'] = $curriculum->id;
 
         $temp = new object();
 
-        $temp->action = empty($record['action'])? '': addslashes($record['action']);
+        $temp->action = empty($record['action'])? '': $record['action'];
         $item->set_from_data((object)$item_record);
         $temp->item = $item;
 
