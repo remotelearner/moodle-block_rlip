@@ -40,37 +40,48 @@ Disable
 
  */
 class import_csv extends elis_import {
-    public function import_user($file) {        
-        return $this->import_file($file);
+    public function import_user($file, $header=false) {
+        return $this->import_file($file, $header);
     }
 
-    public function import_enrolment($file) {
-        return $this->import_file($file);
+    public function import_enrolment($file, $header=false) {
+        return $this->import_file($file, $header);
     }
 
-    public function import_course($file) {
-        return $this->import_file($file);
+    public function import_course($file, $header=false) {
+        return $this->import_file($file, $header);
     }
 
     private function sanitize_callback(&$value, $key) {
         $value = clean_param($value, PARAM_CLEAN);
     }
 
-    private function import_file($file_name) {
+    private function import_file($file_name, $header=false) {
+        static $file;
+        static $fields;
+
         $retval = new object();
+        $retval->header = array();
+        $retval->records = array();
 
-        $file = fopen($file_name, 'r');
-        $count = 0;
+        if (!isset($file)) {
+            $file = fopen($file_name, 'r');
+        }
 
-        if(!empty($file) && !feof($file)) {
-            $retval->header = $fields = fgetcsv($file, 8192, ',', '"');
+        if (!empty($file) && !feof($file)) {
+            if ($header) {
+                $retval->header = $fields = fgetcsv($file, 8192, ',', '"');
+                return $retval;
+            } else {
+                $retval->header = $fields;
+            }
+
             $field_count = count($fields);
 
-            while(!feof($file)) {
-                $count++;
+            if (!feof($file)) {
                 $record =  fgetcsv($file, 8192, ',', '"');
                 if (!is_array($record)) {
-                    continue;
+                    return $retval;
                 }
                 $record_count = count($record);
                 array_walk($record, array($this, 'sanitize_callback'));
@@ -80,13 +91,14 @@ class import_csv extends elis_import {
                 } else {
                     $records[] = $record;
                 }
+
+                $retval->records = $records;
+                return $retval;
             }
         }
 
         fclose($file);
-
-        $retval->records = $records;
-        return $retval;
+        return false;
     }
 }
 

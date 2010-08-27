@@ -23,9 +23,10 @@
  * @copyright  (C) 2008-2010 Remote Learner.net Inc http://www.remote-learner.net
  *
  */
-    
+    define('RLIP_DEBUG_TIME',  true);
+
     global $CFG;
-    
+
     $context = get_context_instance(CONTEXT_SYSTEM);
 
     require_capability('block/rlip:config', $context);
@@ -48,7 +49,7 @@
 
     foreach($imports as $i) {
         $success = false;
-        
+
         $variable = "block_rlip_imp{$i}_filetype";
         $plugin_name = 'import_' . $CFG->$variable;
         $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib.php';

@@ -71,15 +71,9 @@ abstract class elis_import {
             try {
                 is_file($file) OR throwException("file $file not found");
 
-                $method = "import_$type";
-                method_exists($this, $method) OR throwException("unimplemented import $type");
-                $data = $this->$method($file);  //calls import_<import type> on the import file
-
                 $get_class = "{$type}_import";
-                class_exists($get_class) OR throwException("unimplemented improt $type");
-                $records = $this->get(new $get_class(), $data);
-
-                $this->process($records, $type);
+                class_exists($get_class) OR throwException("unimplemented import $type");
+                $this->get(new $get_class(), $file, $type);
 
                 $retval = true;
 
@@ -96,9 +90,14 @@ abstract class elis_import {
         return $retval;
     }
 
-    private function get($import, $data) {
+    private function get($import, $file, $type) {
+
+        if (RLIP_DEBUG_TIME) $start = microtime(true);
+
+        $method = "import_$type";
+        method_exists($this, $method) OR throwException("unimplemented import $type");
+        $data = $this->$method($file, true);  // Get the header line of the csv file.
         $columns = $data->header;
-        $records = $data->records;
 
         $properties = $import->get_properties_map();
 
@@ -111,9 +110,22 @@ abstract class elis_import {
             throwException("missing required column $missing");
         }
 
-        $items = $import->get_items($records);
+        /// Process each line of the CSV file. THIS CAN TAKE A LOT OF TIME!
+        set_time_limit(0);
+        while ($data = $this->$method($file)) {
+            $records = $data->records;
+            $items = $import->get_items($records);
+            $this->process($items, $type);
+        }
 
-        return $items;
+        if (RLIP_DEBUG_TIME) {
+            $end  = microtime(true);
+            $time = $end - $start;
+            mtrace("elis_import.get('$file', '$type'): $time");
+        }
+
+//        return $items;
+        return true;
     }
 
     public function process($records, $type) {
@@ -533,7 +545,11 @@ class user_import extends import {
 
 
     protected function get_auth($auth) {
-        $auth_plugins = get_list_of_plugins('auth');
+        static $auth_plugins;
+
+        if (empty($auth_plugins)) {
+            $auth_plugins = get_list_of_plugins('auth');
+        }
 
         if(in_array($auth, $auth_plugins)) {
             return $auth;
@@ -547,10 +563,14 @@ class user_import extends import {
     }
 
     protected function get_country($country) {
-        $country_list = get_list_of_countries();
+        static $country_list;
 
-        if(in_array($country, $country_list)) {
-            return $country;
+        if (empty($country_list)) {
+            $country_list = get_list_of_countries();
+        }
+
+        if (($ckey = array_search($country, $country_list)) !== false) {
+            return $ckey;
         }
 
         return '';
@@ -569,7 +589,11 @@ class user_import extends import {
     }
 
     protected function get_language($language) {
-        $language_list = get_list_of_languages();
+        static $language_list;
+
+        if (empty($language_list)) {
+            $language_list = get_list_of_languages();
+        }
 
         if(in_array($language, $language_list)) {
             return $language;
@@ -579,7 +603,11 @@ class user_import extends import {
     }
 
     protected function get_theme($theme) {
-        $theme_list = get_list_of_themes();
+        static $theme_list;
+
+        if (empty($theme_list)) {
+            $theme_list = get_list_of_themes();
+        }
 
         if(in_array($theme, $theme_list)) {
             return $theme;
@@ -1052,9 +1080,13 @@ abstract class import {
      * @return <type>
      */
     public function get_properties_map() {
+        static $properties_map;
+
         $retval = $this->get_fields();
 
-        $properties_map = get_records('block_rlip_fieldmap', 'context', $this->context);
+        if (!isset($properties_map)) {
+            $properties_map = get_records('block_rlip_fieldmap', 'context', $this->context);
+        }
 
         if(!empty($properties_map)) {
             foreach($properties_map as $pm) {

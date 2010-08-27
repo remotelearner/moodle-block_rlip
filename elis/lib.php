@@ -45,7 +45,7 @@ abstract class elis_import {
     public abstract function import_user($file);
     public abstract function import_enrolment($file);
     public abstract function import_course($file);
-    
+
 //    public abstract function import_coursecategories($file = null);
 
     /**
@@ -55,7 +55,7 @@ abstract class elis_import {
      */
     public function __construct($logfile=null) {
         global $CFG;
-        
+
         $this->log_filer = new log_filer($CFG->block_rlip_logfilelocation, $logfile);
     }
 
@@ -72,14 +72,12 @@ abstract class elis_import {
         if(has_capability('block/rlip:config', $context)) {
             try {
                 if(is_file($file)) {
-                    $method = "import_$type";
-                    method_exists($this, $method) OR throwException("unimplemented import $type");
-                    $data = $this->$method($file);  //calls import_<import type> on the import file
-
+///................ This processes the $data array, record by record in get_user function.
                     $method = "get_$type";
                     method_exists($this,$method) OR throwException("unimplemented get $type");
-                    $this->$method($data);      //processes the records and inserts them in the database
+                    $this->$method($file, $type);      //processes the records and inserts them in the database
                     $retval = true;
+///................
 
                     if(!empty($file) && is_file($file)) {
                         if(!@unlink($file)) {
@@ -101,9 +99,12 @@ abstract class elis_import {
      * gets user records and send them to processing
      * @param array $data user records to be placed in the database
      */
-    private function get_user($data) {
+    private function get_user($file, $type) {
+        $method = "import_$type";
+        method_exists($this, $method) OR throwException("unimplemented import $type");
+        $data = $this->$method($file, true);  //calls import_<import type> on the import file
+
         $columns = $data->header;
-        $records = $data->records;
 
         $ui = new user_import();
         $properties = $ui->get_properties_map();
@@ -117,16 +118,20 @@ abstract class elis_import {
             throwException("missing required fields $missing");
         }
 
-        $this->user_handler($records, count($columns));
+///.... This process $records, one by one. Change this to do one record at a time, and process them from CVS.
+        $this->user_handler($file, $type, count($columns));
     }
 
     /**
      * gets user records and send them to processing
-     * @param array $data enrolment records 
+     * @param array $data enrolment records
      */
-    private function get_enrolment($data) {
+    private function get_enrolment($file, $type) {
+        $method = "import_$type";
+        method_exists($this, $method) OR throwException("unimplemented import $type");
+        $data = $this->$method($file, true);  //calls import_<import type> on the import file
+
         $columns = $data->header;
-        $records = $data->records;
 
         $si = new student_import();
         $properties = student_import::get_properties_map();
@@ -141,16 +146,19 @@ abstract class elis_import {
             throwException("missing required fields $missing");
         }
 
-        $this->enrolment_handler($records, count($columns));
+        $this->enrolment_handler($file, $type, count($columns));
     }
 
     /**
      * get course records and send them to processing
      * @param  array $data course records
      */
-    private function get_course($data) {
+    private function get_course($file, $type) {
+        $method = "import_$type";
+        method_exists($this, $method) OR throwException("unimplemented import $type");
+        $data = $this->$method($file, true);  //calls import_<import type> on the import file
+
         $columns = $data->header;
-        $records = $data->records;
 
         $cmi = new cmclass_import();
         $ti = new track_import();
@@ -159,7 +167,7 @@ abstract class elis_import {
 
         in_array('action', $columns) OR throwException('header must contain an action field');          //action and context fields can not be renamed
         in_array('context', $columns) OR throwException('header must contain a context field');
-        
+
         if(!$ci->check_required_columns($columns) ||
             !$cmi->check_required_columns($columns) ||
             !$ti->check_required_columns($columns) ||
@@ -173,11 +181,11 @@ abstract class elis_import {
             $missing_fields = array_unique($missing_fields);
 
             $missing = implode(', ', $missing_fields);
-            
+
             throwException("missing required fields $missing");
         }
 
-        $this->course_handler($records, count($columns));
+        $this->course_handler($file, $type, count($columns));
     }
 
     /**
@@ -187,38 +195,52 @@ abstract class elis_import {
      * @param array $records records to upload to db
      * @param int $num number of columns each record should have
      */
-    public function enrolment_handler($records, $num) {
+    public function enrolment_handler($file, $type, $num) {
         global $CURMAN;
+
+        $umethod = "import_$type";
+        method_exists($this, $umethod) OR throwException("unimplemented import $type");
 
         $properties = student_import::get_properties_map();
 
-        foreach($records as $r) {
-            if(count($r) === $num) {
-                $context = current(explode('_', $r[$properties['context']], 2));
-                $method = "handle_{$context}_{$r[$properties['execute']]}";
-                $this->$method($r);
-            } else if(count($r) < $num) {
-                $this->log_filer->add_error_record("not enough fields");
-            } else if(count($r) > $num) {
-                $this->log_filer->add_error_record("too many fields");
+        set_time_limit(0);
+        while ($data = $this->$umethod($file)) {
+            $records = $data->records;
+            foreach($records as $r) {
+                if(count($r) === $num) {
+                    $context = current(explode('_', $r[$properties['context']], 2));
+                    $method = "handle_{$context}_{$r[$properties['execute']]}";
+                    $this->$method($r);
+                } else if(count($r) < $num) {
+                    $this->log_filer->add_error_record("not enough fields");
+                } else if(count($r) > $num) {
+                    $this->log_filer->add_error_record("too many fields");
+                }
             }
         }
     }
 
-    public function user_handler($records, $num) {
-        $user_imp = new user_import();
-        $users = $user_imp->get_items($records);
+    public function user_handler($file, $type, $num) {
+        $umethod = "import_$type";
+        method_exists($this, $umethod) OR throwException("unimplemented import $type");
 
-        foreach($users as $ui) {
-            if(!empty($ui->action)) {
-                if(!empty($ui->item)) {
-                    $method = "user_{$ui->action}";
-                    $this->$method($ui->item);
+        $user_imp = new user_import();
+        set_time_limit(0);
+        while ($data = $this->$umethod($file)) {
+            $records = $data->records;
+            $users = $user_imp->get_items($records);
+
+            foreach($users as $ui) {
+                if(!empty($ui->action)) {
+                    if(!empty($ui->item)) {
+                        $method = "user_{$ui->action}";
+                        $this->$method($ui->item);
+                    } else {
+                        $this->log_filer->add_error_record();
+                    }
                 } else {
-                    $this->log_filer->add_error_record();
+                    $this->log_filer->add_error_record('action required');
                 }
-            } else {
-                $this->log_filer->add_error_record('action required');
             }
         }
     }
@@ -240,21 +262,28 @@ abstract class elis_import {
      * @param array $records
      * @param int $num_columns
      */
-    private function course_handler($records, $num_columns) {
+    private function course_handler($file, $type, $num_columns) {
         global $CURMAN;
-        
-        foreach($records as $r) {
-            try {
-                if(count($r) === $num_columns) {
-                    $method = "handle_{$r['context']}_{$r['action']}";
-                    $this->$method($r);
-                } else if(count($r) < $num_columns) {
-                    throwException('not enough fields');
-                } else if(count($r) > $num_columns) {
-                    throwException('too many fields');
+
+        $umethod = "import_$type";
+        method_exists($this, $umethod) OR throwException("unimplemented import $type");
+
+        set_time_limit(0);
+        while ($data = $this->$umethod($file)) {
+            $records = $data->records;
+            foreach($records as $r) {
+                try {
+                    if(count($r) === $num_columns) {
+                        $method = "handle_{$r['context']}_{$r['action']}";
+                        $this->$method($r);
+                    } else if(count($r) < $num_columns) {
+                        throwException('not enough fields');
+                    } else if(count($r) > $num_columns) {
+                        throwException('too many fields');
+                    }
+                } catch(Exception $e) {
+                    $this->log_filer->add_error_record($e->getMessage());
                 }
-            } catch(Exception $e) {
-                $this->log_filer->add_error_record($e->getMessage());
             }
         }
     }
@@ -294,7 +323,7 @@ abstract class elis_import {
                 $this->log_filer->add_warning("invalid environment name {$r[$properties['environment']]}");
             }
         }
-        
+
         $ci = new course_import();
         $course = $ci->get_item($r);
 
@@ -319,7 +348,7 @@ abstract class elis_import {
     private function handle_track_create($r) {
         $ti = new track_import();
         $properties = $ti->get_properties_map();
-        
+
         if(!empty($properties['assignment']) && !empty($r[$properties['assignment']])) {      //assignment column can not be renamed
             $curriculum = curriculum::get_by_idnumber($r[$properties['assignment']]);
 
@@ -405,9 +434,9 @@ abstract class elis_import {
 
     /**
      * updates an elis course
-     * 
+     *
      * @global object $CURMAN
-     * @param array $r 
+     * @param array $r
      */
     public function handle_course_update($r) {
         global $CURMAN;
@@ -719,7 +748,7 @@ abstract class elis_import {
         if(!empty($user->idnumber)) {
             $old_user = $user;
             $user = user::get_by_idnumber($user->idnumber);
-            
+
             if(!empty($user)) {
                 if(!empty($user)) {
                     foreach($old_user->properties as $key=>$null) {
@@ -737,7 +766,7 @@ abstract class elis_import {
                             if(!empty($old_user->auth)) {
                                 $CURMAN->db->set_field('user', 'auth', $old_user->auth, 'id', cm_get_moodleuserid($user->id));
                             }
-                            
+
                             $this->log_filer->add_success("user {$user->to_string()} successfully updated");
                         } else {
                             $this->log_filer->add_error_record("failed to update user {$user->to_string()}");
@@ -959,7 +988,7 @@ abstract class elis_import {
                             if(!empty($roleid)) {
                                 $starttime = empty($item[$properties['enrolmenttime']])? 0: $item[$properties['enrolmenttime']];
                                 $endtime = empty($item[$properties['completetime']])? 0: $item[$properties['completetime']];
-                                
+
                                 if(role_assign($roleid, $parentid, 0, $context->id, $starttime, $endtime)) {
                                     $this->log_filer->add_success("$parent_recordid made {$item[$properties['role']]} of  $idnumber");
                                 } else {
@@ -1215,14 +1244,14 @@ class user_import extends import {
      */
     public function get_items($records) {
         global $USER;
-        
+
         $properties_map = $this->get_properties_map();
         $user = new user();
         $retval = array();
 
         foreach($records as $rec) {
             $user_record = array();
-            
+
             foreach($user->properties as $p=>$null) {
                 if(!empty($properties_map[$p])) {
                     if(!empty($rec[$properties_map[$p]])) {
@@ -1293,8 +1322,14 @@ class user_import extends import {
      */
     public function get_properties_map() {
         global $CURMAN;
+        static $map;
+
+        if (isset($map)) {
+            return $map;
+        }
 
         $u = new user();
+
         $properties = array_keys($u->properties);
 
         $map = array_combine($properties, $properties);
@@ -1306,7 +1341,7 @@ class user_import extends import {
         $map['execute'] = 'action';
         $map['theme'] = 'theme';
         $map['auth'] = 'auth';
-        
+
         $custom_fields = field::get_for_context_level('user');
 
         if(!empty($custom_fields)) {
@@ -1344,7 +1379,7 @@ class student_import extends import {
 
         $properties_map = $this->get_properties_map();
         $item = new $this->data_object();
-        
+
         $item_record = array();
 
         foreach($item->properties as $p=>$null) {
@@ -1390,7 +1425,7 @@ class student_import extends import {
         }else {
             if(strcmp($location, 'class') === 0) {
                 $cmclass = cmclass::get_by_idnumber($id);
-                
+
                 if(!empty($cmclass)) {
                     $item_record['classid'] = $cmclass->id;
                     $temp->item = new student($item_record);            //dynamic student class
@@ -1415,6 +1450,11 @@ class student_import extends import {
      */
     public function get_properties_map() {
         global $CURMAN;
+        static $map;
+
+        if (isset($map)) {
+            return $map;
+        }
 
         $item = new student();                         //dynamic student class
         $properties = array_keys($item->properties);
@@ -1424,7 +1464,7 @@ class student_import extends import {
         unset($map['classid']);
         unset($map['userid']);
         unset($map['idnumber']);
-        
+
         $map['user_idnumber'] = 'user_idnumber';
         $map['role'] = 'role';
         $map['context'] = 'context';
@@ -1464,7 +1504,7 @@ class student_import extends import {
         if(empty($map['user_idnumber']) || empty($columnkeys[$map['user_idnumber']])) {
             return false;
         }
-        
+
         return true;
     }
 
@@ -1513,11 +1553,11 @@ class course_import extends import {
      */
     public function get_item($record) {
         global $CURMAN;
-        
+
         $properties_map = $this->get_properties_map();
         $item = new course();
         $item_record = array();
-        
+
         foreach($item->properties as $p=>$null) {
             if(!empty($properties_map[$p])) {
                 if(!empty($record[$properties_map[$p]])) {
@@ -1561,6 +1601,11 @@ class course_import extends import {
      */
     public function get_properties_map() {
         global $CURMAN;
+        static $map;
+
+        if (isset($map)) {
+            return $map;
+        }
 
         $u = new course();
         $properties = array_keys($u->properties);
@@ -1573,7 +1618,7 @@ class course_import extends import {
         $map['environment'] = 'environment';
         $map['assignment'] = 'assignment';
         $map['link'] = 'link';
-        
+
         $properties_map = $CURMAN->db->get_records('block_rlip_fieldmap', 'context', 'course');
 
         if(!empty($properties_map)) {
@@ -1592,7 +1637,7 @@ class course_import extends import {
 class cmclass_import extends import {
     protected $data_object = 'cmclass';
     protected $context = 'class';
-    
+
     /**
      *
      * @param <type> $record
@@ -1634,7 +1679,7 @@ class cmclass_import extends import {
 
         return $temp;
     }
-    
+
     /**
      *
      * @global <type> $CURMAN
@@ -1642,6 +1687,11 @@ class cmclass_import extends import {
      */
     public function get_properties_map() {
         global $CURMAN;
+        static $map;
+
+        if (isset($map)) {
+            return $map;
+        }
 
         $u = new cmclass();
         $properties = array_keys($u->properties);
@@ -1659,7 +1709,7 @@ class cmclass_import extends import {
         $map['track'] = 'track';
         $map['moodlecourseid'] = 'moodlecourseid';
         $map['autocreate'] = 'autocreate';
-        
+
         $properties_map = $CURMAN->db->get_records('block_rlip_fieldmap', 'context', 'class');
 
         if(!empty($properties_map)) {
@@ -1712,6 +1762,11 @@ class curriculum_import extends import {
      */
     public function get_properties_map() {
         global $CURMAN;
+        static $map;
+
+        if (isset($map)) {
+            return $map;
+        }
 
         $u = new curriculum();
         $properties = array_keys($u->properties);
@@ -1722,7 +1777,7 @@ class curriculum_import extends import {
         unset($map['timeapproved']);
         unset($map['timemodified']);
         unset($map['iscustom']);
-        
+
         $properties_map = $CURMAN->db->get_records('block_rlip_fieldmap', 'context', 'curriculum');
 
         if(!empty($properties_map)) {
@@ -1741,7 +1796,7 @@ class curriculum_import extends import {
 class track_import extends import {
     protected $data_object = 'track';
     protected $context = 'track';
-    
+
     /**
      *
      * @param <type> $record
@@ -1751,7 +1806,7 @@ class track_import extends import {
         $properties_map = $this->get_properties_map();
         $item = new track();
         $item_record = array();
-        
+
         foreach($item->properties as $p=>$null) {
             if(!empty($properties_map[$p])) {
                 if(!empty($record[$properties_map[$p]])) {
@@ -1775,12 +1830,17 @@ class track_import extends import {
 
     /**
      * used for mapping user defined fields to elis properties
-     * 
+     *
      * @global <type> $CURMAN
      * @return <type>
      */
     public function get_properties_map() {
         global $CURMAN;
+        static $map;
+
+        if (isset($map)) {
+            return $map;
+        }
 
         $u = new track();
         $properties = array_keys($u->properties);
@@ -1792,7 +1852,7 @@ class track_import extends import {
         unset($map['timemodified']);
         unset($map['curid']);
         unset($map['defaulttrack']);
-        
+
         $map['assignment'] = 'assignment';
         $map['autocreate'] = 'autocreate';
 
