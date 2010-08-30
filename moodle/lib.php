@@ -129,6 +129,8 @@ abstract class elis_import {
     }
 
     public function process($records, $type) {
+//        if (RLIP_DEBUG_TIME) $start = microtime(true);
+
         foreach($records as $record) {
             try {
                 if(empty($record['execute'])) {
@@ -141,6 +143,12 @@ abstract class elis_import {
                 $this->log_filer->add_error_record($e->getMessage());
             }
         }
+
+//        if (RLIP_DEBUG_TIME) {
+//            $end  = microtime(true);
+//            $time = $end - $start;
+//            mtrace("elis_import.process('$type'): $time");
+//        }
     }
 
     /**
@@ -242,6 +250,8 @@ abstract class elis_import {
     public function user_add($user) {
         global $CFG;
 
+        if (RLIP_DEBUG_TIME) $start = microtime(true);
+
         $ui = new user_import();
         $ui->check_new($user);
 
@@ -251,6 +261,12 @@ abstract class elis_import {
         $user['mnethostid'] = $CFG->mnet_localhost_id;
         $user['confirmed'] = 1;
         $user['id'] = insert_record('user', (object)$user);
+
+        if (RLIP_DEBUG_TIME) {
+            $end  = microtime(true);
+            $time = $end - $start;
+            mtrace("elis_import.user_add(): $time");
+        }
 
         if(!empty($user['id'])) {
             $this->log_filer->add_success("user {$user['username']} added");
@@ -621,12 +637,25 @@ class user_import extends import {
     }
 
     public function check_new($record) {
+        global $CFG;
+
+        if (RLIP_DEBUG_TIME) $start = microtime(true);
+
         $retval = true;
 
-        $retval = $retval && !record_exists('user', 'username', $record['username'], 'deleted', 0) or
-                    throwException("user {$record['username']} already exists");
+        $retval = $retval && !record_exists('user', 'mnethostid', $CFG->mnet_localhost_id, 'username', $record['username'], 'deleted', 0);
 
-        return $retval;
+        if (RLIP_DEBUG_TIME) {
+            $end  = microtime(true);
+            $time = $end - $start;
+            mtrace("elis_import.check_new(): $time");
+        }
+
+        if (!$retval) {
+            throwException("user {$record['username']} already exists");
+        } else {
+            return $retval;
+        }
     }
 
     public function check_old($record) {

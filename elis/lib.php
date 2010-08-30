@@ -118,8 +118,16 @@ abstract class elis_import {
             throwException("missing required fields $missing");
         }
 
-///.... This process $records, one by one. Change this to do one record at a time, and process them from CVS.
+        if (RLIP_DEBUG_TIME) $start = microtime(true);
+
+    ///.... This process $records, one by one. Change this to do one record at a time, and process them from CVS.
         $this->user_handler($file, $type, count($columns));
+
+        if (RLIP_DEBUG_TIME) {
+            $end  = microtime(true);
+            $time = $end - $start;
+            mtrace("elis_import.get_user('$type'): $time");
+        }
     }
 
     /**
@@ -227,6 +235,9 @@ abstract class elis_import {
         $user_imp = new user_import();
         set_time_limit(0);
         while ($data = $this->$umethod($file)) {
+
+            if (RLIP_DEBUG_TIME) $start = microtime(true);
+
             $records = $data->records;
             $users = $user_imp->get_items($records);
 
@@ -241,6 +252,12 @@ abstract class elis_import {
                 } else {
                     $this->log_filer->add_error_record('action required');
                 }
+            }
+
+            if (RLIP_DEBUG_TIME) {
+                $end  = microtime(true);
+                $time = $end - $start;
+                mtrace("elis_import.user_handler('$type'): $time");
             }
         }
     }
