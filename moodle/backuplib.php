@@ -39,7 +39,7 @@ function content_rollover($from) {
     }
 
 /// Check backup_version.
-//    upgrade_backup_db('curriculum/index.php?s=cur&section=curr');
+    upgrade_backup_db('blocks/rlip/moodle/displaypage.php');
 
     $prefs = array(
         'backup_metacourse'   => 0,
@@ -349,7 +349,7 @@ function rollover_import_backup_file_silently($pathtofile,$destinationcourse,$em
     }
     $restore = clone($SESSION->restore);
 
-    if (!restore_execute($SESSION->restore,$SESSION->info,$SESSION->course_header,$errorstr)) {
+    if (!restore_execute($restore,$SESSION->info,$SESSION->course_header,$errorstr)) {
         mtrace($debuginfo.'Failed restore_execute (error was '.$errorstr.')');
         return false;
     }
