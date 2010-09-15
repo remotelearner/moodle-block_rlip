@@ -182,7 +182,7 @@ abstract class elis_import {
             $courseid = get_field('course', 'id', 'shortname', $r['link']);
 
             if(!empty($courseid)) {
-                $r['id'] = content_rollover($courseid);
+                $r['id'] = content_rollover($courseid, (empty($r['startdate']) ? NULL : $r['startdate']));
             }
 
             // Rename the fullname, shortname and idnumber of the restored course

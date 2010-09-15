@@ -6,9 +6,10 @@
  * Rollover will restore into a new blank course
  *
  * @param int $from The course ID we are taking content from.
+ * @param int $startdate Optional date the course will start on.
  * @return bool True on success, False otherwise.
  */
-function content_rollover($from) {
+function content_rollover($from, $startdate=0) {
     global $CFG;
 
     require_once $CFG->dirroot . '/backup/lib.php';
@@ -68,7 +69,8 @@ function content_rollover($from) {
         'restore_logs'         => 0,
         'restore_site_files'   => 1,
         'restore_course_files' => 1,
-        'restore_messages'     => 0
+        'restore_messages'     => 0,
+        'restore_startdate'    => $startdate
     );
 
     $newcourseid = false;
@@ -315,8 +317,13 @@ function rollover_import_backup_file_silently($pathtofile,$destinationcourse,$em
     $SESSION->restore->restore_site_files = $restore->restore_site_files = (isset($preferences['restore_site_files']) ? $preferences['restore_site_files'] : 0);
     $SESSION->restore->backup_version = $SESSION->info->backup_backup_version;
 
-    // TODO: SET THE PROPER START DATE WITH A CORRECT OFFSET
-    $SESSION->restore->course_startdateoffset   = $SESSION->course_header->course_startdate;
+    // If a start date was specified, determine the difference between the start date of the template course
+    // and the one specified for use in module dates.
+    if (!empty($preferences['restore_startdate'])) {
+        $SESSION->restore->course_startdateoffset = $preferences['restore_startdate'] - $SESSION->course_header->course_startdate;
+    } else {
+        $SESSION->restore->course_startdateoffset = 0;
+    }
     // Set restore groups to 0
     $SESSION->restore->groups                   = $restore->groups = RESTORE_GROUPS_NONE;
     // Set restore cateogry to 0, restorelib.php will look in the backup xml file
