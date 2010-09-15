@@ -23,7 +23,7 @@
  * @copyright  (C) 2008-2010 Remote Learner.net Inc http://www.remote-learner.net
  *
  */
-    define('RLIP_DEBUG_TIME',  true);
+    define('RLIP_DEBUG_TIME',  false);
 
     global $CFG;
 
