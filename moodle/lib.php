@@ -249,6 +249,7 @@ abstract class elis_import {
      */
     public function user_add($user) {
         global $CFG;
+        require_once($CFG->dirroot.'/user/profile/lib.php');
 
         if (RLIP_DEBUG_TIME) $start = microtime(true);
 
@@ -260,7 +261,18 @@ abstract class elis_import {
         $user['timemodified']   = time();
         $user['mnethostid'] = $CFG->mnet_localhost_id;
         $user['confirmed'] = 1;
-        $user['id'] = insert_record('user', (object)$user);
+        $user = (object)$user;
+        $user->id = insert_record('user', $user);
+
+        /// Save custom profile fields.
+        if ($fields = get_records('user_info_field')) {
+            foreach ($fields as $field) {
+                require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+                $newfield = 'profile_field_'.$field->datatype;
+                $formfield = new $newfield($field->id, $user->id);
+                $formfield->edit_save_data($user);
+            }
+        }
 
         if (RLIP_DEBUG_TIME) {
             $end  = microtime(true);
@@ -268,10 +280,10 @@ abstract class elis_import {
             mtrace("elis_import.user_add(): $time");
         }
 
-        if(!empty($user['id'])) {
-            $this->log_filer->add_success("user {$user['username']} added");
+        if(!empty($user->id)) {
+            $this->log_filer->add_success("user {$user->username} added");
         } else {
-            throwException("user {$user['username']} not added");
+            throwException("user {$user->username} not added");
         }
     }
 
@@ -552,7 +564,7 @@ class user_import extends import {
         $custom_fields = get_records('user_info_field');
         if(!empty($custom_fields)) {
             foreach($custom_fields as $cf) {
-                $retval[$cf->shortname] = $cf->shortname;
+                $retval["profile_field_{$cf->shortname}"] = "profile_field_{$cf->shortname}";
             }
         }
 
