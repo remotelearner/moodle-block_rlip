@@ -763,13 +763,14 @@ abstract class elis_import {
         global $CURMAN;
 
         if(!empty($user->idnumber)) {
-            $old_user = $user;
+            $old_user = clone($user);
             $user = user::get_by_idnumber($user->idnumber);
 
             if(!empty($user)) {
                 if(!empty($user)) {
-                    foreach($old_user->properties as $key=>$null) {
-                        if(!empty($old_user->$key)) {
+                    $properties = get_object_vars($old_user);
+                    foreach($properties as $key=>$null) {
+                        if(!empty($old_user->$key) && (!isset($user->$key) || ($old_user->$key != $user->$key))) {
                             $user->$key = $old_user->$key;
                         }
                     }
