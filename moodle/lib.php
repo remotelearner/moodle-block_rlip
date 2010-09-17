@@ -812,7 +812,7 @@ class enrolment_import extends import {
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
 
         !record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
-                    throwException("{$record['username']} already a {$record['role']} in {$record['instance']}");
+                    throwException("{$record['username']} already assigned as {$record['role']} in {$record['instance']}");
 
         return true;
     }
@@ -866,7 +866,7 @@ class enrolment_import extends import {
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
 
         record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
-                    throwException("{$record['username']} already a {$record['role']} in {$record['instance']}");
+                    throwException("{$record['username']} not assigned as {$record['role']} in {$record['instance']}");
 
         return true;
     }
