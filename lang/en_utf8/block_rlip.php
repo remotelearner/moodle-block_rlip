@@ -41,6 +41,7 @@ $string['track_properties'] = 'Track properties map';
 $string['user'] = 'User';
 $string['user_properties'] = 'User properties map';
 
+$string['configcreategroups'] = 'If set, will automatically create new groups and groupings in the specified course.';
 $string['configfilelocation'] = 'This defines the absolute path to the directory that is checked for import files.';
 $string['configexportfilelocation'] = 'This defines the absolute path to the export file that you wish to use. This ' .
                                       'is not a directory location, but the exact location of the export file itself. ' .
@@ -59,6 +60,7 @@ Each tab also specifies the mapping between each moodle fields and the fields wi
 $string['blockname'] = 'Course Completion Export';
 $string['createdata'] = 'Create user completion data';
 $string['createdemptyfile'] = 'Created export file $a with no data';
+$string['creategroups'] = 'Create groups and groupings';
 $string['filenotdefined'] = 'Export file not defined';
 $string['filerecordwriteerror'] = 'Unable to write line $a';
 $string['filewriteerror'] = 'Unable to write header to local file $a';

@@ -143,7 +143,7 @@ class courseimport_form extends moodleform {
         foreach($data as $key => $p) {
             $mform->addElement('text', 'cur_' . $key, $key . ': ');
         }
-        
+
         $mform->closeHeaderBefore('save_buttons');
 
         $group = array();

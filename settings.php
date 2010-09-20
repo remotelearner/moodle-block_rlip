@@ -34,4 +34,6 @@ $settings->add(new admin_setting_configtext('block_rlip_emailnotification', get_
 $settings->add(new admin_setting_configcheckbox('block_rlip_exportallhistorical', get_string('exportallhistorical', 'block_rlip'),
                    get_string('configexportallhistorical', 'block_rlip'), '0'));
 
+$settings->add(new admin_setting_configcheckbox('block_rlip_creategroups', get_string('creategroups', 'block_rlip'),
+                   get_string('configcreategroups', 'block_rlip'), '0'));
 ?>

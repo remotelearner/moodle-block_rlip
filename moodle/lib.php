@@ -327,6 +327,8 @@ abstract class elis_import {
      * @param array $item student record to enrol
      */
     public function enrolment_add($item) {
+        global $CFG;
+
         $ei = new enrolment_import();
         $ei->check_new($item);
         $context = $ei->get_context_instance($item);
@@ -338,6 +340,49 @@ abstract class elis_import {
         $timeend = empty($item['timeend'])?0:$item['timeend'];
         role_assign($roleid, $userid, 0, $context->id, $timestart, $timeend, 0, 'manual');
         build_context_path();
+
+        /// Handle any groups and groupings...
+        if (!empty($item['group'])) {
+            if ($courseid = get_field('course', 'id', 'shortname', $item['instance'])) {
+                if (!($groupid = groups_get_group_by_name($courseid, $item['group']))) {
+                    if ($CFG->block_rlip_creategroups) {
+                        /// Group needs to be created if configured that way...
+                        $group = new Object();
+                        $group->name = addslashes($item['group']);
+                        $group->courseid = $courseid;
+                        if (!$groupid = groups_create_group($group)) {
+                            throwException("Failed to create group {$item['group']}");
+                        }
+                    } else {
+                        throwException("Invalid group {$item['group']} specified");
+                    }
+                }
+                if (!groups_add_member($groupid, $userid)) {
+                    throwException("Assigning user {$item['username']} to group {$item['group']} failed");
+                }
+
+                if (!empty($item['grouping'])) {
+                    if (!($groupingid = groups_get_grouping_by_name($courseid, $item['grouping']))) {
+                        if ($CFG->block_rlip_creategroups) {
+                            /// Groupings needs to be created if configured that way...
+                            $grouping = new Object();
+                            $grouping->name = addslashes($item['grouping']);
+                            $grouping->courseid = $courseid;
+                            if (!$groupingid = groups_create_grouping($grouping)) {
+                                throwException("Failed to create grouping {$item['grouping']}");
+                            }
+                        } else {
+                            throwException("Invalid grouping {$item['grouping']} specified");
+                        }
+                    }
+                    if (!groups_assign_grouping($groupingid, $groupid)) {
+                        throwException("Assigning group {$item['group']} to grouping {$item['grouping']} failed");
+                    }
+                }
+            } else {
+                throwException("Course {$item['instance']} does not exist");
+            }
+        }
 
         $this->log_filer->add_success("assigned user {$item['username']} to the {$item['role']} role of the {$item['context']} {$item['instance']}");
     }
@@ -378,11 +423,10 @@ abstract class elis_import {
         $timestart = empty($item['timestart'])?0:$item['timestart'];
         $timeend = empty($item['timeend'])?0:$item['timeend'];
 
-        role_unassign($roleid, $userid, 0, $context->id);
+        role_assign($roleid, $userid, 0, $context->id, $timestart, $timeend, 0, 'manual');
+        build_context_path();
 
-        update_record('assignments', (object)$item);
-
-        $this->log_filer->add_success("updated user {$item['username']} from the {$item['role']} role of the {$item['context']} {$item['instance']}");
+        $this->log_filer->add_success("updated user {$item['username']} to the {$item['role']} role of the {$item['context']} {$item['instance']}");
     }
 }
 
@@ -701,8 +745,10 @@ class enrolment_import extends import {
                         'useridnumber',
                         'context',
                         'timestart',        //date to unix timestamp
-                        'timeend',
-                        'instance');         //date to unix timestamp
+                        'timeend',          //date to unix timestamp
+                        'instance',
+                        'group',
+                        'grouping');
 
         $retval = array_combine($retval, $retval);
         $retval['execute'] = 'action';
