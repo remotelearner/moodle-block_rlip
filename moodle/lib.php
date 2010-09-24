@@ -270,6 +270,11 @@ abstract class elis_import {
                 require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
                 $newfield = 'profile_field_'.$field->datatype;
                 $formfield = new $newfield($field->id, $user->id);
+                /// The API expects the array index of the choice, if the field type supports choices.
+                /// We need to determine the index of the choice value we receive.
+                if (isset($formfield->options) && !empty($formfield->options)) {
+                    $user->{$formfield->inputname} = array_search($user->{$formfield->inputname}, $formfield->options);
+                }
                 $formfield->edit_save_data($user);
             }
         }
@@ -310,6 +315,11 @@ abstract class elis_import {
                 require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
                 $newfield = 'profile_field_'.$field->datatype;
                 $formfield = new $newfield($field->id, $user->id);
+                /// The API expects the array index of the choice, if the field type supports choices.
+                /// We need to determine the index of the choice value we receive.
+                if (isset($formfield->options) && !empty($formfield->options)) {
+                    $user->{$formfield->inputname} = array_search($user->{$formfield->inputname}, $formfield->options);
+                }
                 $formfield->edit_save_data($user);
             }
         }
