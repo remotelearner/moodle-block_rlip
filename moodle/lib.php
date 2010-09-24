@@ -292,6 +292,8 @@ abstract class elis_import {
      * @param object $user user to be updated
      */
     public function user_update($user) {
+        global $CFG;
+
         $ui = new user_import();
         $ui->check_old($user);
 
@@ -299,12 +301,23 @@ abstract class elis_import {
         $user['password']   = $user['password'];
         $user['timemodified']   = time();
 
-        $user['id'] = get_field('user', 'id', 'username', $user['username']);
+        $user = (object)$user;
+        $user->id = get_field('user', 'id', 'username', $user->username);
 
-        if(update_record('user', (object)$user)) {
-            $this->log_filer->add_success("user {$user['username']} updated");
+        /// Save custom profile fields.
+        if ($fields = get_records('user_info_field')) {
+            foreach ($fields as $field) {
+                require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
+                $newfield = 'profile_field_'.$field->datatype;
+                $formfield = new $newfield($field->id, $user->id);
+                $formfield->edit_save_data($user);
+            }
+        }
+
+        if(update_record('user', $user)) {
+            $this->log_filer->add_success("user {$user->username} updated");
         } else {
-            throwException("user {$user['username']} not updated");
+            throwException("user {$user->username} not updated");
         }
     }
 
