@@ -25,6 +25,7 @@
  */
 
 require_once ('backuplib.php');
+require_once($CFG->dirroot.'/user/profile/lib.php');
 
 define('RLIP_DIRLOCATION', $CFG->dirroot . '/blocks/rlip');
 
@@ -249,7 +250,6 @@ abstract class elis_import {
      */
     public function user_add($user) {
         global $CFG;
-        require_once($CFG->dirroot.'/user/profile/lib.php');
 
         if (RLIP_DEBUG_TIME) $start = microtime(true);
 
