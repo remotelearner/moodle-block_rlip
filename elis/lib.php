@@ -602,16 +602,7 @@ abstract class elis_import {
                 if(!empty($r[$properties[$p]])) {
                     /// Process date and time fields.
                     if (($p == 'startdate') || ($p == 'enddate')) {
-                        if ($CFG->block_rlip_dateformat == 'M/D/Y') {
-                            list($month, $day, $year) = explode('/', $r[$properties[$p]]);
-                        } else if ($CFG->block_rlip_dateformat == 'D-M-Y') {
-                            list($day, $month, $year) = explode('-', $r[$properties[$p]]);
-                        } else if ($CFG->block_rlip_dateformat == 'Y.M.D') {
-                            list($year, $month, $day) = explode('.', $r[$properties[$p]]);
-                        } else {
-                            ///error!
-                        }
-                        $class->$p = make_timestamp($year, $month, $day);
+                        $class->$p = get_IP_timestamp($r[$properties[$p]]);
                     } else {
                         $class->$p = $r[$properties[$p]];
                     }
@@ -644,7 +635,12 @@ abstract class elis_import {
         foreach($track->properties as $p=>$null) {
             if(!empty($properties[$p])) {
                 if(!empty($r[$properties[$p]])) {
-                    $track->$p = $r[$properties[$p]];
+                    /// Process date and time fields.
+                    if (($p == 'startdate') || ($p == 'enddate')) {
+                        $class->$p = get_IP_timestamp($r[$properties[$p]]);
+                    } else {
+                        $class->$p = $r[$properties[$p]];
+                    }
                 }
             }
         }
@@ -1695,16 +1691,7 @@ class cmclass_import extends import {
                 if(!empty($record[$properties_map[$p]])) {
                     /// Process date and time fields.
                     if (($p == 'startdate') || ($p == 'enddate')) {
-                        if ($CFG->block_rlip_dateformat == 'M/D/Y') {
-                            list($month, $day, $year) = explode('/', $record[$properties_map[$p]]);
-                        } else if ($CFG->block_rlip_dateformat == 'D-M-Y') {
-                            list($day, $month, $year) = explode('-', $record[$properties_map[$p]]);
-                        } else if ($CFG->block_rlip_dateformat == 'Y.M.D') {
-                            list($year, $month, $day) = explode('.', $record[$properties_map[$p]]);
-                        } else {
-                            ///error!
-                        }
-                        $item_record[$p] = make_timestamp($year, $month, $day);
+                        $item_record[$p] = get_IP_timestamp($record[$properties_map[$p]]);
                     } else {
                         $item_record[$p] = $record[$properties_map[$p]];
                     }
@@ -1866,7 +1853,12 @@ class track_import extends import {
         foreach($item->properties as $p=>$null) {
             if(!empty($properties_map[$p])) {
                 if(!empty($record[$properties_map[$p]])) {
-                    $item_record[$p] = $record[$properties_map[$p]];
+                    /// Process date and time fields.
+                    if (($p == 'startdate') || ($p == 'enddate')) {
+                        $item_record[$p] = get_IP_timestamp($record[$properties_map[$p]]);
+                    } else {
+                        $item_record[$p] = $record[$properties_map[$p]];
+                    }
                 }
             }
         }
@@ -2019,5 +2011,30 @@ abstract class import {
 
 function throwException($message = null, $code = null) {
     throw new Exception($message, $code);
+}
+
+/**
+ *
+ * Return a Moodle timestamp from the passed in date string formatted as specified in $CFG->block_rlip_dateformat.
+ *
+ * @param string $timestring Formatted according to the $CFG->block_rlip_dateformat setting.
+ * @throws Exception
+ * @return integer timestamp
+ * @uses $CFG->block_rlip_dateformat
+ *
+ */
+function get_IP_timestamp($timestring) {
+    global $CFG;
+
+    if ($CFG->block_rlip_dateformat == 'M/D/Y') {
+        list($month, $day, $year) = explode('/', $timestring);
+    } else if ($CFG->block_rlip_dateformat == 'D-M-Y') {
+        list($day, $month, $year) = explode('-', $timestring);
+    } else if ($CFG->block_rlip_dateformat == 'Y.M.D') {
+        list($year, $month, $day) = explode('.', $timestring);
+    } else {
+        throwException("Invalid time format specified.");
+    }
+    return make_timestamp($year, $month, $day);
 }
 ?>
