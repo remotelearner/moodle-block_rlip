@@ -36,4 +36,8 @@ $settings->add(new admin_setting_configcheckbox('block_rlip_exportallhistorical'
 
 $settings->add(new admin_setting_configcheckbox('block_rlip_creategroups', get_string('creategroups', 'block_rlip'),
                    get_string('configcreategroups', 'block_rlip'), '0'));
+
+$choices = array('M/D/Y' => 'M/D/Y', 'D-M-Y' => 'D-M-Y', 'Y.M.D' => 'Y.M.D');
+$settings->add(new admin_setting_configselect('block_rlip_dateformat', get_string('dateformat', 'block_rlip'),
+                   get_string('configdateformat', 'block_rlip'), 'M/D/Y', $choices));
 ?>

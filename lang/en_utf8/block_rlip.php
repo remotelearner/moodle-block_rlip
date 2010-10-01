@@ -42,14 +42,15 @@ $string['user'] = 'User';
 $string['user_properties'] = 'User properties map';
 
 $string['configcreategroups'] = 'If set, will automatically create new groups and groupings in the specified course.';
-$string['configfilelocation'] = 'This defines the absolute path to the directory that is checked for import files.';
+$string['configdateformat'] = 'Set date format expected from import.';
+$string['configemailnotification'] = 'A comma-separated list of idnumbers of users to be sent the log of actions via email (blank for no notification).';
+$string['configexportallhistorical'] = 'Selecting this option will include all historical completion information in both the manual and scheduled executions of the export. If not selected, only data modified within the last day will be included during manual executions, and only data modified since the last scheduled execution is included for scheduled executions.';
 $string['configexportfilelocation'] = 'This defines the absolute path to the export file that you wish to use. This ' .
                                       'is not a directory location, but the exact location of the export file itself. ' .
                                       'If you do not with to create an export file, leave this option empty.';
 $string['configexportfiletimestamp'] = 'This allows the Integration Point export to append a unique timestamp to export files.';
+$string['configfilelocation'] = 'This defines the absolute path to the directory that is checked for import files.';
 $string['configlogfilelocation'] = 'This defines the directory to store all import and export log files.';
-$string['configemailnotification'] = 'A comma-separated list of idnumbers of users to be sent the log of actions via email (blank for no notification).';
-$string['configexportallhistorical'] = 'Selecting this option will include all historical completion information in both the manual and scheduled executions of the export. If not selected, only data modified within the last day will be included during manual executions, and only data modified since the last scheduled execution is included for scheduled executions.';
 
 $string['ip_export_timespan'] = 'Note: When running a test export from this page, only class completions from up to one day ago will be included, unless the \"Save and process all\" button is used.';
 
@@ -61,6 +62,7 @@ $string['blockname'] = 'Course Completion Export';
 $string['createdata'] = 'Create user completion data';
 $string['createdemptyfile'] = 'Created export file $a with no data';
 $string['creategroups'] = 'Create groups and groupings';
+$string['dateformat'] = 'Import date format';
 $string['filenotdefined'] = 'Export file not defined';
 $string['filerecordwriteerror'] = 'Unable to write line $a';
 $string['filewriteerror'] = 'Unable to write header to local file $a';

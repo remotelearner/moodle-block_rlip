@@ -537,7 +537,7 @@ abstract class elis_import {
     }
 
     public function handle_class_update($r) {
-        global $CURMAN;
+        global $CFG, $CURMAN;
 
         $properties = cmclass_import::get_properties_map();
                     //get the class that we are going to update
@@ -600,7 +600,21 @@ abstract class elis_import {
         foreach($class->properties as $p=>$null) {
             if(!empty($properties[$p])) {
                 if(!empty($r[$properties[$p]])) {
-                    $class->$p = $r[$properties[$p]];
+                    /// Process date and time fields.
+                    if (($p == 'startdate') || ($p == 'enddate')) {
+                        if ($CFG->block_rlip_dateformat == 'M/D/Y') {
+                            list($month, $day, $year) = explode('/', $r[$properties[$p]]);
+                        } else if ($CFG->block_rlip_dateformat == 'D-M-Y') {
+                            list($day, $month, $year) = explode('-', $r[$properties[$p]]);
+                        } else if ($CFG->block_rlip_dateformat == 'Y.M.D') {
+                            list($year, $month, $day) = explode('.', $r[$properties[$p]]);
+                        } else {
+                            ///error!
+                        }
+                        $class->$p = make_timestamp($year, $month, $day);
+                    } else {
+                        $class->$p = $r[$properties[$p]];
+                    }
                 }
             }
         }
@@ -702,6 +716,8 @@ abstract class elis_import {
     public function user_add($user) {
         global $CURMAN;
 
+        if (RLIP_DEBUG_TIME) $start = microtime(true);
+
         if($user->has_required_fields() === true) {
             if($user->duplicate_check() === false) {
                 if($user->add()) {
@@ -713,6 +729,12 @@ abstract class elis_import {
 
                     if(!empty($user->auth)) {
                         $CURMAN->db->set_field('user', 'auth', $user->auth, 'id', cm_get_moodleuserid($user->id));
+                    }
+
+                    if (RLIP_DEBUG_TIME) {
+                        $end  = microtime(true);
+                        $time = $end - $start;
+                        mtrace("elis_import.user_add({$user->username}): $time");
                     }
                 } else {
                     $this->log_filer->add_error_record("user {$user->to_string()} to database");
@@ -1662,6 +1684,8 @@ class cmclass_import extends import {
      * @return <type>
      */
     public function get_item($record) {
+        global $CFG;
+
         $properties_map = $this->get_properties_map();
         $item = new cmclass();
 
@@ -1669,7 +1693,21 @@ class cmclass_import extends import {
         foreach($item->properties as $p=>$null) {
             if(!empty($properties_map[$p])) {
                 if(!empty($record[$properties_map[$p]])) {
-                    $item_record[$p] = $record[$properties_map[$p]];
+                    /// Process date and time fields.
+                    if (($p == 'startdate') || ($p == 'enddate')) {
+                        if ($CFG->block_rlip_dateformat == 'M/D/Y') {
+                            list($month, $day, $year) = explode('/', $record[$properties_map[$p]]);
+                        } else if ($CFG->block_rlip_dateformat == 'D-M-Y') {
+                            list($day, $month, $year) = explode('-', $record[$properties_map[$p]]);
+                        } else if ($CFG->block_rlip_dateformat == 'Y.M.D') {
+                            list($year, $month, $day) = explode('.', $record[$properties_map[$p]]);
+                        } else {
+                            ///error!
+                        }
+                        $item_record[$p] = make_timestamp($year, $month, $day);
+                    } else {
+                        $item_record[$p] = $record[$properties_map[$p]];
+                    }
                 }
             }
         }
