@@ -41,7 +41,7 @@ if(is_elis()) {
     require_once('lib.php');
 }
 
-class importpage extends newpage {
+class importpage extends ipb_newpage {
     var $pagename = 'dim';
     var $section = 'admn';
 

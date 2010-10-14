@@ -9,7 +9,7 @@
  * @param int $startdate Optional date the course will start on.
  * @return bool True on success, False otherwise.
  */
-function content_rollover($from, $startdate=0) {
+function ipb_content_rollover($from, $startdate=0) {
     global $CFG;
 
     require_once $CFG->dirroot . '/backup/lib.php';
@@ -54,7 +54,7 @@ function content_rollover($from, $startdate=0) {
 
     $errorstr = '';
 
-    if (($filename = rollover_backup_course_silently($from, $prefs, $errorstr)) === false) {
+    if (($filename = ipb_rollover_backup_course_silently($from, $prefs, $errorstr)) === false) {
         error($errorstr);
         return false;
     }
@@ -74,7 +74,7 @@ function content_rollover($from, $startdate=0) {
     );
 
     $newcourseid = false;
-    if (!$newcourseid = rollover_import_backup_file_silently($filename, 0, false, false, $prefs)) {
+    if (!$newcourseid = ipb_rollover_import_backup_file_silently($filename, 0, false, false, $prefs)) {
         error('Error importing course data');
         return false;
     }
@@ -103,7 +103,7 @@ function content_rollover($from, $startdate=0) {
     backup_messages
 * and if not provided, they will not be included.
 */
-function rollover_backup_generate_preferences_artificially($course, $prefs) {
+function ipb_rollover_backup_generate_preferences_artificially($course, $prefs) {
     global $CFG;
     $preferences = new StdClass;
     $preferences->backup_unique_code = time();
@@ -199,7 +199,7 @@ function rollover_backup_generate_preferences_artificially($course, $prefs) {
  * @param int $courseid the id of the course
  * @param array $prefs see {@link backup_generate_preferences_artificially}
  */
-function rollover_backup_course_silently($courseid, $prefs, &$errorstring) {
+function ipb_rollover_backup_course_silently($courseid, $prefs, &$errorstring) {
     global $CFG, $preferences; // global preferences here because something else wants it :(
     if (!defined('BACKUP_SILENTLY')) {
         define('BACKUP_SILENTLY', 1);
@@ -208,7 +208,7 @@ function rollover_backup_course_silently($courseid, $prefs, &$errorstring) {
         debugging("Couldn't find course with id $courseid in backup_course_silently");
         return false;
     }
-    $preferences = rollover_backup_generate_preferences_artificially($course, $prefs);
+    $preferences = ipb_rollover_backup_generate_preferences_artificially($course, $prefs);
     if (backup_execute($preferences, $errorstring)) {
         return $CFG->dataroot . '/' . $course->id . '/backupdata/' . $preferences->backup_name;
     }
@@ -233,7 +233,7 @@ function rollover_backup_course_silently($courseid, $prefs, &$errorstring) {
  *   course_files
  *   messages
  */
-function rollover_import_backup_file_silently($pathtofile,$destinationcourse,$emptyfirst=false,$userdata=false, $preferences=array()) {
+function ipb_rollover_import_backup_file_silently($pathtofile,$destinationcourse,$emptyfirst=false,$userdata=false, $preferences=array()) {
     global $CFG,$SESSION,$USER; // is there such a thing on cron? I guess so..
     global $restore; // ick
     if (empty($USER)) {

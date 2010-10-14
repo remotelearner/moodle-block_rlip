@@ -28,7 +28,7 @@
 
 require_once $CFG->libdir . '/weblib.php';
 
-abstract class newpage {
+abstract class ipb_newpage {
     var $params;
     var $section;
 
@@ -241,7 +241,7 @@ abstract class newpage {
     function get_url() {
         return $this->get_moodle_url()->out();
     }
-    
+
     function get_new_page($params=false) {
         $page_class = get_class($this);
         return new $page_class($params);

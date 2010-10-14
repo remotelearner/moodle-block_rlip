@@ -35,6 +35,7 @@ $string['ip_link'] = 'Integration Point page';
 $string['ip_log'] = 'Integration point Log';
 
 $string['logfilelocation'] = 'Log file location';
+$string['overrideelisip'] = 'Use IP Basic';
 $string['save'] = 'Save';
 $string['title'] = 'Integration Point';
 $string['track_properties'] = 'Track properties map';
@@ -51,6 +52,7 @@ $string['configexportfilelocation'] = 'This defines the absolute path to the exp
 $string['configexportfiletimestamp'] = 'This allows the Integration Point export to append a unique timestamp to export files.';
 $string['configfilelocation'] = 'This defines the absolute path to the directory that is checked for import files.';
 $string['configlogfilelocation'] = 'This defines the directory to store all import and export log files.';
+$string['configoverrideelisip'] = 'Ignore ELIS IP and use IP Basic (Moodle only)';
 
 $string['ip_export_timespan'] = 'Note: When running a test export from this page, only class completions from up to one day ago will be included, unless the \"Save and process all\" button is used.';
 
