@@ -10,7 +10,7 @@
 function is_elis($ignoreoverride=false) {
     global $CFG;
 
-    if (!$ignoreoverride && $CFG->block_rlip_overrideelisip) {
+    if (!$ignoreoverride && !empty($CFG->block_rlip_overrideelisip)) {
         return false;
     }
 
