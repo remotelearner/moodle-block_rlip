@@ -1863,6 +1863,11 @@ class track_import extends import {
             }
         }
 
+        /// 'autocreate' is not one of the listed properties of a track. Treat it separate.
+        if (!empty($record[$properties_map['autocreate']])) {
+            $item_record['autocreate'] = $record[$properties_map['autocreate']];
+        }
+
         $curriculum = curriculum::get_by_idnumber($record[$properties_map['assignment']]);
 
         $item_record['curid'] = $curriculum->id;
