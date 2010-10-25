@@ -127,7 +127,7 @@ class dataimportpage extends newpage {
 
         $target = $this->get_new_page(array('action' => 'user'));
 
-        $usermap = user_import::get_properties_map();
+        $usermap = ipe_user_import::get_properties_map();
 
         $configform = new userimport_form($target->get_moodle_url());
 
@@ -142,7 +142,7 @@ class dataimportpage extends newpage {
             foreach($usermap as $key=>$um) {
                 if(!empty($configdata->$key)) {
                     if(strcmp($um, $configdata->$key) !== 0) {
-                        $ui = new user_import();
+                        $ui = new ipe_user_import();
                         $ui->set_property_map($key, $configdata->$key);
                     }
                 } else {
@@ -173,10 +173,10 @@ class dataimportpage extends newpage {
 
         $target = $this->get_new_page(array('action' => 'course'));
 
-        $map['crs_'] = $this->array_prefix('crs_', course_import::get_properties_map());
-        $map['cls_'] = $this->array_prefix('cls_', cmclass_import::get_properties_map());
-        $map['cur_'] = $this->array_prefix('cur_', curriculum_import::get_properties_map());
-        $map['trk_'] = $this->array_prefix('trk_', track_import::get_properties_map());
+        $map['crs_'] = $this->array_prefix('crs_', ipe_course_import::get_properties_map());
+        $map['cls_'] = $this->array_prefix('cls_', ipe_cmclass_import::get_properties_map());
+        $map['cur_'] = $this->array_prefix('cur_', ipe_curriculum_import::get_properties_map());
+        $map['trk_'] = $this->array_prefix('trk_', ipe_track_import::get_properties_map());
 
         $configform = new courseimport_form($target->get_moodle_url());
         
@@ -196,16 +196,16 @@ class dataimportpage extends newpage {
                     if(!empty($configdata->$key)) {
                         if(strcmp($um, $configdata->$key) !== 0) {
                             if(strcmp($prefix, 'crs_') === 0) {
-                                $ci = new course_import();
+                                $ci = new ipe_course_import();
                                 $ci->set_property_map(str_replace($prefix, '', $key), $configdata->$key);
                             } else if(strcmp($prefix, 'cls_') === 0) {
-                                $ci = new cmclass_import();
+                                $ci = new ipe_cmclass_import();
                                 $ci->set_property_map(str_replace($prefix, '', $key), $configdata->$key);
                             } else if(strcmp($prefix, 'cur_') === 0) {
-                                $ci = new curriculum_import();
+                                $ci = new ipe_curriculum_import();
                                 $ci->set_property_map(str_replace($prefix, '', $key), $configdata->$key);
                             } else if(strcmp($prefix, 'trk_') === 0) {
-                                $ci = new track_import();
+                                $ci = new ipe_track_import();
                                 $ci->set_property_map(str_replace($prefix, '', $key), $configdata->$key);
                             }
                         }
@@ -238,7 +238,7 @@ class dataimportpage extends newpage {
 
         $target = $this->get_new_page(array('action' => 'enrolment'));
 
-        $student_map = student_import::get_properties_map();
+        $student_map = ipe_student_import::get_properties_map();
 
         $configform = new enrolmentimport_form($target->get_moodle_url());
 
@@ -253,7 +253,7 @@ class dataimportpage extends newpage {
             foreach($student_map as $key=>$um) {
                 if(!empty($configdata->$key)) {
                     if(strcmp($um, $configdata->$key) !== 0) {
-                        $si = new student_import();
+                        $si = new ipe_student_import();
                         $si->set_property_map($key, $configdata->$key);
                     }
                 } else {

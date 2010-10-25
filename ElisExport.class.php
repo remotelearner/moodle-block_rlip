@@ -12,7 +12,7 @@ class ElisExport {
             $include_all = true;
         }
 
-        $this->log_filer = new log_filer($CFG->block_rlip_logfilelocation, 'export_' . time());
+        $this->log_filer = new ipe_log_filer($CFG->block_rlip_logfilelocation, 'export_' . time());
 
         if(empty($CFG->block_rlip_exportfilelocation)) {
             if($manual !== true) {

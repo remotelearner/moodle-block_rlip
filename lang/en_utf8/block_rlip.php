@@ -17,6 +17,7 @@ $string['export_now'] = 'Export now';
 $string['exportallhistorical'] = 'Include all historical data';
 $string['exportfilelocation'] = 'Export file location';
 $string['exportfiletimestamp'] = 'Unique export file names';
+$string['exportperiod'] = 'Export period';
 
 $string['filelocation'] = 'Import file location';
 $string['filename'] = 'File name';
@@ -27,6 +28,7 @@ $string['generalimportinfo'] = 'This checks for specially formatted files in a s
 $string['import_all'] = 'Import all';
 $string['import_location_missing'] = 'Import file location is missing. Please ensure rlip was set up correctly.';
 $string['import_save'] = 'Save and process';
+$string['importperiod'] = 'Import period';
 
 $string['ip_disabled_warning'] = 'WARNING! Integration Point functionality is an additional paid service and has not been enabled on this site. As such, the settings in this section will not be used. Please contact Remote-Learner for assistance on this topic via the link provided below.';
 $string['ip_enabled'] = 'Integration Point Functionality';
@@ -42,6 +44,17 @@ $string['track_properties'] = 'Track properties map';
 $string['user'] = 'User';
 $string['user_properties'] = 'User properties map';
 
+$string['filepaths'] = 'File paths';
+$string['configfilepaths'] = 'These paths should be configured by a Remote-Learner staff member to ensure the correct functionality of Integration Point.';
+$string['notifications'] = 'Notifications';
+$string['confignotifications'] = '';
+$string['import'] = 'Import';
+$string['configimport'] = '';
+$string['export'] = 'Export';
+$string['configexport'] = '';
+$string['elis'] = 'ELIS';
+$string['configelis'] = 'Settings in this section apply specifically to sites running ELIS.';
+
 $string['configcreategroups'] = 'If set, will automatically create new groups and groupings in the specified course.';
 $string['configdateformat'] = 'Set date format expected from import.';
 $string['configemailnotification'] = 'A comma-separated list of idnumbers of users to be sent the log of actions via email (blank for no notification).';
@@ -50,7 +63,9 @@ $string['configexportfilelocation'] = 'This defines the absolute path to the exp
                                       'is not a directory location, but the exact location of the export file itself. ' .
                                       'If you do not with to create an export file, leave this option empty.';
 $string['configexportfiletimestamp'] = 'This allows the Integration Point export to append a unique timestamp to export files.';
+$string['configexportperiod'] = 'This setting controls how often the export is run. Values can be entered in the form *d*h*m to represent days, hours, and minutes. Please set this value to five minutes or longer to allow ample time for processing.';
 $string['configfilelocation'] = 'This defines the absolute path to the directory that is checked for import files.';
+$string['configimportperiod'] = 'This setting controls how often the import is run. Values can be entered in the form *d*h*m to represent days, hours, and minutes. Please set this value to five minutes or longer to allow ample time for processing.';
 $string['configlogfilelocation'] = 'This defines the directory to store all import and export log files.';
 $string['configoverrideelisip'] = 'Ignore ELIS IP and use IP Basic (Moodle only)';
 

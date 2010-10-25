@@ -25,6 +25,8 @@
  */
     define('RLIP_DEBUG_TIME',  false);
 
+    require_once($CFG->dirroot . '/blocks/rlip/sharedlib.php');
+    
     global $CFG;
 
     $context = get_context_instance(CONTEXT_SYSTEM);
@@ -54,16 +56,24 @@
         $plugin_name = 'import_' . $CFG->$variable;
         $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib.php';
 
-        @include_once($plugin);
+        include_once($plugin);
+        
+        if(is_elis()) {
+            $plugin_name .= '_elis';
+        } else {
+            $plugin_name .= '_moodle';
+        }
 
         if(class_exists($plugin_name)) {
             $importer = new $plugin_name($logfile);
 
-            if(is_subclass_of($importer, 'elis_import')) {
+            //if(is_subclass_of($importer, 'ipe_import')) {
                 $variable = "block_rlip_imp{$i}_filename";
                 $success = $importer->import_records($CFG->block_rlip_filelocation . '/' . $CFG->$variable, $i);
                 $any_success = true;
-            }
+            //}
+        } else {
+            echo 'missing: ' . $plugin_name;
         }
 
         if(!empty($success)) {

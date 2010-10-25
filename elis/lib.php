@@ -24,9 +24,12 @@
  *
  */
 
-define('RLIP_DIRLOCATION', $CFG->dirroot . '/blocks/rlip');
+if(!defined('RLIP_DIRLOCATION')) {
+    define('RLIP_DIRLOCATION', $CFG->dirroot . '/blocks/rlip');
+}
 
 require_once (CURMAN_DIRLOCATION . '/lib/user.class.php');
+require_once($CFG->dirroot . '/blocks/rlip/sharedlib.php');
 
 define('logfile', 'logfile.log');
 
@@ -56,7 +59,7 @@ abstract class elis_import {
     public function __construct($logfile=null) {
         global $CFG;
 
-        $this->log_filer = new log_filer($CFG->block_rlip_logfilelocation, $logfile);
+        $this->log_filer = new ipe_log_filer($CFG->block_rlip_logfilelocation, $logfile);
     }
 
     /**
@@ -104,29 +107,31 @@ abstract class elis_import {
         method_exists($this, $method) OR throwException("unimplemented import $type");
         $data = $this->$method($file, true);  //calls import_<import type> on the import file
 
-        $columns = $data->header;
+        if(!empty($data->header)) {
+            $columns = $data->header;
 
-        $ui = new user_import();
-        $properties = $ui->get_properties_map();
+            $ui = new ipe_user_import();
+            $properties = $ui->get_properties_map();
 
-        in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
+            in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
 
-        if(!$ui->check_required_columns($columns)) {
-            $missing_fields = $ui->get_missing_fields($columns);
-            $missing = implode(', ', $missing_fields);
+            if(!$ui->check_required_columns($columns)) {
+                $missing_fields = $ui->get_missing_fields($columns);
+                $missing = implode(', ', $missing_fields);
 
-            throwException("missing required fields $missing");
-        }
+                throwException("missing required fields $missing");
+            }
 
-        if (RLIP_DEBUG_TIME) $start = microtime(true);
+            if (RLIP_DEBUG_TIME) $start = microtime(true);
 
-    ///.... This process $records, one by one. Change this to do one record at a time, and process them from CVS.
-        $this->user_handler($file, $type, count($columns));
+        ///.... This process $records, one by one. Change this to do one record at a time, and process them from CVS.
+            $this->user_handler($file, $type, count($columns));
 
-        if (RLIP_DEBUG_TIME) {
-            $end  = microtime(true);
-            $time = $end - $start;
-            mtrace("elis_import.get_user('$type'): $time");
+            if (RLIP_DEBUG_TIME) {
+                $end  = microtime(true);
+                $time = $end - $start;
+                mtrace("ipe_import.get_user('$type'): $time");
+            }
         }
     }
 
@@ -139,22 +144,24 @@ abstract class elis_import {
         method_exists($this, $method) OR throwException("unimplemented import $type");
         $data = $this->$method($file, true);  //calls import_<import type> on the import file
 
-        $columns = $data->header;
+        if(!empty($data->header)) {
+            $columns = $data->header;
 
-        $si = new student_import();
-        $properties = student_import::get_properties_map();
+            $si = new ipe_student_import();
+            $properties = student_import::get_properties_map();
 
-        in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
-        in_array($properties['context'], $columns) OR throwException('header must contain a context field');
+            in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
+            in_array($properties['context'], $columns) OR throwException('header must contain a context field');
 
-        if(!$si->check_required_columns($columns)) {
-            $missing_fields = $si->get_missing_fields($columns);
+            if(!$si->check_required_columns($columns)) {
+                $missing_fields = $si->get_missing_fields($columns);
 
-            $missing = implode(', ', $missing_fields);
-            throwException("missing required fields $missing");
+                $missing = implode(', ', $missing_fields);
+                throwException("missing required fields $missing");
+            }
+
+            $this->enrolment_handler($file, $type, count($columns));
         }
-
-        $this->enrolment_handler($file, $type, count($columns));
     }
 
     /**
@@ -166,34 +173,36 @@ abstract class elis_import {
         method_exists($this, $method) OR throwException("unimplemented import $type");
         $data = $this->$method($file, true);  //calls import_<import type> on the import file
 
-        $columns = $data->header;
+        if(!empty($data->header)) {
+            $columns = $data->header;
 
-        $cmi = new cmclass_import();
-        $ti = new track_import();
-        $ci = new course_import();
-        $cui = new curriculum_import();
+            $cmi = new ipe_cmclass_import();
+            $ti = new ipe_track_import();
+            $ci = new ipe_course_import();
+            $cui = new ipe_curriculum_import();
 
-        in_array('action', $columns) OR throwException('header must contain an action field');          //action and context fields can not be renamed
-        in_array('context', $columns) OR throwException('header must contain a context field');
+            in_array('action', $columns) OR throwException('header must contain an action field');          //action and context fields can not be renamed
+            in_array('context', $columns) OR throwException('header must contain a context field');
 
-        if(!$ci->check_required_columns($columns) ||
-            !$cmi->check_required_columns($columns) ||
-            !$ti->check_required_columns($columns) ||
-            !$cui->check_required_columns($columns)) {
+            if(!$ci->check_required_columns($columns) ||
+                !$cmi->check_required_columns($columns) ||
+                !$ti->check_required_columns($columns) ||
+                !$cui->check_required_columns($columns)) {
 
-            $missing_fields = array_merge($ci->get_missing_fields($columns),
+                $missing_fields = array_merge($ci->get_missing_fields($columns),
                 $cmi->get_missing_fields($columns),
                 $ti->get_missing_fields($columns),
                 $cui->get_missing_fields($columns));
 
-            $missing_fields = array_unique($missing_fields);
+                $missing_fields = array_unique($missing_fields);
 
-            $missing = implode(', ', $missing_fields);
+                $missing = implode(', ', $missing_fields);
 
-            throwException("missing required fields $missing");
+                throwException("missing required fields $missing");
+            }
+
+            $this->course_handler($file, $type, count($columns));
         }
-
-        $this->course_handler($file, $type, count($columns));
     }
 
     /**
@@ -232,7 +241,7 @@ abstract class elis_import {
         $umethod = "import_$type";
         method_exists($this, $umethod) OR throwException("unimplemented import $type");
 
-        $user_imp = new user_import();
+        $user_imp = new ipe_user_import();
         set_time_limit(0);
         while ($data = $this->$umethod($file)) {
 
@@ -257,7 +266,7 @@ abstract class elis_import {
             if (RLIP_DEBUG_TIME) {
                 $end  = microtime(true);
                 $time = $end - $start;
-                mtrace("elis_import.user_handler('$type'): $time");
+                mtrace("ipe_import.user_handler('$type'): $time");
             }
         }
     }
@@ -341,7 +350,7 @@ abstract class elis_import {
             }
         }
 
-        $ci = new course_import();
+        $ci = new ipe_course_import();
         $course = $ci->get_item($r);
 
         $this->create($course);
@@ -352,7 +361,7 @@ abstract class elis_import {
      * @param array $r curriculum record
      */
     private function handle_curr_create($r) {
-        $cui = new curriculum_import();
+        $cui = new ipe_curriculum_import();
         $curr = $cui->get_item($r);
 
         $this->create($curr);
@@ -363,7 +372,7 @@ abstract class elis_import {
      * @param array $r track record
      */
     private function handle_track_create($r) {
-        $ti = new track_import();
+        $ti = new ipe_track_import();
         $properties = $ti->get_properties_map();
 
         if(!empty($properties['assignment']) && !empty($r[$properties['assignment']])) {      //assignment column can not be renamed
@@ -390,7 +399,7 @@ abstract class elis_import {
     private function handle_class_create($r) {
         global $CURMAN;
 
-        $cmi = new cmclass_import();
+        $cmi = new ipe_cmclass_import();
         $properties = $cmi->get_properties_map();
 
         if(!empty($r[$properties['assignment']])) {
@@ -730,7 +739,7 @@ abstract class elis_import {
                     if (RLIP_DEBUG_TIME) {
                         $end  = microtime(true);
                         $time = $end - $start;
-                        mtrace("elis_import.user_add({$user->username}): $time");
+                        mtrace("ipe_import.user_add({$user->username}): $time");
                     }
                 } else {
                     $this->log_filer->add_error_record("user {$user->to_string()} to database");
@@ -838,7 +847,7 @@ abstract class elis_import {
      * @param array $item student record to enrol
      */
     public function handle_class_enroll($item) {
-        $si = new student_import();
+        $si = new ipe_student_import();
         $record = $si->get_item($item);
         if(!empty($record->item)) {
             $item = $record->item;
@@ -1134,143 +1143,28 @@ abstract class elis_import {
 /**
  * used to log messages to a file
  */
-class log_filer {
-    private $endl = "\n"; //new line delimiter
-    private $warning = '';
-    private $logs = array();
-    private $count = 1; //holds the current record being logged to the file
-    private $filename = '';
+class ipe_log_filer extends log_filer {
+    
+    function notify_user($idnumber, $subject, $message) {
+        global $USER;
+        
+        $cmuser = user::get_by_idnumber(trim($idnum));
 
-    /**
-     * opens a file to append to with the given file name in the given file location
-     * @param string $file location where log file is to be put
-     * @param string $filename name of log file
-     */
-    function __construct($file, $filename) {
-        if(!empty($file) && is_dir(addslashes($file))) {
-            $this->filename = addslashes($file) . '/' . $filename . '.log';
-        }
-    }
+        if(!empty($cmuser)) {
+            $user = cm_get_moodleuser($cmuser->id);
 
-    /**
-     * print a string to the file with a new line at the end
-     * @param string $line what to print
-     */
-    function lfprintln($line = '') {
-        $this->lfprint($line . $this->endl);
-    }
-
-    /**
-     * prints a string to the file
-     * @param string $str what to print
-     */
-    function lfprint($str = '') {
-        $this->logs[] = $str;
-    }
-
-    /**
-     * ues the count to display what record contained the error
-     * @param string $line prints an error message to the file for a particular record
-     */
-    function add_error_record($line='error') {
-        $this->lfprintln("error with record #$this->count: $line $this->warning");
-        $this->warning = '';
-        $this->count++;
-    }
-
-    /**
-     * adds an error message to the log file
-     * @param string $line error message
-     */
-    function add_error($line='error') {
-        $this->lfprintln("error: $line $this->warning");
-        $this->warning = '';
-    }
-
-    /**
-     * adds indication of successfully used the record
-     * @param string $line success message
-     */
-    function add_success($line='success') {
-        $this->lfprintln("success with record #$this->count: $line $this->warning");
-        $this->warning = '';
-        $this->count++;
-    }
-
-    /**
-     * adds a warning to the log fil for the current record
-     * @param string $line warning message
-     */
-    function add_warning($line='warning') {
-        if(empty($this->warning)) {
-            $this->warning = ' WARNING ' . $line;
-        } else {
-            $this->warning .= ', ' . $line;
-        }
-    }
-
-    /**
-     * prints all the messages to the log file
-     * @global object $CURMAN
-     * @global object $USER
-     * @param object $file name of the file to log to
-     */
-    function output_log($file=null) {
-        global $CFG, $USER;
-
-        if(empty($this->logs)) {
-            return;
-        }
-
-        if(empty($file)) {
-            $file = fopen($this->filename, 'a');
-        }
-
-        if(!empty($file)) {
-            $message = '';
-            foreach($this->logs as $log) {
-                $message .= $log . "\n";
-            }
-
-            if(!empty($message)) {
-                fwrite($file, $message);
-
-                $idnumbers = explode(',', $CFG->block_rlip_emailnotification);
-
-                $subject = get_string('ip_log', 'block_rlip');
-
-                foreach($idnumbers as $idnum) {
-                    if(!empty($idnum)) {
-                        $cmuser = user::get_by_idnumber(trim($idnum));
-
-                        if(!empty($cmuser)) {
-                            $user = cm_get_moodleuser($cmuser->id);
-
-                            if(!empty($user)) {
-                                email_to_user($user, $USER, $subject, $message);
-                            }
-                        }
-                    }
-                }
+            if(!empty($user)) {
+                email_to_user($user, $USER, $subject, $message);
             }
         }
     }
 
-    /**
-     * close the file when this object loses focus, may not be needed but there
-     * as a precaucion
-     */
-    function __destruct() {
-        if(!empty($this->file)) {
-            fclose($this->file);
-        }
-    }
 }
 
 /**
  *
  */
-class user_import extends import {
+class ipe_user_import extends ipe_import {
     protected $data_object = 'user';
     protected $context = 'user';
     /**
@@ -1401,7 +1295,7 @@ class user_import extends import {
 /**
  *
  */
-class student_import extends import {
+class ipe_student_import extends ipe_import {
     protected $data_object = 'student';
     protected $context = 'student';
 
@@ -1577,7 +1471,7 @@ class student_import extends import {
 /**
  *
  */
-class course_import extends import {
+class ipe_course_import extends ipe_import {
     protected $data_object = 'course';
     protected $context = 'course';
 
@@ -1670,7 +1564,7 @@ class course_import extends import {
 /**
  *
  */
-class cmclass_import extends import {
+class ipe_cmclass_import extends ipe_import {
     protected $data_object = 'cmclass';
     protected $context = 'class';
 
@@ -1768,7 +1662,7 @@ class cmclass_import extends import {
 /**
  *
  */
-class curriculum_import extends import {
+class ipe_curriculum_import extends ipe_import {
     protected $data_object = 'curriculum';
     protected $context = 'curriculum';
 
@@ -1836,7 +1730,7 @@ class curriculum_import extends import {
 /**
  *
  */
-class track_import extends import {
+class ipe_track_import extends ipe_import {
     protected $data_object = 'track';
     protected $context = 'track';
 
@@ -1921,7 +1815,7 @@ class track_import extends import {
     }
 }
 
-abstract class import {
+abstract class ipe_import {
     protected $data_object;
     protected $context;
 
@@ -2012,10 +1906,6 @@ abstract class import {
             return $CURMAN->db->set_field('block_rlip_fieldmap', 'fieldmap', $value, 'context', $this->context, 'fieldname', $key);
         }
     }
-}
-
-function throwException($message = null, $code = null) {
-    throw new Exception($message, $code);
 }
 
 /**

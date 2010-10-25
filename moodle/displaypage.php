@@ -31,9 +31,9 @@ $context = get_context_instance(CONTEXT_SYSTEM);
 
 require_capability('block/rlip:config', $context);
 
-require_once ('dataimportpage.class.php');
+require_once ('ipb_dataimportpage.class.php');
 
-$page = new dataimportpage();
+$page = new ipb_dataimportpage();
 
 $page->print_page();
 

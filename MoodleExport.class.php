@@ -5,7 +5,7 @@ class MoodleExport {
     public function cron($manual) {
         global $CFG;
 
-        $this->log_filer = new log_filer($CFG->block_rlip_logfilelocation, 'export_' . time());
+        $this->log_filer = new ipb_log_filer($CFG->block_rlip_logfilelocation, 'export_' . time());
 
         if(empty($CFG->block_rlip_exportfilelocation)) {
             if($manual !== true) {

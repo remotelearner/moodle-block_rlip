@@ -27,24 +27,25 @@
         //TODO: change to lib/dataimportform.class.php once more compatible
 require_once($CFG->dirroot . '/blocks/rlip/lib/importpage.class.php');
 
-class dataimportpage extends importpage {
+class ipb_dataimportpage extends importpage {
 
     function get_export() {
+        global $CFG;
         require_once($CFG->dirroot . '/blocks/rlip/MoodleExport.class.php');
 
         return new MoodleExport();
     }
 
     function action_user() {
-        $this->do_action(new user_import(), 'user');
+        $this->do_action(new ipb_user_import(), 'user');
     }
 
     function action_course() {
-        $this->do_action(new course_import(), 'course');
+        $this->do_action(new ipb_course_import(), 'course');
     }
 
     function action_enrolment() {
-        $this->do_action(new enrolment_import(), 'enrolment');
+        $this->do_action(new ipb_enrolment_import(), 'enrolment');
     }
 
     private function do_action($import, $action) {
@@ -54,7 +55,7 @@ class dataimportpage extends importpage {
 
         $map = $import->get_properties_map();
 
-        $form_class = "{$action}import_form";
+        $form_class = "ipb_{$action}import_form";
         $configform = new $form_class($target->get_moodle_url());
 
         $configform->set_data($CFG);

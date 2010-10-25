@@ -31,7 +31,7 @@ require_once($CFG->dirroot . '/lib/formslib.php');
  *
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class generalimport_form extends moodleform {
+class ipb_generalimport_form extends moodleform {
     /**
      * defines layout for the main dataimport form
      */
@@ -63,7 +63,7 @@ class generalimport_form extends moodleform {
 /**
  * display form for picking the file and format to import user records with
  */
-class userimport_form extends moodleform {
+class ipb_userimport_form extends moodleform {
     /**
      * defines the layout for the user import form
      */
@@ -82,7 +82,7 @@ class userimport_form extends moodleform {
 
         $mform->addElement('header', 'user_properties', get_string('user_properties', 'block_rlip'));
 
-        $ui = new user_import();
+        $ui = new ipb_user_import();
         $data = $ui->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', $key, $key . ': ');
@@ -100,7 +100,7 @@ class userimport_form extends moodleform {
 /**
  * display form for picking the file and format to import course, curriculum, class, track records with
  */
-class courseimport_form extends moodleform {
+class ipb_courseimport_form extends moodleform {
     /**
      * defines layout for the course import form
      */
@@ -118,7 +118,7 @@ class courseimport_form extends moodleform {
 
         $mform->addElement('header', 'course_properties', get_string('course_properties', 'block_rlip'));
 
-        $ci = new course_import();
+        $ci = new ipb_course_import();
         $data = $ci->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', $key, $key . ': ');
@@ -138,7 +138,7 @@ class courseimport_form extends moodleform {
  * display form for picking the file and format to student and instructor association records
  * in classes and tracks
  */
-class enrolmentimport_form extends moodleform {
+class ipb_enrolmentimport_form extends moodleform {
     /**
      * defines layout for the enrolment import form
      */
@@ -147,7 +147,7 @@ class enrolmentimport_form extends moodleform {
 
         $mform->addElement('text', 'block_rlip_impenrolment_filename', get_string('filename', 'block_rlip') . ': ');
         
-        $plugins = get_import_plugins();
+        $plugins = ipb_get_import_plugins();
         if(count($plugins) > 1) {
             $mform->addElement('select', 'block_rlip_impenrolment_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
         } else {
@@ -156,7 +156,7 @@ class enrolmentimport_form extends moodleform {
 
         $mform->addElement('header', 'enrol_properties', get_string('enrol_properties', 'block_rlip'));
         
-        $si = new enrolment_import();
+        $si = new ipb_enrolment_import();
         $data = $si->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', $key, $key . ': ');
@@ -176,7 +176,7 @@ class enrolmentimport_form extends moodleform {
  * to import based on csv, xml or whatever
  * @return array of plugin imports
  */
-function get_import_plugins() {
+function ipb_get_import_plugins() {
     global $CFG;
 
     $blockroot = $CFG->dirroot . '/blocks/rlip/lib';

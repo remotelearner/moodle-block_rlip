@@ -82,7 +82,7 @@ class userimport_form extends moodleform {
 
         $mform->addElement('header', 'user_properties', get_string('user_properties', 'block_rlip'));
 
-        $ui = new user_import();
+        $ui = new ipe_user_import();
         $data = $ui->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', $key, $key . ': ');
@@ -116,7 +116,7 @@ class courseimport_form extends moodleform {
         }
 
         $mform->addElement('header', 'course_properties', get_string('course_properties', 'block_rlip'));
-        $coi = new course_import();
+        $coi = new ipe_course_import();
         $data = $coi->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', 'crs_' . $key, $key . ': ');
@@ -124,21 +124,21 @@ class courseimport_form extends moodleform {
 
         //course import form handles class, track, curriculm, and course import
         $mform->addElement('header', 'class_properties', get_string('class_properties', 'block_rlip'));
-        $cmi = new cmclass_import();
+        $cmi = new ipe_cmclass_import();
         $data = $cmi->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', 'cls_' . $key, $key . ': ');
         }
 
         $mform->addElement('header', 'track_properties', get_string('track_properties', 'block_rlip'));
-        $ti = new track_import();
+        $ti = new ipe_track_import();
         $data = $ti->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', 'trk_' . $key, $key . ': ');
         }
 
         $mform->addElement('header', 'curr_properties', get_string('curr_properties', 'block_rlip'));
-        $ci = new curriculum_import();
+        $ci = new ipe_curriculum_import();
         $data = $ci->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', 'cur_' . $key, $key . ': ');
@@ -174,7 +174,7 @@ class enrolmentimport_form extends moodleform {
         }
 
         $mform->addElement('header', 'enrol_properties', get_string('enrol_properties', 'block_rlip'));
-        $si = new student_import();
+        $si = new ipe_student_import();
         $data = $si->get_properties_map();
         foreach($data as $key => $p) {
             $mform->addElement('text', $key, $key . ': ');

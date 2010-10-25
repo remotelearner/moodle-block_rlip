@@ -43,8 +43,8 @@ class block_rlip extends block_base {
      */
     public function init() {
         $this->title   = get_string('title', 'block_rlip');
-        $this->version = 2010051704;
-        $this->cron = DAYSECS;
+        $this->version = 2010101900;
+        $this->cron = 5 * MINSECS;
 
         $this->log_filer = null;
     }
@@ -106,6 +106,8 @@ class block_rlip extends block_base {
     function cron($manual = false) {
         global $CFG;
 
+        $timenow = time();
+        
         // Make sure that a file was configured for the export to run correctly.
         if (empty($CFG->block_rlip_exportfilelocation)) {
             return true;
@@ -125,10 +127,46 @@ class block_rlip extends block_base {
 
             $export = new MoodleExport();
         }
-
-        $export->cron($manual);
-
-        include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
+        
+        /*
+         * Export
+         */
+        $last_export = 0;
+        if(!empty($CFG->block_rlip_last_export_cron)) {
+            $last_export = $CFG->block_rlip_last_export_cron;
+        }
+        
+        $export_period = 0;
+        if(!empty($CFG->block_rlip_exportperiod)) {
+            $export_period = block_rlip_time_string_to_seconds($CFG->block_rlip_exportperiod);
+        } else {
+            $export_period = block_rlip_time_string_to_seconds('1d');
+        }
+        
+        if($timenow >= ($last_export + $export_period)) {
+            $export->cron($manual);
+            set_config('block_rlip_last_export_cron', $timenow);
+        }
+        
+        /*
+         * Import
+         */
+        $last_import = 0;
+        if(!empty($CFG->block_rlip_last_import_cron)) {
+            $last_import = $CFG->block_rlip_last_import_cron;
+        }
+        
+        $import_period = 0;
+        if(!empty($CFG->block_rlip_importperiod)) {
+            $import_period = block_rlip_time_string_to_seconds($CFG->block_rlip_importperiod);
+        } else {
+            $import_period = block_rlip_time_string_to_seconds('30m');
+        }
+        
+        if($timenow >= ($last_import + $import_period)) {
+            include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
+            set_config('block_rlip_last_import_cron', $timenow);
+        }
 
         return true;
     }
