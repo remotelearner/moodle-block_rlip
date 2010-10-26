@@ -56,7 +56,7 @@ class import_csv_moodle extends moodle_import {
     }
 
     private function sanitize_callback(&$value, $key) {
-        $value = clean_param($value, PARAM_CLEAN);
+        $value = trim(clean_param($value, PARAM_CLEAN));
     }
 
     private function import_file($file_name, $header=false) {
@@ -67,7 +67,7 @@ class import_csv_moodle extends moodle_import {
         $retval->header = array();
         $retval->records = array();
 
-        if (!isset($file)) {
+        if (empty($file)) {
             $file = fopen($file_name, 'r');
             
             if(!flock($file, LOCK_EX | LOCK_NB)) {
@@ -80,6 +80,8 @@ class import_csv_moodle extends moodle_import {
         if (!empty($file) && !feof($file)) {
             if ($header) {
                 $retval->header = $fields = fgetcsv($file, 8192, ',', '"');
+                array_walk($retval->header, array($this, 'sanitize_callback'));
+                array_walk($fields, array($this, 'sanitize_callback'));
                 return $retval;
             } else {
                 $retval->header = $fields;
@@ -108,6 +110,7 @@ class import_csv_moodle extends moodle_import {
 
         flock($file, LOCK_UN);
         fclose($file);
+        $file = null;
         return false;
     }
 }
@@ -141,7 +144,7 @@ class import_csv_elis extends elis_import {
     }
 
     private function sanitize_callback(&$value, $key) {
-        $value = clean_param($value, PARAM_CLEAN);
+        $value = trim(clean_param($value, PARAM_CLEAN));
     }
 
     private function import_file($file_name, $header=false) {
@@ -152,7 +155,7 @@ class import_csv_elis extends elis_import {
         $retval->header = array();
         $retval->records = array();
 
-        if (!isset($file)) {
+        if (empty($file)) {
             $file = fopen($file_name, 'r');
             
             if(!flock($file, LOCK_EX | LOCK_NB)) {
@@ -165,6 +168,8 @@ class import_csv_elis extends elis_import {
         if (!empty($file) && !feof($file)) {
             if ($header) {
                 $retval->header = $fields = fgetcsv($file, 8192, ',', '"');
+                array_walk($retval->header, array($this, 'sanitize_callback'));
+                array_walk($fields, array($this, 'sanitize_callback'));
                 return $retval;
             } else {
                 $retval->header = $fields;
@@ -193,6 +198,7 @@ class import_csv_elis extends elis_import {
 
         flock($file, LOCK_UN);
         fclose($file);
+        $file = null;
         return false;
     }
 }

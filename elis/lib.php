@@ -148,7 +148,7 @@ abstract class elis_import {
             $columns = $data->header;
 
             $si = new ipe_student_import();
-            $properties = student_import::get_properties_map();
+            $properties = ipe_student_import::get_properties_map();
 
             in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
             in_array($properties['context'], $columns) OR throwException('header must contain a context field');
@@ -218,7 +218,7 @@ abstract class elis_import {
         $umethod = "import_$type";
         method_exists($this, $umethod) OR throwException("unimplemented import $type");
 
-        $properties = student_import::get_properties_map();
+        $properties = ipe_student_import::get_properties_map();
 
         set_time_limit(0);
         while ($data = $this->$umethod($file)) {
@@ -322,7 +322,7 @@ abstract class elis_import {
     private function handle_course_create($r) {
         global $CURMAN;
 
-        $properties = course_import::get_properties_map();
+        $properties = ipe_course_import::get_properties_map();
 
         if(!empty($r[$properties['assignment']])) {
             $curriculum = curriculum::get_by_idnumber($r[$properties['assignment']]);
