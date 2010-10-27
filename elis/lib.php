@@ -1006,7 +1006,7 @@ abstract class elis_import {
     }
 
     public function handle_user_enrol($item) {
-        $properties = student_import::get_properties_map();
+        $properties = ipe_student_import::get_properties_map();
 
         $record_context = explode('_', $item[$properties['context']], 2);
         next($record_context);
