@@ -64,7 +64,7 @@ class block_rlip extends block_base {
 
         $context = get_context_instance(CONTEXT_SYSTEM);
 
-        if(!is_elis() && has_capability('block/rlip:config', $context)) {
+        if(!block_rlip_is_elis() && has_capability('block/rlip:config', $context)) {
             $this->content->text = '<a href="' . $CFG->wwwroot . '/blocks/rlip/moodle/displaypage.php' . '">' . get_string('ip_link', 'block_rlip') . '</a>';
         } else {
             $this->content->text = '';
@@ -118,7 +118,7 @@ class block_rlip extends block_base {
             return true;
         }
 
-        if(is_elis()) {
+        if(block_rlip_is_elis()) {
             require_once('ElisExport.class.php');
 
             $export = new ElisExport();

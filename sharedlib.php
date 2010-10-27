@@ -7,7 +7,7 @@
  * we need to know if ELIS is installed regardless of the config setting (like on
  * the settings page).
  */
-function is_elis($ignoreoverride=false) {
+function block_rlip_is_elis($ignoreoverride=false) {
     global $CFG;
 
     if (!$ignoreoverride && !empty($CFG->block_rlip_overrideelisip)) {
@@ -29,7 +29,7 @@ function is_elis($ignoreoverride=false) {
 /**
  * used to log messages to a file
  */
-abstract class log_filer {
+abstract class block_rlip_log_filer {
     private $endl = "\n"; //new line delimiter
     private $warning = '';
     private $logs = array();
@@ -156,7 +156,7 @@ abstract class log_filer {
     }
 }
 
-function throwException($message = null, $code = null) {
+function block_rlip_throwException($message = null, $code = null) {
     throw new Exception($message, $code);
 }
 

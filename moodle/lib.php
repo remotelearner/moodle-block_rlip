@@ -73,10 +73,10 @@ abstract class moodle_import {
 
         if(has_capability('block/rlip:config', $context)) {
             try {
-                is_file($file) OR throwException("file $file not found");
+                is_file($file) OR block_rlip_throwException("file $file not found");
 
                 $get_class = "ipb_{$type}_import";
-                class_exists($get_class) OR throwException("unimplemented import $type");
+                class_exists($get_class) OR block_rlip_throwException("unimplemented import $type");
                 $this->get(new $get_class(), $file, $type);
 
                 $retval = true;
@@ -99,7 +99,7 @@ abstract class moodle_import {
         if (RLIP_DEBUG_TIME) $start = microtime(true);
 
         $method = "import_$type";
-        method_exists($this, $method) OR throwException("unimplemented import $type");
+        method_exists($this, $method) OR block_rlip_throwException("unimplemented import $type");
         $data = $this->$method($file, true);  // Get the header line of the csv file.
         
         if(!empty($data->header)) {
@@ -107,13 +107,13 @@ abstract class moodle_import {
 
             $properties = $import->get_properties_map();
 
-            in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
+            in_array($properties['execute'], $columns) OR block_rlip_throwException('header must contain an action field');
 
             $missing_fields = $import->get_missing_required_columns($columns);
             if(!empty($missing_fields)) {
                 $missing = implode(', ', $missing_fields);
 
-                throwException("missing required column $missing");
+                block_rlip_throwException("missing required column $missing");
             }
 
             /// Process each line of the CSV file. THIS CAN TAKE A LOT OF TIME!
@@ -143,7 +143,7 @@ abstract class moodle_import {
         foreach($records as $record) {
             try {
                 if(empty($record['execute'])) {
-                    throwException('missing action');
+                    block_rlip_throwException('missing action');
                 } else {
                     $method = "{$type}_{$record['execute']}";
                     $this->$method($record);
@@ -182,7 +182,7 @@ abstract class moodle_import {
         if(!empty($missing)){
             $required = implode(', ', $missing);
 
-            throwException("missing required fields $required");
+            block_rlip_throwException("missing required fields $required");
         }
 
         $ci->check_new($r);
@@ -199,13 +199,13 @@ abstract class moodle_import {
             if(update_record('course', (object)$r)) {
                 $this->log_filer->add_success("course {$r['fullname']} added");
             } else {
-                throwException("failed to create course {$r['fullname']}");
+                block_rlip_throwException("failed to create course {$r['fullname']}");
             }
         } else {
             if(create_course((object)$r)) {
                 $this->log_filer->add_success("course {$r['fullname']} added");
             } else {
-                throwException("failed to create course {$r['fullname']}");
+                block_rlip_throwException("failed to create course {$r['fullname']}");
             }
 
         }
@@ -225,13 +225,13 @@ abstract class moodle_import {
 
         // We must specify a category if one hasn't been in the file
         if (empty($r['category'])) {
-            throwException("invalid category provided");
+            block_rlip_throwException("invalid category provided");
         }
 
         if(update_record('course', (object)$r)) {
             $this->log_filer->add_success("course {$r['fullname']} updated");
         } else {
-            throwException("course {$r['fullname']} not updated");
+            block_rlip_throwException("course {$r['fullname']} not updated");
         }
     }
 
@@ -248,7 +248,7 @@ abstract class moodle_import {
         if(delete_course($course, false)) {
             $this->log_filer->add_success("course {$course->fullname} deleted");
         } else {
-            throwException("failed to delete course {$r['fullname']}");
+            block_rlip_throwException("failed to delete course {$r['fullname']}");
         }
     }
 
@@ -296,7 +296,7 @@ abstract class moodle_import {
         if(!empty($user->id)) {
             $this->log_filer->add_success("user {$user->username} added");
         } else {
-            throwException("user {$user->username} not added");
+            block_rlip_throwException("user {$user->username} not added");
         }
     }
 
@@ -335,7 +335,7 @@ abstract class moodle_import {
         if(update_record('user', $user)) {
             $this->log_filer->add_success("user {$user->username} updated");
         } else {
-            throwException("user {$user->username} not updated");
+            block_rlip_throwException("user {$user->username} not updated");
         }
     }
 
@@ -382,14 +382,14 @@ abstract class moodle_import {
                         $group->name = addslashes($item['group']);
                         $group->courseid = $courseid;
                         if (!$groupid = groups_create_group($group)) {
-                            throwException("Failed to create group {$item['group']}");
+                            block_rlip_throwException("Failed to create group {$item['group']}");
                         }
                     } else {
-                        throwException("Invalid group {$item['group']} specified");
+                        block_rlip_throwException("Invalid group {$item['group']} specified");
                     }
                 }
                 if (!groups_add_member($groupid, $userid)) {
-                    throwException("Assigning user {$item['username']} to group {$item['group']} failed");
+                    block_rlip_throwException("Assigning user {$item['username']} to group {$item['group']} failed");
                 }
 
                 if (!empty($item['grouping'])) {
@@ -400,18 +400,18 @@ abstract class moodle_import {
                             $grouping->name = addslashes($item['grouping']);
                             $grouping->courseid = $courseid;
                             if (!$groupingid = groups_create_grouping($grouping)) {
-                                throwException("Failed to create grouping {$item['grouping']}");
+                                block_rlip_throwException("Failed to create grouping {$item['grouping']}");
                             }
                         } else {
-                            throwException("Invalid grouping {$item['grouping']} specified");
+                            block_rlip_throwException("Invalid grouping {$item['grouping']} specified");
                         }
                     }
                     if (!groups_assign_grouping($groupingid, $groupid)) {
-                        throwException("Assigning group {$item['group']} to grouping {$item['grouping']} failed");
+                        block_rlip_throwException("Assigning group {$item['group']} to grouping {$item['grouping']} failed");
                     }
                 }
             } else {
-                throwException("Course {$item['instance']} does not exist");
+                block_rlip_throwException("Course {$item['instance']} does not exist");
             }
         }
 
@@ -464,7 +464,7 @@ abstract class moodle_import {
 /**
  * used to log messages to a file
  */
-class ipb_log_filer extends log_filer {
+class ipb_log_filer extends block_rlip_log_filer {
 
     function notify_user($idnumber, $subject, $message) {
         global $USER;
@@ -624,7 +624,7 @@ class ipb_user_import extends ipb_import {
         }
 
         if (!$retval) {
-            throwException("user {$record['username']} already exists");
+            block_rlip_throwException("user {$record['username']} already exists");
         } else {
             return $retval;
         }
@@ -635,7 +635,7 @@ class ipb_user_import extends ipb_import {
 
         $retval = $retval &&
                     record_exists('user', 'username', $record['username'], 'deleted', 0) or
-                    throwException("user {$record['username']} does not exist");
+                    block_rlip_throwException("user {$record['username']} does not exist");
 
         return $retval;
     }
@@ -687,38 +687,38 @@ class ipb_enrolment_import extends ipb_import {
         //check instance exists
 
         in_array($record['context'], $contexts) or
-                    throwException("invalid context {$record['context']} does not exist");
+                    block_rlip_throwException("invalid context {$record['context']} does not exist");
 
         if(strcmp($record['context'], 'user') === 0) {
             $instanceid = get_field('user', 'id', 'username', $record['instance']);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'user') === 0) {
             record_exists('user', 'username', $record['instance']) or
-                    throwException("invalid user {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid user {$record['instance']} does not exist");
 
             $instanceid = get_field('user', 'id', 'username', $record['instance']);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'coursecat') === 0) {
             record_exists('course_categories', 'name', $record['instance']) or
-                    throwException("invalid course category {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid course category {$record['instance']} does not exist");
 
             $instanceid = get_field('coursecat', 'id', 'name', $record['instance']);
             $contextlevel = CONTEXT_COURSECAT;
         } else if(strcmp($record['context'], 'course') === 0) {
             record_exists('course', 'shortname', $record['instance']) or
-                    throwException("invalid course {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid course {$record['instance']} does not exist");
 
             $instanceid = get_field('course', 'id', 'shortname', $record['instance']);
             $contextlevel = CONTEXT_COURSE;
         } else if(strcmp($record['context'], 'module') === 0) {
             record_exists('modules', 'name', $record['instance']) or
-                    throwException("invalid module {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid module {$record['instance']} does not exist");
 
             $instanceid = get_field('module', 'id', 'name', $record['instance']);
             $contextlevel = CONTEXT_MODULE;
         } else if(strcmp($record['context'], 'block') === 0) {
             record_exists('block', 'name', $record['instance']) or
-                    throwException("invalid block {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid block {$record['instance']} does not exist");
 
             $instanceid = get_field('block', 'id', 'name', $record['instance']);
             $contextlevel = CONTEXT_BLOCK;
@@ -738,44 +738,44 @@ class ipb_enrolment_import extends ipb_import {
         //check instance exists
 
         record_exists('role', 'shortname', $record['role']) or
-                    throwException("invalid role {$record['role']} does not exist");
+                    block_rlip_throwException("invalid role {$record['role']} does not exist");
 
         record_exists('user', 'username', $record['username'], 'deleted', 0) or
-                    throwException("invalid user {$record['username']} does not exist");
+                    block_rlip_throwException("invalid user {$record['username']} does not exist");
 
         in_array($record['context'], $contexts) or
-                    throwException("invalid context {$record['context']} does not exist");
+                    block_rlip_throwException("invalid context {$record['context']} does not exist");
 
         if(strcmp($record['context'], 'user') === 0) {
             $instanceid = get_field('user', 'id', 'username', $record['instance']);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'user') === 0) {
             record_exists('user', 'username', $record['instance']) or
-                    throwException("invalid user {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid user {$record['instance']} does not exist");
 
             $instanceid = get_field('user', 'id', 'username', $record['instance']);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'coursecat') === 0) {
             record_exists('course_categories', 'name', $record['instance']) or
-                    throwException("invalid course category {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid course category {$record['instance']} does not exist");
 
             $instanceid = get_field('coursecat', 'id', 'name', $record['instance']);
             $contextlevel = CONTEXT_COURSECAT;
         } else if(strcmp($record['context'], 'course') === 0) {
             record_exists('course', 'shortname', $record['instance']) or
-                    throwException("invalid course {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid course {$record['instance']} does not exist");
 
             $instanceid = get_field('course', 'id', 'shortname', $record['instance']);
             $contextlevel = CONTEXT_COURSE;
         } else if(strcmp($record['context'], 'module') === 0) {
             record_exists('modules', 'name', $record['instance']) or
-                    throwException("invalid module {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid module {$record['instance']} does not exist");
 
             $instanceid = get_field('module', 'id', 'name', $record['instance']);
             $contextlevel = CONTEXT_MODULE;
         } else if(strcmp($record['context'], 'block') === 0) {
             record_exists('block', 'name', $record['instance']) or
-                    throwException("invalid block {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid block {$record['instance']} does not exist");
 
             $instanceid = get_field('block', 'id', 'name', $record['instance']);
             $contextlevel = CONTEXT_BLOCK;
@@ -786,7 +786,7 @@ class ipb_enrolment_import extends ipb_import {
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
 
         !record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
-                    throwException("{$record['username']} already assigned as {$record['role']} in {$record['instance']}");
+                    block_rlip_throwException("{$record['username']} already assigned as {$record['role']} in {$record['instance']}");
 
         return true;
     }
@@ -795,41 +795,41 @@ class ipb_enrolment_import extends ipb_import {
         $contexts = array('system', 'user', 'coursecat', 'course', 'module', 'block');
 
         record_exists('user', 'username', $record['username'], 'deleted', 0) or
-                    throwException("invalid user {$record['username']} does not exist");
+                    block_rlip_throwException("invalid user {$record['username']} does not exist");
 
         in_array($record['context'], $contexts) or
-                    throwException("invalid context {$record['context']} does not exist");
+                    block_rlip_throwException("invalid context {$record['context']} does not exist");
 
         if(strcmp($record['context'], 'user') === 0) {
             $instanceid = get_field('user', 'id', 'username', $record['instance']);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'user') === 0) {
             record_exists('user', 'username', $record['instance']) or
-                    throwException("invalid user {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid user {$record['instance']} does not exist");
 
             $instanceid = get_field('user', 'id', 'username', $record['instance']);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'coursecat') === 0) {
             record_exists('course_categories', 'name', $record['instance']) or
-                    throwException("invalid course category {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid course category {$record['instance']} does not exist");
 
             $instanceid = get_field('coursecat', 'id', 'name', $record['instance']);
             $contextlevel = CONTEXT_COURSECAT;
         } else if(strcmp($record['context'], 'course') === 0) {
             record_exists('course', 'shortname', $record['instance']) or
-                    throwException("invalid course {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid course {$record['instance']} does not exist");
 
             $instanceid = get_field('course', 'id', 'shortname', $record['instance']);
             $contextlevel = CONTEXT_COURSE;
         } else if(strcmp($record['context'], 'module') === 0) {
             record_exists('modules', 'name', $record['instance']) or
-                    throwException("invalid module {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid module {$record['instance']} does not exist");
 
             $instanceid = get_field('module', 'id', 'name', $record['instance']);
             $contextlevel = CONTEXT_MODULE;
         } else if(strcmp($record['context'], 'block') === 0) {
             record_exists('block', 'name', $record['instance']) or
-                    throwException("invalid block {$record['instance']} does not exist");
+                    block_rlip_throwException("invalid block {$record['instance']} does not exist");
 
             $instanceid = get_field('block', 'id', 'name', $record['instance']);
             $contextlevel = CONTEXT_BLOCK;
@@ -840,7 +840,7 @@ class ipb_enrolment_import extends ipb_import {
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
 
         record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
-                    throwException("{$record['username']} not assigned as {$record['role']} in {$record['instance']}");
+                    block_rlip_throwException("{$record['username']} not assigned as {$record['role']} in {$record['instance']}");
 
         return true;
     }
@@ -963,11 +963,11 @@ class ipb_course_import extends ipb_import {
 
         if(!empty($record['link'])) {
             $retval = $retval && record_exists('course', 'shortname', $record['link']) or
-                        throwException("course {$record['link']} does not exist");
+                        block_rlip_throwException("course {$record['link']} does not exist");
         }
 
         $retval = $retval && !record_exists('course', 'shortname', $record['shortname']) or
-                    throwException("course {$record['shortname']} already exists");
+                    block_rlip_throwException("course {$record['shortname']} already exists");
 
         return $retval;
     }
@@ -978,7 +978,7 @@ class ipb_course_import extends ipb_import {
         //don't need to check the link when updating or deleting a coures only when creating
 
         $retval = $retval && record_exists('course', 'shortname', $record['shortname']) or
-                    throwException("course {$record['shortname']} does not exist");
+                    block_rlip_throwException("course {$record['shortname']} does not exist");
 
         return $retval;
     }

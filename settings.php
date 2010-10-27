@@ -72,7 +72,7 @@ $settings->add(new admin_setting_configcheckbox('block_rlip_exportallhistorical'
 /*
  * Elis section
  */                   
-if (is_elis(true)) {
+if (block_rlip_is_elis(true)) {
     $settings->add(new admin_setting_heading('block_rlip_elis', get_string('elis', 'block_rlip'), get_string('configelis', 'block_rlip')));    
     
     $settings->add(new admin_setting_configcheckbox('block_rlip_overrideelisip', get_string('overrideelisip', 'block_rlip'),

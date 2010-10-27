@@ -26,7 +26,7 @@
 
 require_once($CFG->dirroot . '/blocks/rlip/sharedlib.php');
 
-if(is_elis()) {
+if(block_rlip_is_elis()) {
     require_once($CFG->dirroot . '/curriculum/config.php');
 
     require_once($CFG->dirroot . '/blocks/rlip/elis/lib.php');

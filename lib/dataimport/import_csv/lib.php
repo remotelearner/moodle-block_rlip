@@ -235,12 +235,12 @@ class import_csv_elis extends elis_import {
 //        $file = fopen($handle, 'r');
 //
 //        if(empty($file)) {
-////            throwException("missing file $file_name");
+////            block_rlip_throwException("missing file $file_name");
 //            return;
 //        }
 //
 //        if(feof($file)) {
-////            throwException("no records to import in file $file_name")
+////            block_rlip_throwException("no records to import in file $file_name")
 //            return;
 //        }
 //

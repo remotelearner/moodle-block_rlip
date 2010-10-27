@@ -58,7 +58,7 @@
 
         include_once($plugin);
         
-        if(is_elis()) {
+        if(block_rlip_is_elis()) {
             $plugin_name .= '_elis';
         } else {
             $plugin_name .= '_moodle';

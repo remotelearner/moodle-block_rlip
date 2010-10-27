@@ -77,7 +77,7 @@ abstract class elis_import {
                 if(is_file($file)) {
 ///................ This processes the $data array, record by record in get_user function.
                     $method = "get_$type";
-                    method_exists($this,$method) OR throwException("unimplemented get $type");
+                    method_exists($this,$method) OR block_rlip_throwException("unimplemented get $type");
                     $this->$method($file, $type);      //processes the records and inserts them in the database
                     $retval = true;
 ///................
@@ -104,7 +104,7 @@ abstract class elis_import {
      */
     private function get_user($file, $type) {
         $method = "import_$type";
-        method_exists($this, $method) OR throwException("unimplemented import $type");
+        method_exists($this, $method) OR block_rlip_throwException("unimplemented import $type");
         $data = $this->$method($file, true);  //calls import_<import type> on the import file
 
         if(!empty($data->header)) {
@@ -113,13 +113,13 @@ abstract class elis_import {
             $ui = new ipe_user_import();
             $properties = $ui->get_properties_map();
 
-            in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
+            in_array($properties['execute'], $columns) OR block_rlip_throwException('header must contain an action field');
 
             if(!$ui->check_required_columns($columns)) {
                 $missing_fields = $ui->get_missing_fields($columns);
                 $missing = implode(', ', $missing_fields);
 
-                throwException("missing required fields $missing");
+                block_rlip_throwException("missing required fields $missing");
             }
 
             if (RLIP_DEBUG_TIME) $start = microtime(true);
@@ -141,7 +141,7 @@ abstract class elis_import {
      */
     private function get_enrolment($file, $type) {
         $method = "import_$type";
-        method_exists($this, $method) OR throwException("unimplemented import $type");
+        method_exists($this, $method) OR block_rlip_throwException("unimplemented import $type");
         $data = $this->$method($file, true);  //calls import_<import type> on the import file
 
         if(!empty($data->header)) {
@@ -150,14 +150,14 @@ abstract class elis_import {
             $si = new ipe_student_import();
             $properties = ipe_student_import::get_properties_map();
 
-            in_array($properties['execute'], $columns) OR throwException('header must contain an action field');
-            in_array($properties['context'], $columns) OR throwException('header must contain a context field');
+            in_array($properties['execute'], $columns) OR block_rlip_throwException('header must contain an action field');
+            in_array($properties['context'], $columns) OR block_rlip_throwException('header must contain a context field');
 
             if(!$si->check_required_columns($columns)) {
                 $missing_fields = $si->get_missing_fields($columns);
 
                 $missing = implode(', ', $missing_fields);
-                throwException("missing required fields $missing");
+                block_rlip_throwException("missing required fields $missing");
             }
 
             $this->enrolment_handler($file, $type, count($columns));
@@ -170,7 +170,7 @@ abstract class elis_import {
      */
     private function get_course($file, $type) {
         $method = "import_$type";
-        method_exists($this, $method) OR throwException("unimplemented import $type");
+        method_exists($this, $method) OR block_rlip_throwException("unimplemented import $type");
         $data = $this->$method($file, true);  //calls import_<import type> on the import file
 
         if(!empty($data->header)) {
@@ -181,8 +181,8 @@ abstract class elis_import {
             $ci = new ipe_course_import();
             $cui = new ipe_curriculum_import();
 
-            in_array('action', $columns) OR throwException('header must contain an action field');          //action and context fields can not be renamed
-            in_array('context', $columns) OR throwException('header must contain a context field');
+            in_array('action', $columns) OR block_rlip_throwException('header must contain an action field');          //action and context fields can not be renamed
+            in_array('context', $columns) OR block_rlip_throwException('header must contain a context field');
 
             if(!$ci->check_required_columns($columns) ||
                 !$cmi->check_required_columns($columns) ||
@@ -198,7 +198,7 @@ abstract class elis_import {
 
                 $missing = implode(', ', $missing_fields);
 
-                throwException("missing required fields $missing");
+                block_rlip_throwException("missing required fields $missing");
             }
 
             $this->course_handler($file, $type, count($columns));
@@ -216,7 +216,7 @@ abstract class elis_import {
         global $CURMAN;
 
         $umethod = "import_$type";
-        method_exists($this, $umethod) OR throwException("unimplemented import $type");
+        method_exists($this, $umethod) OR block_rlip_throwException("unimplemented import $type");
 
         $properties = ipe_student_import::get_properties_map();
 
@@ -239,7 +239,7 @@ abstract class elis_import {
 
     public function user_handler($file, $type, $num) {
         $umethod = "import_$type";
-        method_exists($this, $umethod) OR throwException("unimplemented import $type");
+        method_exists($this, $umethod) OR block_rlip_throwException("unimplemented import $type");
 
         $user_imp = new ipe_user_import();
         set_time_limit(0);
@@ -292,7 +292,7 @@ abstract class elis_import {
         global $CURMAN;
 
         $umethod = "import_$type";
-        method_exists($this, $umethod) OR throwException("unimplemented import $type");
+        method_exists($this, $umethod) OR block_rlip_throwException("unimplemented import $type");
 
         set_time_limit(0);
         while ($data = $this->$umethod($file)) {
@@ -303,9 +303,9 @@ abstract class elis_import {
                         $method = "handle_{$r['context']}_{$r['action']}";
                         $this->$method($r);
                     } else if(count($r) < $num_columns) {
-                        throwException('not enough fields');
+                        block_rlip_throwException('not enough fields');
                     } else if(count($r) > $num_columns) {
-                        throwException('too many fields');
+                        block_rlip_throwException('too many fields');
                     }
                 } catch(Exception $e) {
                     $this->log_filer->add_error_record($e->getMessage());
@@ -469,10 +469,10 @@ abstract class elis_import {
 
         $properties = course_import::get_properties_map();
 
-        !empty($r[$properties['idnumber']]) OR throwException('missing idnumber');
+        !empty($r[$properties['idnumber']]) OR block_rlip_throwException('missing idnumber');
         $course = course::get_by_idnumber($r[$properties['idnumber']]);
 
-        !empty($course) OR throwException('no course with that idnumber');
+        !empty($course) OR block_rlip_throwException('no course with that idnumber');
 
         if(!empty($r[$properties['assignment']])) {
             $curriculum = curriculum::get_by_idnumber($r[$properties['assignment']]);
@@ -517,18 +517,18 @@ abstract class elis_import {
         if($course->update()) {
             $this->log_filer->add_success("updated $course->idnumber");
         } else {
-            throwException("failed to update $course->idnumber");
+            block_rlip_throwException("failed to update $course->idnumber");
         }
     }
 
     public function handle_curr_update($r) {
         $properties = course_import::get_properties_map();
 
-        !empty($r[$properties['idnumber']]) OR throwException('missing idnumber');
+        !empty($r[$properties['idnumber']]) OR block_rlip_throwException('missing idnumber');
 
         $curr = curriculum::get_by_idnumber($r[$properties['idnumber']]);
 
-        !empty($curr) OR throwException("no curriculum with that {$r[$properties['idnumber']]}");
+        !empty($curr) OR block_rlip_throwException("no curriculum with that {$r[$properties['idnumber']]}");
 
         foreach($curr->properties as $p=>$null) {
             if(!empty($properties[$p])) {
@@ -541,7 +541,7 @@ abstract class elis_import {
         if($curr->update()) {
             $this->log_filer->add_success("updated $curr->idnumber");
         } else {
-            throwException("failed to update $curr->idnumber");
+            block_rlip_throwException("failed to update $curr->idnumber");
         }
     }
 
@@ -550,16 +550,16 @@ abstract class elis_import {
 
         $properties = cmclass_import::get_properties_map();
                     //get the class that we are going to update
-        !empty($r[$properties['idnumber']]) OR throwException('missing idnumber');
+        !empty($r[$properties['idnumber']]) OR block_rlip_throwException('missing idnumber');
         $class = cmclass::get_by_idnumber($r[$properties['idnumber']]);
 
-        !empty($class) OR throwException("no class with idnumber {$r[$properties['idnumber']]}");
+        !empty($class) OR block_rlip_throwException("no class with idnumber {$r[$properties['idnumber']]}");
 
                 //get the course this class is associated with
-        !empty($r[$properties['assignment']]) OR throwException('no associated course declared');
+        !empty($r[$properties['assignment']]) OR block_rlip_throwException('no associated course declared');
         $course = course::get_by_idnumber($r[$properties['assignment']]);
 
-        !empty($course) OR throwException("associated course {$r[$properties['assignment']]} not found");
+        !empty($course) OR block_rlip_throwException("associated course {$r[$properties['assignment']]} not found");
 
         if(empty($class->autocreate)) {
             $class->autocreate = false;
@@ -622,23 +622,23 @@ abstract class elis_import {
         if($class->update()) {
             $this->log_filer->add_success("updated $class->idnumber");
         } else {
-            throwException("failed to update $class->idnumber");
+            block_rlip_throwException("failed to update $class->idnumber");
         }
     }
 
     public function handle_track_update($r) {
         $properties = track_import::get_properties_map();
 
-        !empty($properties['idnumber']) OR throwException('missing idnumber');
+        !empty($properties['idnumber']) OR block_rlip_throwException('missing idnumber');
 
         $track = track::get_by_idnumber($r[$properties['idnumber']]);
 
-        !empty($track) OR throwException("no track with idnumber {$r[$properties['idnumber']]}");
+        !empty($track) OR block_rlip_throwException("no track with idnumber {$r[$properties['idnumber']]}");
 
-        !empty($r[$properties['assignment']]) OR throwException('no associated curriculum declared');
+        !empty($r[$properties['assignment']]) OR block_rlip_throwException('no associated curriculum declared');
         $curriculum = curriculum::get_by_idnumber($r[$properties['assignment']]);
 
-        !empty($curriculum) OR throwException('associated curriculum does not exist');
+        !empty($curriculum) OR block_rlip_throwException('associated curriculum does not exist');
         $track->curid = $curriculum->id;
 
         foreach($track->properties as $p=>$null) {
@@ -657,7 +657,7 @@ abstract class elis_import {
         if($track->update()) {
             $this->log_filer->add_success("updated $track->idnumber");
         } else {
-            throwException("failed to update $track->idnumber");
+            block_rlip_throwException("failed to update $track->idnumber");
         }
     }
 
@@ -1143,7 +1143,7 @@ abstract class elis_import {
 /**
  * used to log messages to a file
  */
-class ipe_log_filer extends log_filer {
+class ipe_log_filer extends block_rlip_log_filer {
     
     function notify_user($idnumber, $subject, $message) {
         global $USER;
@@ -1928,7 +1928,7 @@ function get_IP_timestamp($timestring) {
     } else if ($CFG->block_rlip_dateformat == 'Y.M.D') {
         list($year, $month, $day) = explode('.', $timestring);
     } else {
-        throwException("Invalid time format specified.");
+        block_rlip_throwException("Invalid time format specified.");
     }
     return make_timestamp($year, $month, $day);
 }
