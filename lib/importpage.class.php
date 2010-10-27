@@ -80,7 +80,11 @@ class importpage extends ipb_newpage {
 
         $target = $this->get_new_page(array('action' => 'default'));
 
-        $configform = new generalimport_form($target->get_moodle_url());
+        if(block_rlip_is_elis()) {
+            $configform = new generalimport_form($target->get_moodle_url());
+        } else {
+            $configform = new ipb_generalimport_form($target->get_moodle_url());
+        }
 //        $configform->set_data($CFG);
 
         if ($configdata = $configform->get_data()) {
