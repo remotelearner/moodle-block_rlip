@@ -467,7 +467,7 @@ abstract class elis_import {
     public function handle_course_update($r) {
         global $CURMAN;
 
-        $properties = course_import::get_properties_map();
+        $properties = ipe_course_import::get_properties_map();
 
         !empty($r[$properties['idnumber']]) OR block_rlip_throwException('missing idnumber');
         $course = course::get_by_idnumber($r[$properties['idnumber']]);
@@ -522,7 +522,7 @@ abstract class elis_import {
     }
 
     public function handle_curr_update($r) {
-        $properties = course_import::get_properties_map();
+        $properties = ipe_course_import::get_properties_map();
 
         !empty($r[$properties['idnumber']]) OR block_rlip_throwException('missing idnumber');
 
@@ -548,7 +548,7 @@ abstract class elis_import {
     public function handle_class_update($r) {
         global $CFG, $CURMAN;
 
-        $properties = cmclass_import::get_properties_map();
+        $properties = ipe_cmclass_import::get_properties_map();
                     //get the class that we are going to update
         !empty($r[$properties['idnumber']]) OR block_rlip_throwException('missing idnumber');
         $class = cmclass::get_by_idnumber($r[$properties['idnumber']]);
@@ -627,7 +627,7 @@ abstract class elis_import {
     }
 
     public function handle_track_update($r) {
-        $properties = track_import::get_properties_map();
+        $properties = ipe_track_import::get_properties_map();
 
         !empty($properties['idnumber']) OR block_rlip_throwException('missing idnumber');
 
