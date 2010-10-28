@@ -886,7 +886,7 @@ abstract class elis_import {
      * @param array $item record of student to enrol
      */
     public function handle_class_unenroll($item) {
-        $properties = student_import::get_properties_map();
+        $properties = ipe_student_import::get_properties_map();
 
         $temp= user::get_by_idnumber($item[$properties['user_idnumber']]);
 
@@ -951,7 +951,7 @@ abstract class elis_import {
      */
     public function handle_track_unenrol($item) {
         if(!empty($item)) {
-            $properties = student_import::get_properties_map();
+            $properties = ipe_student_import::get_properties_map();
             $temp = user::get_by_idnumber($item[$properties['user_idnumber']]);
 
             if(!empty($temp->id)) {
@@ -1064,7 +1064,7 @@ abstract class elis_import {
     }
 
     public function handle_user_unenrol($item) {
-        $properties = student_import::get_properties_map();
+        $properties = ipe_student_import::get_properties_map();
 
         $record_context = explode('_', $item[$properties['context']], 2);
         next($record_context);
