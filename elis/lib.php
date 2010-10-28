@@ -959,22 +959,22 @@ abstract class elis_import {
                 $context = explode('_', $item[$properties['context']], 2);
                 next($context);
                 $idnumber = current($context);
-                $temp = cmclass::get_by_idnumber($idnumber);
+                $temp = track::get_by_idnumber($idnumber);
 
                 if(!empty($temp->id)) {
-                    $classid = $temp->id;
-                    $track = usertrack::get_usertrack($userid, $classid);
+                    $trackid = $temp->id;
+                    $track = usertrack::get_usertrack($userid, $trackid);
 
                     if(!empty($track)) {
                         if($track->has_required_fields() === true) {
-                            if($track->duplicate_check() === false) {
-                                if($track->add()) {
+                            if($track->duplicate_check() === true) {
+                                if($track->delete()) {
                                     $this->log_filer->add_success("{$track->to_string()} added");
                                 } else {
                                     $this->log_filer->add_error_record("{$track->to_string()} to database");
                                 }
                             } else {
-                                $this->log_filer->add_error_record("{$track->to_string()} already exists");
+                                $this->log_filer->add_error_record("{$track->to_string()} does not exist");
                             }
                         } else {
                             $required = $track->get_missing_required_fields();
