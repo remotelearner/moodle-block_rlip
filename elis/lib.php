@@ -646,9 +646,9 @@ abstract class elis_import {
                 if(!empty($r[$properties[$p]])) {
                     /// Process date and time fields.
                     if (($p == 'startdate') || ($p == 'enddate')) {
-                        $class->$p = get_IP_timestamp($r[$properties[$p]]);
+                        $track->$p = get_IP_timestamp($r[$properties[$p]]);
                     } else {
-                        $class->$p = $r[$properties[$p]];
+                        $track->$p = $r[$properties[$p]];
                     }
                 }
             }
