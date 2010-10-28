@@ -151,7 +151,9 @@ class ElisExport {
             }
         }
 
-        $sql = "SELECT clsenrol.id, usr.idnumber AS usridnumber, usr.firstname, usr.lastname, crs.idnumber AS crsidnumber, crs.cost,
+        $as = sql_as();
+        
+        $sql = "SELECT clsenrol.id, usr.idnumber {$as} usridnumber, usr.firstname, usr.lastname, crs.idnumber {$as} crsidnumber, crs.cost,
                 clsenrol.enrolmenttime AS timestart, clsenrol.completetime AS timeend, clsenrol.grade AS usergrade, moodle_user.username
                 FROM {$CFG->prefix}crlm_class_enrolment clsenrol
                 JOIN {$CFG->prefix}crlm_class cls ON clsenrol.classid = cls.id

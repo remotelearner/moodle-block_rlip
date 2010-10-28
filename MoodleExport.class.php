@@ -146,7 +146,9 @@ class MoodleExport {
         $return = array();
         $i      = 0;
 
-        $sql = "SELECT u.id, u.firstname, u.lastname, u.idnumber usridnumber, u.username, c.shortname crsidnumber, gg.finalgrade usergrade, c.startdate timestart
+        $as = sql_as();
+        
+        $sql = "SELECT u.id, u.firstname, u.lastname, u.idnumber {$as} usridnumber, u.username, c.shortname {$as} crsidnumber, gg.finalgrade usergrade, c.startdate {$as} timestart
                 FROM {$CFG->prefix}grade_items as gi
                 JOIN {$CFG->prefix}grade_grades as gg ON gg.itemid = gi.id
                 JOIN {$CFG->prefix}user as u ON gg.userid = u.id
@@ -173,7 +175,7 @@ class MoodleExport {
                 $firstname      = $userdata->firstname;
                 $lastname       = $userdata->lastname;
                 $username       = $userdata->username;
-                $userno         = empty($userdata->usridnumber) ? '' : $userdata->useridnumber;
+                $userno         = empty($userdata->usridnumber) ? '' : $userdata->usridnumber;
                 $coursecode     = $userdata->crsidnumber;
                 $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
                 $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
