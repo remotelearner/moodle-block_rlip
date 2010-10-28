@@ -307,7 +307,7 @@ abstract class moodle_import {
     public function user_update($user) {
         global $CFG;
 
-        $ui = new user_import();
+        $ui = new ipb_user_import();
         $ui->check_old($user);
 
         /// Update an existing user
