@@ -72,7 +72,7 @@ class ipb_userimport_form extends moodleform {
 
         //just the file name not a path
         $mform->addElement('text', 'block_rlip_impuser_filename', get_string('filename', 'block_rlip') . ': ');
-        $plugins = get_import_plugins();
+        $plugins = ipb_get_import_plugins();
 
         if(count($plugins) > 1) {
             $mform->addElement('select', 'block_rlip_impuser_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);
@@ -108,7 +108,7 @@ class ipb_courseimport_form extends moodleform {
         $mform = &$this->_form;
 
         $mform->addElement('text', 'block_rlip_impcourse_filename', get_string('filename', 'block_rlip') . ': ');
-        $plugins = get_import_plugins();
+        $plugins = ipb_get_import_plugins();
 
         if(count($plugins) > 1) {
             $mform->addElement('select', 'block_rlip_impcourse_filetype', get_string('filetype', 'block_rlip') . ': ', $plugins);

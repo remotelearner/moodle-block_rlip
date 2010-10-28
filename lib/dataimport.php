@@ -54,7 +54,13 @@
 
         $variable = "block_rlip_imp{$i}_filetype";
         $plugin_name = 'import_' . $CFG->$variable;
-        $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib.php';
+        
+        //this code is awful but fixes issues for the time being
+        if(block_rlip_is_elis()) {
+            $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib_elis.php';
+        } else {
+            $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib_moodle.php';
+        }
 
         include_once($plugin);
         
