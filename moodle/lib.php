@@ -280,7 +280,7 @@ abstract class moodle_import {
                 $formfield = new $newfield($field->id, $user->id);
                 /// The API expects the array index of the choice, if the field type supports choices.
                 /// We need to determine the index of the choice value we receive.
-                if (isset($formfield->options) && !empty($formfield->options)) {
+                if (isset($formfield->options) && !empty($formfield->options) && isset($user->{$formfield->inputname})) {
                     $user->{$formfield->inputname} = array_search($user->{$formfield->inputname}, $formfield->options);
                 }
                 $formfield->edit_save_data($user);
@@ -325,7 +325,7 @@ abstract class moodle_import {
                 $formfield = new $newfield($field->id, $user->id);
                 /// The API expects the array index of the choice, if the field type supports choices.
                 /// We need to determine the index of the choice value we receive.
-                if (isset($formfield->options) && !empty($formfield->options)) {
+                if (isset($formfield->options) && !empty($formfield->options) && isset($user->{$formfield->inputname})) {
                     $user->{$formfield->inputname} = array_search($user->{$formfield->inputname}, $formfield->options);
                 }
                 $formfield->edit_save_data($user);
@@ -994,7 +994,7 @@ abstract class ipb_import {
 
     public function __call($name, $args) {
         if(strncmp($name, 'get_', 4) === 0) {
-            if(!empty($args[0])) {
+            if(isset($args[0])) {
                 return $args[0];
             }
         }
@@ -1005,7 +1005,7 @@ abstract class ipb_import {
         $properties = $this->get_properties_map();
 
         foreach($properties as $key=>$p) {
-            if(!empty($record[$p])) {
+            if(isset($record[$p])) {
                 $method = "get_$p";
                 $retval[$key] = $this->$method($record[$p]);
             }
