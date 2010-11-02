@@ -797,7 +797,7 @@ abstract class elis_import {
                 if(!empty($user)) {
                     $properties = get_object_vars($old_user);
                     foreach($properties as $key=>$null) {
-                        if(!empty($old_user->$key) && (!isset($user->$key) || ($old_user->$key != $user->$key))) {
+                        if($key != 'id' && isset($old_user->$key) && (!isset($user->$key) || ($old_user->$key != $user->$key))) {
                             $user->$key = $old_user->$key;
                         }
                     }
@@ -1226,7 +1226,7 @@ class ipe_user_import extends ipe_import {
 
                 if(!empty($custom_fields)) {
                     foreach($custom_fields as $cf) {
-                        if(!empty($rec[$properties_map[$cf->shortname]])) {
+                        if(isset($rec[$properties_map[$cf->shortname]])) {
                             $property = 'field_' . $cf->shortname;
                             $temp->item->$property = $rec[$properties_map[$cf->shortname]];
                         }
