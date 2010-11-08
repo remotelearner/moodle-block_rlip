@@ -35,6 +35,16 @@ class ElisExport {
         }
 
         $exportfilelocation = trim($CFG->block_rlip_exportfilelocation);
+        if(is_dir($exportfilelocation)) {
+            if(strrpos($exportfilelocation, '/') == strlen($exportfilelocation) - strlen('/')) {
+                $exportfilelocation .= 'export.csv';
+            } else {
+                $exportfilelocation .= '/export.csv';
+            }
+        } else if(strrpos($exportfilelocation, '/') == strlen($exportfilelocation) - strlen('/')) {
+            $exportfilelocation .= 'export.csv';
+        }
+        
         if(!empty($CFG->block_rlip_exportfiletimestamp)) {
             $exportfilelocation = $this->add_timestamp_to_filename($exportfilelocation);
         }

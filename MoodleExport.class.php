@@ -25,14 +25,19 @@ class MoodleExport {
             $this->log_filer->lfprintln(get_string('filenotdefined', 'block_rlip'));
             $this->log_filer->output_log();
             return true;
-        } else {
-            $last_slash_position = strrpos($exportfilelocation, '/');
-
-            if($last_slash_position === count($exportfilelocation)) {
-                $exportfilelocation .= 'records_';
-            }
         }
 
+        $exportfilelocation = trim($CFG->block_rlip_exportfilelocation);
+        if(is_dir($exportfilelocation)) {
+            if(strrpos($exportfilelocation, '/') == strlen($exportfilelocation) - strlen('/')) {
+                $exportfilelocation .= 'export.csv';
+            } else {
+                $exportfilelocation .= '/export.csv';
+            }
+        } else if(strrpos($exportfilelocation, '/') == strlen($exportfilelocation) - strlen('/')) {
+            $exportfilelocation .= 'export.csv';
+        }
+        
         if(!empty($CFG->block_rlip_exportfiletimestamp)) {
             $exportfilelocation = $this->add_timestamp_to_filename($exportfilelocation);
         }

@@ -107,16 +107,6 @@ class block_rlip extends block_base {
         global $CFG;
 
         $timenow = time();
-        
-        // Make sure that a file was configured for the export to run correctly.
-        if (empty($CFG->block_rlip_exportfilelocation)) {
-            return true;
-        }
-
-        // Make sure that the export file location is actually a file, and not a directory path.
-        if (is_dir($CFG->block_rlip_exportfilelocation)) {
-            return true;
-        }
 
         if(block_rlip_is_elis()) {
             require_once('ElisExport.class.php');
@@ -143,7 +133,7 @@ class block_rlip extends block_base {
             $export_period = block_rlip_time_string_to_seconds('1d');
         }
         
-        if($timenow >= ($last_export + $export_period)) {
+        if($timenow >= ($last_export + $export_period) && !empty($CFG->block_rlip_exportfilelocation)) {
             $export->cron($manual);
             set_config('block_rlip_last_export_cron', $timenow);
         }
