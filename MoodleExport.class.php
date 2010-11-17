@@ -2,7 +2,7 @@
 require_once($CFG->dirroot . '/blocks/rlip/moodle/lib.php');
 
 class MoodleExport {
-    public function cron($manual) {
+    public function cron($manual, $last_cron_time = 0) {
         global $CFG;
 
         $this->log_filer = new ipb_log_filer($CFG->block_rlip_logfilelocation, 'export_' . time());

@@ -3,7 +3,7 @@ require_once($CFG->dirroot . '/curriculum/config.php');
 require_once($CFG->dirroot . '/blocks/rlip/elis/lib.php');
 
 class ElisExport {
-    function cron($manual = false) {
+    function cron($manual = false, $last_cron_time = 0) {
         global $CFG;
 
         $include_all = false;
@@ -56,7 +56,7 @@ class ElisExport {
         if($manual !== true) {
             mtrace(get_string('createdata', 'block_rlip'));
         }
-        $records = $this->get_user_data($manual, $include_all);
+        $records = $this->get_user_data($manual, $include_all, $last_cron_time);
 
         $header = $this->get_user_data_header();
 
@@ -140,7 +140,7 @@ class ElisExport {
     }
 
 
-    function get_cm_user_data($manual = false, $include_all = false) {
+    function get_cm_user_data($manual = false, $include_all = false, $last_cron_time = 0) {
         global $CFG;
 
         require_once($CFG->dirroot . '/curriculum/config.php');
@@ -155,7 +155,7 @@ class ElisExport {
                 $one_day_ago = time() - DAYSECS;
                 $time_condition = ' AND clsenrol.completetime > ' . $one_day_ago;
             }
-        } else if($last_cron_time = get_field('block', 'lastcron', 'name', 'rlip')) {
+        } else if(!empty($last_cron_time)) {
             if($include_all !== true) {
                 $time_condition = ' AND clsenrol.completetime > ' . $last_cron_time;
             }
@@ -194,11 +194,11 @@ class ElisExport {
                );
     }
 
-    private function get_user_data($manual = false, $include_all = false) {
+    private function get_user_data($manual = false, $include_all = false, $last_cron_time = 0) {
         $return = array();
         $i      = 0;
 
-        $users = $this->get_cm_user_data($manual, $include_all);
+        $users = $this->get_cm_user_data($manual, $include_all, $last_cron_time);
 
         $userstatus     = 'COMPLETED';
 

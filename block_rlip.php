@@ -134,7 +134,7 @@ class block_rlip extends block_base {
         }
         
         if($timenow >= ($last_export + $export_period) && !empty($CFG->block_rlip_exportfilelocation)) {
-            $export->cron($manual);
+            $export->cron($manual, $last_export);
             set_config('block_rlip_last_export_cron', $timenow);
         }
         
