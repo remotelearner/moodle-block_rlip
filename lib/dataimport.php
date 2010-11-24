@@ -31,65 +31,69 @@
 
     $context = get_context_instance(CONTEXT_SYSTEM);
 
-    require_capability('block/rlip:config', $context);
+    if (has_capability('block/rlip:config', $context)) {
 
-    if(!isset($action)) {
-        $action = optional_param('action', 'default');
-    }
+        if(!isset($action)) {
+            $action = optional_param('action', 'default');
+        }
 
-    if(empty($action) || strcmp($action, 'default') === 0) {
-        $imports = array('user', 'course', 'enrolment');
-    } else if(!is_array($action)) {
-        $imports = array($action);
+        if(empty($action) || strcmp($action, 'default') === 0) {
+            $imports = array('user', 'course', 'enrolment');
+        } else if(!is_array($action)) {
+            $imports = array($action);
+        } else {
+            $imports = $action;
+        }
+
+        $logfile = 'import_' . time();
+
+        $any_success = false;
+
+        foreach($imports as $i) {
+            $success = false;
+
+            $variable = "block_rlip_imp{$i}_filetype";
+            $plugin_name = 'import_' . $CFG->$variable;
+        
+            //this code is awful but fixes issues for the time being
+            if(block_rlip_is_elis()) {
+                $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib_elis.php';
+            } else {
+                $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib_moodle.php';
+            }
+
+            include_once($plugin);
+        
+            if(block_rlip_is_elis()) {
+                $plugin_name .= '_elis';
+            } else {
+                $plugin_name .= '_moodle';
+            }
+
+            if(class_exists($plugin_name)) {
+                $importer = new $plugin_name($logfile);
+
+                //if(is_subclass_of($importer, 'ipe_import')) {
+                    $variable = "block_rlip_imp{$i}_filename";
+                    $success = $importer->import_records($CFG->block_rlip_filelocation . '/' . $CFG->$variable, $i);
+                    $any_success = true;
+                //}
+            } else {
+                echo 'missing: ' . $plugin_name;
+            }
+
+            if(!empty($success)) {
+                print 'successfully imported from file: ' . $i . '<br />';
+            } else {
+                print 'failed to import from file: ' . $i . '<br />';
+            }
+        }
+
+        if($any_success === true) {
+            print '<br />view log at <a href="' . $CFG->wwwroot . '/blocks/rlip/lib/viewlog.php?file=' . $logfile . '">log file</a>';
+        }
+    
     } else {
-        $imports = $action;
-    }
-
-    $logfile = 'import_' . time();
-
-    $any_success = false;
-
-    foreach($imports as $i) {
-        $success = false;
-
-        $variable = "block_rlip_imp{$i}_filetype";
-        $plugin_name = 'import_' . $CFG->$variable;
-        
-        //this code is awful but fixes issues for the time being
-        if(block_rlip_is_elis()) {
-            $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib_elis.php';
-        } else {
-            $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib_moodle.php';
-        }
-
-        include_once($plugin);
-        
-        if(block_rlip_is_elis()) {
-            $plugin_name .= '_elis';
-        } else {
-            $plugin_name .= '_moodle';
-        }
-
-        if(class_exists($plugin_name)) {
-            $importer = new $plugin_name($logfile);
-
-            //if(is_subclass_of($importer, 'ipe_import')) {
-                $variable = "block_rlip_imp{$i}_filename";
-                $success = $importer->import_records($CFG->block_rlip_filelocation . '/' . $CFG->$variable, $i);
-                $any_success = true;
-            //}
-        } else {
-            echo 'missing: ' . $plugin_name;
-        }
-
-        if(!empty($success)) {
-            print 'successfully imported from file: ' . $i . '<br />';
-        } else {
-            print 'failed to import from file: ' . $i . '<br />';
-        }
-    }
-
-    if($any_success === true) {
-        print '<br />view log at <a href="' . $CFG->wwwroot . '/blocks/rlip/lib/viewlog.php?file=' . $logfile . '">log file</a>';
+        print get_string('nopermissions', 'block_rlip');
     }
 ?>

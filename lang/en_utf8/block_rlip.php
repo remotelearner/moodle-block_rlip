@@ -91,4 +91,6 @@ $string['nodata'] = 'No user completion data to create';
 $string['noparams'] = 'Parameters not initialized, cannot create local csv file for upload';
 $string['recordadded'] = 'User Data: User idnumber $a->userno - Course idnumber $a->coursecode has been added';
 $string['skiprecord'] = 'Either the user idnumber $a->usridnumber or course idnumber $a->crsidnumber was empty - skipping record because of missing required field(s)';
+
+$string['nopermissions'] = 'Sorry, you do not have the permissions required to perform this action';
 ?>

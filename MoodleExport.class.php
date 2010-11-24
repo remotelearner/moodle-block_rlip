@@ -7,6 +7,12 @@ class MoodleExport {
 
         $this->log_filer = new ipb_log_filer($CFG->block_rlip_logfilelocation, 'export_' . time());
 
+        $context = get_context_instance(CONTEXT_SYSTEM);
+        if (!has_capability('block/rlip:config', $context)) {
+            echo get_string('nopermissions', 'block_rlip') . '<br/>';
+            return false;
+        }
+        
         if(empty($CFG->block_rlip_exportfilelocation)) {
             if($manual !== true) {
                 mtrace(get_string('filenotdefined', 'block_rlip') . "\n");
@@ -19,7 +25,7 @@ class MoodleExport {
         $exportfilelocation = trim($CFG->block_rlip_exportfilelocation);
 
         if(empty($exportfilelocation)) {
-            if(manual !== true) {
+            if($manual !== true) {
                 mtrace(get_string('filenotdefined', 'block_rlip') . "\n");
             }
             $this->log_filer->lfprintln(get_string('filenotdefined', 'block_rlip'));
