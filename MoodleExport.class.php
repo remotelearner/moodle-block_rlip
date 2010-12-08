@@ -141,29 +141,45 @@ class MoodleExport {
 
     private function get_user_data_header() {
         return $header = array(
-                 'First Name',
-                 'Last Name',
-                 'Username',
-                 'User Idnumber',
-                 'Course Idnumber',
-                 'Start Date',
-                 'End Date',
-                 'Grade'
+                 get_string('export_header_firstname', 'block_rlip'),
+                 get_string('export_header_lastname', 'block_rlip'),
+                 get_string('export_header_username', 'block_rlip'),
+                 get_string('export_header_user_idnumber', 'block_rlip'),
+                 get_string('export_header_course_idnumber', 'block_rlip'),
+                 get_string('export_header_start_date', 'block_rlip'),
+                 get_string('export_header_end_date', 'block_rlip'),
+                 get_string('export_header_grade', 'block_rlip'),
+                 get_string('export_header_letter', 'block_rlip')
                );
     }
 
     private function get_user_data($manual = false, $include_all = false) {
         global $CFG;
+        
+        require_once($CFG->dirroot . '/lib/gradelib.php');
+        
         $return = array();
         $i      = 0;
 
         $as = sql_as();
         
-        $sql = "SELECT u.id, u.firstname, u.lastname, u.idnumber {$as} usridnumber, u.username, c.shortname {$as} crsidnumber, gg.finalgrade usergrade, c.startdate {$as} timestart
-                FROM {$CFG->prefix}grade_items as gi
-                JOIN {$CFG->prefix}grade_grades as gg ON gg.itemid = gi.id
-                JOIN {$CFG->prefix}user as u ON gg.userid = u.id
-                JOIN {$CFG->prefix}course as c ON c.id = gi.courseid
+        //query to retrieve user info and course grade data
+        $sql = "SELECT u.id,
+                       u.firstname,
+                       u.lastname,
+                       u.idnumber {$as} usridnumber,
+                       u.username,
+                       c.shortname {$as} crsidnumber,
+                       gg.finalgrade usergrade,
+                       c.startdate {$as} timestart,
+                       gi.id {$as} gradeitemid
+                FROM {$CFG->prefix}grade_items gi
+                JOIN {$CFG->prefix}grade_grades gg
+                  ON gg.itemid = gi.id
+                JOIN {$CFG->prefix}user u
+                  ON gg.userid = u.id
+                JOIN {$CFG->prefix}course c
+                  ON c.id = gi.courseid
                 WHERE itemtype = 'course'
                 AND u.deleted = 0";
 
@@ -191,7 +207,13 @@ class MoodleExport {
                 $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
                 $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
                 $usergrade      = $userdata->usergrade;
-
+                
+                //calculate the Moodle course grade letter from the query result
+                $gradeletter = '-';
+                if ($grade_item = grade_item::fetch(array('id' => $userdata->gradeitemid))) {
+                    $gradeletter    = grade_format_gradevalue($userdata->usergrade, $grade_item, true, GRADE_DISPLAY_TYPE_LETTER);
+                }
+                
                 $return[$i] = array();
                 array_push($return[$i],
                            $firstname,
@@ -201,7 +223,8 @@ class MoodleExport {
                            $coursecode,
                            $userstartdate,
                            $userenddate,
-                           $usergrade);
+                           $usergrade,
+                           $gradeletter);
 
                 $i++;
 

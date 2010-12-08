@@ -169,13 +169,39 @@ class ElisExport {
 
         $as = sql_as();
         
-        $sql = "SELECT clsenrol.id, usr.idnumber {$as} usridnumber, usr.firstname, usr.lastname, crs.idnumber {$as} crsidnumber, crs.cost,
-                clsenrol.enrolmenttime AS timestart, clsenrol.completetime AS timeend, clsenrol.grade AS usergrade, moodle_user.username
+        //query to return user info, CM class enrolment info,
+        //and grade info from the associated Moodle course
+        $sql = "SELECT clsenrol.id,
+                       usr.idnumber {$as} usridnumber,
+                       usr.firstname,
+                       usr.lastname,
+                       crs.idnumber {$as} crsidnumber,
+                       crs.cost,
+                       clsenrol.enrolmenttime {$as} timestart,
+                       clsenrol.completetime {$as} timeend,
+                       clsenrol.grade {$as} usergrade,
+                       moodle_user.username,
+                       gg.finalgrade {$as} mdlusergrade,
+                       gi.id {$as} gradeitemid
                 FROM {$CFG->prefix}crlm_class_enrolment clsenrol
-                JOIN {$CFG->prefix}crlm_class cls ON clsenrol.classid = cls.id
-                JOIN {$CFG->prefix}crlm_course crs ON crs.id = cls.courseid
-                JOIN {$CFG->prefix}crlm_user usr ON usr.id = clsenrol.userid
-                LEFT JOIN {$CFG->prefix}user moodle_user ON usr.idnumber = moodle_user.idnumber
+                JOIN {$CFG->prefix}crlm_class cls
+                  ON clsenrol.classid = cls.id
+                JOIN {$CFG->prefix}crlm_course crs
+                  ON crs.id = cls.courseid
+                JOIN {$CFG->prefix}crlm_user usr
+                  ON usr.id = clsenrol.userid
+                LEFT JOIN {$CFG->prefix}user moodle_user
+                  ON usr.idnumber = moodle_user.idnumber
+                LEFT JOIN {$CFG->prefix}crlm_class_moodle clsmdl
+                  ON cls.id = clsmdl.classid
+                LEFT JOIN {$CFG->prefix}course mdlcrs
+                  ON clsmdl.moodlecourseid = mdlcrs.id
+                LEFT JOIN {$CFG->prefix}grade_items gi
+                  ON mdlcrs.id = gi.courseid
+                  AND gi.itemtype = 'course'
+                LEFT JOIN {$CFG->prefix}grade_grades gg
+                  ON gi.id = gg.itemid
+                  AND moodle_user.id = gg.userid
                 WHERE clsenrol.completestatusid = {$passed_status}
                 {$time_condition}
                 ORDER BY usridnumber DESC";
@@ -188,19 +214,24 @@ class ElisExport {
 
     private function get_user_data_header() {
         return $header = array(
-                 'First Name',
-                 'Last Name',
-                 'Username',
-                 'User Idnumber',
-                 'Course Idnumber',
-                 'Start Date',
-                 'End Date',
-                 'Status',
-                 'Grade'
+                 get_string('export_header_firstname', 'block_rlip'),
+                 get_string('export_header_lastname', 'block_rlip'),
+                 get_string('export_header_username', 'block_rlip'),
+                 get_string('export_header_user_idnumber', 'block_rlip'),
+                 get_string('export_header_course_idnumber', 'block_rlip'),
+                 get_string('export_header_start_date', 'block_rlip'),
+                 get_string('export_header_end_date', 'block_rlip'),
+                 get_string('export_header_status', 'block_rlip'),
+                 get_string('export_header_grade', 'block_rlip'),
+                 get_string('export_header_letter', 'block_rlip')
                );
     }
 
     private function get_user_data($manual = false, $include_all = false, $last_cron_time = 0) {
+        global $CFG;
+        
+        require_once($CFG->dirroot . '/lib/gradelib.php');
+        
         $return = array();
         $i      = 0;
 
@@ -228,6 +259,12 @@ class ElisExport {
                 $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
                 $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
                 $usergrade      = $userdata->usergrade;
+                
+                //calculate the Moodle course grade letter from the value provided by get_cm_user_data
+                $gradeletter = '-';
+                if ($grade_item = grade_item::fetch(array('id' => $userdata->gradeitemid))) {
+                    $gradeletter    = grade_format_gradevalue($userdata->mdlusergrade, $grade_item, true, GRADE_DISPLAY_TYPE_LETTER);
+                }
 
                 $return[$i] = array();
                 array_push($return[$i],
@@ -239,7 +276,8 @@ class ElisExport {
                            $userstartdate,
                            $userenddate,
                            $userstatus,
-                           $usergrade);
+                           $usergrade,
+                           $gradeletter);
 
                 $i++;
 
