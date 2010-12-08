@@ -945,15 +945,85 @@ class ipb_course_import extends ipb_import {
         return $this->boolean_get($visible);
     }
 
-    protected function get_category($category) {
-        if(is_numeric($category)) {
-            if(record_exists('course_categories', 'id', $category)) {
-                return $category;
+    protected function get_category($category, $action = '') {
+        $trimmed_category = trim($category);
+        
+        //check for a leading / for the case where an absolute path is specified
+        $absolute_path = false;
+        if (strpos($category, '/') === 0) {
+            $absolute_path = true;
+            $trimmed_category = substr($trimmed_category, 1);
+        }
+        
+        //retrieve all the different "parts" of the category path
+        $parts = explode('/', $trimmed_category);
+        
+        $parentids = array();
+        
+        foreach($parts as $part) {
+            //the name must match the specified part
+            $select = "name = '" . addslashes($part) . "'";
+            
+            if (!empty($parentids)) {
+                //we are chaining down a path, so only include children of the categories
+                //found in the previous category level
+                $select .= ' AND parent IN (' . implode(',', $parentids) . ')';
+            } else if ($absolute_path) {
+                //force it to be a top-level category
+                $select .= ' AND parent = 0';
             }
-        } else {
-            $categoryid = get_field('course_categories', 'id', 'name', $category);
-            if(!empty($categoryid)) {
-                return $categoryid;
+
+            if ($records = get_records_select('course_categories', $select)) {
+                $parentids = array();
+                
+                foreach($records as $record) {
+                    $parentids[] = $record->id;
+                }
+            } else {
+                //only create the category on the course create action
+                if ($action == 'create' && (count($parentids) == 1 || empty($parentids))) {
+                    print_object('creating: ' . $part);
+                    $effective_parent = 0;
+                    if (count($parentids) == 1) {
+                        $effective_parent = $parentids[0];
+                    }
+                    
+                    /**
+                     * There is no API call to do this - this code is roughly copied from course/editcategory.php
+                     */
+                    $newcategory = new stdClass();
+                    $newcategory->name = $part;
+                    $newcategory->description = $part;
+                    $newcategory->parent = $effective_parent; // if $data->parent = 0, the new category will be a top-level category
+                    // Create a new category.
+                    $newcategory->sortorder = 999;
+                    if (!$newcategory->id = insert_record('course_categories', $newcategory)) {
+                        error("Could not insert the new category '$newcategory->name' ");
+                    }
+                    $newcategory->context = get_context_instance(CONTEXT_COURSECAT, $newcategory->id);
+                    mark_context_dirty($newcategory->context->path);
+                    fix_course_sortorder(); // Required to build course_categories.depth and .path.
+                    
+                    $parentids = array($newcategory->id);
+                } else {
+                    $parentids = array();
+                    break;
+                }
+            }
+        }
+        
+        if (count($parentids) == 1) {
+            //if we end up with a single result, that is our category
+            return $parentids[0];
+        } else if (count($parentids) > 1) {
+            //multiple results, so we can't proceed
+            return null;
+        }
+        
+        //if not found, try using the record id
+        if(is_numeric($trimmed_category)) {
+            if(record_exists('course_categories', 'id', $trimmed_category)) {
+                return $category;
             }
         }
 
@@ -1007,11 +1077,15 @@ abstract class ipb_import {
     protected function get_item($record) {
         $retval = array();
         $properties = $this->get_properties_map();
-
+        
+        $action_attribute = $properties['execute'];
+        
         foreach($properties as $key=>$p) {
             if(isset($record[$p])) {
                 $method = "get_$p";
-                $retval[$key] = $this->$method($record[$p]);
+                
+                //NOTE: The second parameter is only defined for 
+                $retval[$key] = $this->$method($record[$p], $record[$action_attribute]);
             }
         }
 
