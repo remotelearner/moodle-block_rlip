@@ -350,6 +350,10 @@ abstract class moodle_import {
         $userid = get_record('user', 'username', $user['username'], 'deleted', '0');
 
         delete_user($userid);
+        
+        //role_unassign changes the current user's stored capabilities, so force a reload
+        reload_all_capabilities();
+
         $this->log_filer->add_success("user {$user['username']} deleted");
     }
 
