@@ -253,6 +253,8 @@ function block_rlip_handle_export_mapping_delete() {
                 WHERE fieldorder > {$fieldorder}";
             
         execute_sql($sql, false);
+        
+        redirect(block_rlip_get_base_export_config_url(), '', 0);
     }
 }
 
@@ -309,6 +311,8 @@ function block_rlip_handle_export_mapping_reorder($param, $direction) {
             
         //move the specified record
         set_field('block_rlip_export_fieldmap', 'fieldorder', $new_position, 'id', $moving_record);
+        
+        redirect(block_rlip_get_base_export_config_url(), '', 0);
     }
 }
 
@@ -325,6 +329,10 @@ function block_rlip_handle_export_field_form($target) {
     $form = new export_profile_field_form($target->get_moodle_url());
         
     $editid = optional_param('editid', 0, PARAM_INT);
+    
+    if ($form->is_cancelled()) {
+        redirect(block_rlip_get_base_export_config_url(), '', 0);
+    }
     
     //process the adding of a field, if applicable
     if ($data = $form->get_data()) {
@@ -455,9 +463,12 @@ function block_rlip_display_export_field_mappings() {
             
             $i++;
         }
+        
+        print_table($table);
+    } else {
+        print_box(get_string('export_config_instructions', 'block_rlip'));
     }
     
-    print_table($table);
 }
 
 /**

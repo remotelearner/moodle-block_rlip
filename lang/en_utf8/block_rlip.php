@@ -33,7 +33,11 @@ $string['export_header_letter'] = 'Letter';
 $string['export_config_form_column_header'] = 'Column Header';
 $string['export_config_form_profile_field'] = 'Profile Field';
 $string['export_config_form_add'] = 'Add';
+$string['export_config_form_update'] = 'Update';
 $string['export_config_duplicate_header_error'] = 'Please choose a unique column name';
+
+$string['export_config_instructions'] = 'Currently, no profile fields are included in the export.
+To add this information to the export, add the desired fields through the interface above.';
 
 $string['mapping_column_header'] = 'Column Header';
 $string['mapping_profile_field'] = 'Profile Field';

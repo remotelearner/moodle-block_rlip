@@ -12,6 +12,7 @@ class export_profile_field_form extends moodleform {
         $mform->addElement('hidden', 'editid');
         
         $mform->addElement('text', 'column_header', get_string('export_config_form_column_header', 'block_rlip'));
+        $mform->setHelpButton('column_header', array('exportconfig/column_header', get_string('export_config_form_column_header', 'block_rlip'), 'block_rlip'));
         $mform->addrule('column_header', null, 'required', null, 'client');
         
         $options = array();
@@ -31,9 +32,18 @@ class export_profile_field_form extends moodleform {
         }
         
         $mform->addElement('select', 'profile_field', get_string('export_config_form_profile_field', 'block_rlip'), $options);
+        $mform->setHelpButton('profile_field', array('exportconfig/profile_field', get_string('export_config_form_profile_field', 'block_rlip'), 'block_rlip'));
         $mform->addrule('profile_field', null, 'required', null, 'client');
         
-        $mform->addElement('submit', 'add', get_string('export_config_form_add', 'block_rlip'));
+        $editid = optional_param('editid', 0, PARAM_INT);
+        
+        if ($editid == 0) {
+            $submit_label = get_string('export_config_form_add', 'block_rlip');    
+        } else {
+            $submit_label = get_string('export_config_form_update', 'block_rlip');
+        }
+        
+        $this->add_action_buttons(true, $submit_label);
     }
     
     function validation($data, $files) {
