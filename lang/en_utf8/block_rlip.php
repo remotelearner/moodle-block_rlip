@@ -33,6 +33,7 @@ $string['export_header_letter'] = 'Letter';
 $string['export_config_form_column_header'] = 'Column Header';
 $string['export_config_form_profile_field'] = 'Profile Field';
 $string['export_config_form_add'] = 'Add';
+$string['export_config_duplicate_header_error'] = 'Please choose a unique column name';
 
 $string['mapping_column_header'] = 'Column Header';
 $string['mapping_profile_field'] = 'Profile Field';

@@ -326,8 +326,14 @@ function block_rlip_handle_export_field_form($target) {
         
     //process the adding of a field, if applicable
     if ($data = $form->get_data()) {
-        if (isset($data->profile_field)) {
-            
+
+        if (!empty($data->editid)) {
+            $mapping_record = new stdClass;
+            $mapping_record->id = $data->editid;
+            $mapping_record->fieldname = $data->profile_field;
+            $mapping_record->fieldmap = $data->column_header;
+            update_record('block_rlip_export_fieldmap', addslashes_recursive($mapping_record));
+        } else {
             $mapping_record = new stdClass;
             //right now, we only care about the user context
             $mapping_record->context = 'user';
@@ -349,6 +355,19 @@ function block_rlip_handle_export_field_form($target) {
         }
     }
         
+    $editid = optional_param('editid', 0, PARAM_INT);
+    
+    if ($editid != 0 and
+        $mapping_record = get_record('block_rlip_export_fieldmap', 'id', $editid)) {
+        
+        $data_object = new stdClass;
+        $data_object->profile_field = $mapping_record->fieldname;
+        $data_object->column_header = $mapping_record->fieldmap;
+        $data_object->editid = $editid;
+        
+        $form->set_data($data_object);
+    }
+    
     //display the add form
     $form->display();
 }
@@ -380,14 +399,19 @@ function block_rlip_display_export_field_mappings() {
               ON fieldmap.fieldname = {$concat}
             ORDER BY fieldmap.fieldorder";
 
-    //retrieve the current URL to refer back to this page            
-    $baseurl = qualified_me();
+    //retrieve the current URL to refer back to this page
+    if (block_rlip_is_elis()) {
+        $baseurl = $CFG->wwwroot . '/curriculum/index.php?action=export&s=dim';
+    } else {
+        $baseurl = $CFG->wwwroot . '/blocks/rlip/moodle/displaypage.php?action=export';
+    }
     
     if ($records = get_records_sql($sql)) {
         foreach ($records as $record) {
             $action_items = '<a href="' . $baseurl . '&deleteid=' . $record->id . '">X</a>';
             $action_items .= ' <a href="' . $baseurl . '&moveupid=' . $record->id . '">UP</a>';
             $action_items .= ' <a href="' . $baseurl . '&movedownid=' . $record->id . '">DOWN</a>';
+            $action_items .= ' <a href="' . $baseurl . '&editid=' . $record->id . '">EDIT</a>';
                 
             $table->data[] = array($record->fieldmap, $record->name, $action_items);
         }
@@ -452,11 +476,11 @@ function block_rlip_get_profile_field_mapping() {
             
     if ($records = get_records_sql($sql)) {
         foreach ($records as $record) {
-            //map the field shortname to a column header
-            $result[$record->shortname] = $record->fieldmap;
+            //map the column header to a field shortname
+            $result[$record->fieldmap] = $record->shortname;
         }
     }
-    
+
     return $result;
 }
 

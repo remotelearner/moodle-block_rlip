@@ -178,7 +178,7 @@ class ElisExport {
         
         foreach ($mapping as $key => $value) {
             $contextlevel = context_level_base::get_custom_context_level('user', 'block_curr_admin');
-            $field = new field(field::get_for_context_level_with_name($contextlevel, $key));
+            $field = new field(field::get_for_context_level_with_name($contextlevel, $value));
             
             $sql = "SELECT user_field.id
                     FROM
@@ -188,7 +188,7 @@ class ElisExport {
                     JOIN {$CFG->prefix}crlm_field_category_context user_field_category_context
                       ON user_field_category.id = user_field_category_context.categoryid
                       AND user_field_category_context.contextlevel = {$contextlevel}
-                    WHERE user_field.shortname = '" . addslashes($key) . "'";
+                    WHERE user_field.shortname = '" . addslashes($value) . "'";
             
             if ($profile_field_id = get_field_sql($sql)) {
                 $profile_field_joins .= "LEFT JOIN {$CFG->prefix}context context_{$profile_field_num}
@@ -270,7 +270,7 @@ class ElisExport {
                        
         $mapping = block_rlip_get_profile_field_mapping();                       
                 
-        return array_merge($header, array_values($mapping));
+        return array_merge($header, array_keys($mapping));
     }
 
     private function get_user_data($manual = false, $include_all = false, $last_cron_time = 0) {
