@@ -377,6 +377,38 @@ function block_rlip_handle_export_field_form($target) {
 }
 
 /**
+ * Constructs the apropriate HTML for an icon on the profile field export page
+ * 
+ * @param  string   $param_name        Name of the URL parameter the link action will use
+ * @param  string   $image_name        Name of the image to display, not including file extension
+ * @param  int      $record_id         Id to add to the URL action
+ * @param  boolean  $blank             If true, the blank spacer image will be used instead of the supplied image
+ * @param  string   $blank_image_name  Name of the image file used for the spacer image (excluding extension)
+ * @param  string   $image_extension   File extension used for all images (includes "." prefix)
+ */
+function block_rlip_get_export_icon_html($param_name, $image_name, $record_id, $blank = false, $blank_image_name = 'blank', $image_extension = '.png') {
+    global $CFG;
+    
+    //base page url
+    $baseurl = block_rlip_get_base_export_config_url();
+    
+    //base image url path
+    $base_image_path = $CFG->wwwroot . '/blocks/rlip/pix/';
+    
+    if ($blank) {
+        //image tag for the "spacer" image
+        $result = "<img src=\"{$base_image_path}{$blank_image_name}{$image_extension}\"/>";
+    } else {
+        //image url fo rthe supplied image
+        $result = "<img src=\"{$base_image_path}{$image_name}{$image_extension}\"/>";
+        //link to the appropriate URL action
+        $result = "<a href=\"{$baseurl}&{$param_name}={$record_id}\">{$result}</a>";  
+    }
+    
+    return $result;
+}
+
+/**
  * Displays a table containing the existing mappings between column headers and profile fields
  */
 function block_rlip_display_export_field_mappings() {
@@ -407,16 +439,24 @@ function block_rlip_display_export_field_mappings() {
     $baseurl = block_rlip_get_base_export_config_url();
     
     if ($records = get_records_sql($sql)) {
+        
+        //track record number for first / last record special cases
+        $i = 1;
+        
         foreach ($records as $record) {
-            $action_items = '<a href="' . $baseurl . '&deleteid=' . $record->id . '">X</a>';
-            $action_items .= ' <a href="' . $baseurl . '&moveupid=' . $record->id . '">UP</a>';
-            $action_items .= ' <a href="' . $baseurl . '&movedownid=' . $record->id . '">DOWN</a>';
-            $action_items .= ' <a href="' . $baseurl . '&editid=' . $record->id . '">EDIT</a>';
+            $action_items  = block_rlip_get_export_icon_html('deleteid', 'delete', $record->id);
+            //display for rows 2 - n
+            $action_items .= block_rlip_get_export_icon_html('moveupid', 'up_arrow', $record->id, $i == 1);
+            //display for rows 1 - (n-1)
+            $action_items .= block_rlip_get_export_icon_html('movedownid', 'down_arrow', $record->id, $i == count($records));
+            $action_items .= block_rlip_get_export_icon_html('editid', 'edit', $record->id);
                 
             $table->data[] = array($record->fieldmap, $record->name, $action_items);
+            
+            $i++;
         }
     }
-        
+    
     print_table($table);
 }
 
