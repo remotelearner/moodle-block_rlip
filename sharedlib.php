@@ -324,6 +324,8 @@ function block_rlip_handle_export_field_form($target) {
     //construct our config form
     $form = new export_profile_field_form($target->get_moodle_url());
         
+    $editid = optional_param('editid', 0, PARAM_INT);
+    
     //process the adding of a field, if applicable
     if ($data = $form->get_data()) {
 
@@ -333,6 +335,8 @@ function block_rlip_handle_export_field_form($target) {
             $mapping_record->fieldname = $data->profile_field;
             $mapping_record->fieldmap = $data->column_header;
             update_record('block_rlip_export_fieldmap', addslashes_recursive($mapping_record));
+            
+            redirect(block_rlip_get_base_export_config_url(), '', 0);
         } else {
             $mapping_record = new stdClass;
             //right now, we only care about the user context
@@ -352,10 +356,10 @@ function block_rlip_handle_export_field_form($target) {
            
             //commit to the database
             insert_record('block_rlip_export_fieldmap', addslashes_recursive($mapping_record));
+            
+            redirect(block_rlip_get_base_export_config_url(), '', 0);
         }
     }
-        
-    $editid = optional_param('editid', 0, PARAM_INT);
     
     if ($editid != 0 and
         $mapping_record = get_record('block_rlip_export_fieldmap', 'id', $editid)) {
@@ -400,11 +404,7 @@ function block_rlip_display_export_field_mappings() {
             ORDER BY fieldmap.fieldorder";
 
     //retrieve the current URL to refer back to this page
-    if (block_rlip_is_elis()) {
-        $baseurl = $CFG->wwwroot . '/curriculum/index.php?action=export&s=dim';
-    } else {
-        $baseurl = $CFG->wwwroot . '/blocks/rlip/moodle/displaypage.php?action=export';
-    }
+    $baseurl = block_rlip_get_base_export_config_url();
     
     if ($records = get_records_sql($sql)) {
         foreach ($records as $record) {
@@ -482,6 +482,24 @@ function block_rlip_get_profile_field_mapping() {
     }
 
     return $result;
+}
+
+/**
+ * Calculates the URL used to point to the export page
+ * 
+ * @return  string  The appropriate URL, based on the version of IP installed
+ */
+function block_rlip_get_base_export_config_url() {
+    global $CFG;
+    
+    //retrieve the current URL to refer back to this page
+    if (block_rlip_is_elis()) {
+        $baseurl = $CFG->wwwroot . '/curriculum/index.php?action=export&s=dim';
+    } else {
+        $baseurl = $CFG->wwwroot . '/blocks/rlip/moodle/displaypage.php?action=export';
+    }
+    
+    return $baseurl;
 }
 
 ?>
