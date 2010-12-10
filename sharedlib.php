@@ -334,7 +334,7 @@ function block_rlip_handle_export_field_form($target) {
             $mapping_record->id = $data->editid;
             $mapping_record->fieldname = $data->profile_field;
             $mapping_record->fieldmap = $data->column_header;
-            update_record('block_rlip_export_fieldmap', addslashes_recursive($mapping_record));
+            update_record('block_rlip_export_fieldmap', $mapping_record);
             
             redirect(block_rlip_get_base_export_config_url(), '', 0);
         } else {
@@ -355,7 +355,7 @@ function block_rlip_handle_export_field_form($target) {
             $mapping_record->fieldorder = $max_sort + 1; 
            
             //commit to the database
-            insert_record('block_rlip_export_fieldmap', addslashes_recursive($mapping_record));
+            insert_record('block_rlip_export_fieldmap', $mapping_record);
             
             redirect(block_rlip_get_base_export_config_url(), '', 0);
         }

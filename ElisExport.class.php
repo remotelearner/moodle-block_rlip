@@ -188,7 +188,7 @@ class ElisExport {
                     JOIN {$CFG->prefix}crlm_field_category_context user_field_category_context
                       ON user_field_category.id = user_field_category_context.categoryid
                       AND user_field_category_context.contextlevel = {$contextlevel}
-                    WHERE user_field.shortname = '" . addslashes($value) . "'";
+                    WHERE user_field.shortname = '{$value}'";
             
             if ($profile_field_id = get_field_sql($sql)) {
                 $profile_field_joins .= "LEFT JOIN {$CFG->prefix}context context_{$profile_field_num}

@@ -172,11 +172,11 @@ class MoodleExport {
         $profile_field_joins = "";
         
         $mapping = block_rlip_get_profile_field_mapping();
-        
+
         $profile_field_num = 1;
         
         foreach ($mapping as $key => $value) {
-            if ($profile_field_id = get_field('user_info_field', 'id', 'shortname', addslashes($value))) {
+            if ($profile_field_id = get_field('user_info_field', 'id', 'shortname', $value)) {
                 $profile_field_joins .= "LEFT JOIN {$CFG->prefix}user_info_data user_info_data_{$profile_field_num}
                                            ON u.id = user_info_data_{$profile_field_num}.userid
                                            AND user_info_data_{$profile_field_num}.fieldid = {$profile_field_id}

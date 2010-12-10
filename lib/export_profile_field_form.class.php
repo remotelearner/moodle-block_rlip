@@ -38,7 +38,7 @@ class export_profile_field_form extends moodleform {
     
     function validation($data, $files) {
         global $CFG;
-        
+
         $errors = parent::validation($data, $files);
         
         $profile_field_table = block_rlip_get_profile_field_table('user_info_field');
@@ -51,7 +51,7 @@ class export_profile_field_form extends moodleform {
                 {$CFG->prefix}block_rlip_export_fieldmap fieldmap
                 JOIN {$profile_field_table}
                   ON fieldmap.fieldname = {$concat}
-                WHERE fieldmap = '" . addslashes($data['column_header']) . "'";
+                WHERE fieldmap = '" . $data['column_header'] . "'";
                     
         if (!empty($data['editid'])) {
             $sql .= " AND fieldmap.id != {$data['editid']}";
