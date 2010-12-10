@@ -30,6 +30,13 @@ $string['export_header_status'] = 'Status';
 $string['export_header_grade'] = 'Grade';
 $string['export_header_letter'] = 'Letter';
 
+$string['export_config_form_column_header'] = 'Column Header';
+$string['export_config_form_profile_field'] = 'Profile Field';
+$string['export_config_form_add'] = 'Add';
+
+$string['mapping_column_header'] = 'Column Header';
+$string['mapping_profile_field'] = 'Profile Field';
+
 $string['filelocation'] = 'Import file location';
 $string['filename'] = 'File name';
 $string['filetype'] = 'File type';

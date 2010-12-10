@@ -51,6 +51,7 @@ class importpage extends ipb_newpage {
             array('tab_id' => 'user', 'page' => get_class($this), 'params' => array('action' => 'user'), 'name' => get_string('user', 'block_rlip')),
             array('tab_id' => 'course', 'page' => get_class($this), 'params' => array('action' => 'course'), 'name' => get_string('course', 'block_rlip')),
             array('tab_id' => 'enrolment', 'page' => get_class($this), 'params' => array('action' => 'enrolment'), 'name' => get_string('enrolment', 'block_rlip')),
+            array('tab_id' => 'export', 'page' => get_class($this), 'params' => array('action' => 'export'), 'name' => get_string('export', 'block_rlip'))
         );
 
         parent::__construct($params);

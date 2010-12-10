@@ -140,17 +140,22 @@ class MoodleExport {
     }
 
     private function get_user_data_header() {
-        return $header = array(
-                 get_string('export_header_firstname', 'block_rlip'),
-                 get_string('export_header_lastname', 'block_rlip'),
-                 get_string('export_header_username', 'block_rlip'),
-                 get_string('export_header_user_idnumber', 'block_rlip'),
-                 get_string('export_header_course_idnumber', 'block_rlip'),
-                 get_string('export_header_start_date', 'block_rlip'),
-                 get_string('export_header_end_date', 'block_rlip'),
-                 get_string('export_header_grade', 'block_rlip'),
-                 get_string('export_header_letter', 'block_rlip')
-               );
+        global $CFG;
+        
+        $header = array(get_string('export_header_firstname', 'block_rlip'),
+                        get_string('export_header_lastname', 'block_rlip'),
+                        get_string('export_header_username', 'block_rlip'),
+                        get_string('export_header_user_idnumber', 'block_rlip'),
+                        get_string('export_header_course_idnumber', 'block_rlip'),
+                        get_string('export_header_start_date', 'block_rlip'),
+                        get_string('export_header_end_date', 'block_rlip'),
+                        get_string('export_header_grade', 'block_rlip'),
+                        get_string('export_header_letter', 'block_rlip')
+                       );
+
+        $mapping = block_rlip_get_profile_field_mapping();                       
+                
+        return array_merge($header, array_values($mapping));
     }
 
     private function get_user_data($manual = false, $include_all = false) {
@@ -163,6 +168,31 @@ class MoodleExport {
 
         $as = sql_as();
         
+        $extra_columns = "";
+        $profile_field_joins = "";
+        
+        $mapping = block_rlip_get_profile_field_mapping();
+        
+        $profile_field_num = 1;
+        
+        foreach ($mapping as $key => $value) {
+            if ($profile_field_id = get_field('user_info_field', 'id', 'shortname', addslashes($key))) {
+                $profile_field_joins .= "LEFT JOIN {$CFG->prefix}user_info_data user_info_data_{$profile_field_num}
+                                           ON u.id = user_info_data_{$profile_field_num}.userid
+                                           AND user_info_data_{$profile_field_num}.fieldid = {$profile_field_id}
+                                        ";
+            } else {
+                $profile_field_join .= "LEFT JOIN {$CFG->prefix}user_info_data user_info_data_{$profile_field_num}
+                                          ON 0 = 1
+                                       ";
+            }
+            
+            $extra_columns .= ",
+                               user_info_data_{$profile_field_num}.data {$as} value_{$profile_field_num}";
+            
+            $profile_field_num++;
+        }
+        
         //query to retrieve user info and course grade data
         $sql = "SELECT u.id,
                        u.firstname,
@@ -173,6 +203,7 @@ class MoodleExport {
                        gg.finalgrade usergrade,
                        c.startdate {$as} timestart,
                        gi.id {$as} gradeitemid
+                {$extra_columns}
                 FROM {$CFG->prefix}grade_items gi
                 JOIN {$CFG->prefix}grade_grades gg
                   ON gg.itemid = gi.id
@@ -180,9 +211,10 @@ class MoodleExport {
                   ON gg.userid = u.id
                 JOIN {$CFG->prefix}course c
                   ON c.id = gi.courseid
+                {$profile_field_joins}
                 WHERE itemtype = 'course'
                 AND u.deleted = 0";
-
+                
         $users = get_records_sql($sql);
         $now = time();
 
@@ -214,17 +246,27 @@ class MoodleExport {
                     $gradeletter    = grade_format_gradevalue($userdata->usergrade, $grade_item, true, GRADE_DISPLAY_TYPE_LETTER);
                 }
                 
-                $return[$i] = array();
-                array_push($return[$i],
-                           $firstname,
-                           $lastname,
-                           $username,
-                           $userno,
-                           $coursecode,
-                           $userstartdate,
-                           $userenddate,
-                           $usergrade,
-                           $gradeletter);
+                $row = array($firstname,
+                             $lastname,
+                             $username,
+                             $userno,
+                             $coursecode,
+                             $userstartdate,
+                             $userenddate,
+                             $usergrade,
+                             $gradeletter);
+                             
+                for ($j = 1; $j < $profile_field_num; $j++) {
+                    $field_name = "value_{$j}";
+                    
+                    if (isset($userdata->$field_name)) {
+                        $row[] = $userdata->$field_name;
+                    } else {
+                        $row[] = '';
+                    }
+                }                             
+                
+                $return[$i] = $row;
 
                 $i++;
 

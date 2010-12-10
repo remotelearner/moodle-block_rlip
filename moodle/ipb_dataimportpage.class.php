@@ -47,6 +47,30 @@ class ipb_dataimportpage extends importpage {
     function action_enrolment() {
         $this->do_action(new ipb_enrolment_import(), 'enrolment');
     }
+    
+    function action_export() {
+        global $CFG;
+        
+        require_once($CFG->dirroot . '/blocks/rlip/lib/export_profile_field_form.class.php');
+        
+        //print tabs
+        $this->print_tabs('export');
+        
+        //handle delete action
+        block_rlip_handle_export_mapping_delete();
+        
+        //handle moving up
+        block_rlip_handle_export_mapping_reorder('moveupid', 'up');
+        
+        //handle moving down
+        block_rlip_handle_export_mapping_reorder('movedownid', 'down');
+        
+        //add form
+        block_rlip_handle_export_field_form($this->get_new_page(array('action' => 'export')));
+        
+        //active listing
+        block_rlip_display_export_field_mappings();
+    }
 
     private function do_action($import, $action) {
         global $CFG;
