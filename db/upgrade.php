@@ -30,6 +30,8 @@ function xmldb_block_rlip_upgrade($oldversion = 0) {
     }
     
     if ($result && $oldversion < 2010120900) {
+        //add a new table for storing the mapping of fields in the export
+        //as opposed to the existing import mapping table
         $table = new XMLDBTable('block_rlip_export_fieldmap');
         
         $table->addFieldInfo('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE);

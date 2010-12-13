@@ -153,8 +153,10 @@ class MoodleExport {
                         get_string('export_header_letter', 'block_rlip')
                        );
 
+        //retrieve the configured mapping
         $mapping = block_rlip_get_profile_field_mapping();                       
                 
+        //the array keys are the configured column headers
         return array_merge($header, array_keys($mapping));
     }
 
@@ -168,7 +170,9 @@ class MoodleExport {
 
         $as = sql_as();
         
+        //for storing extra columns we need to include for profile fields
         $extra_columns = "";
+        //for storing extra instances of the profile field table
         $profile_field_joins = "";
         
         $mapping = block_rlip_get_profile_field_mapping();
@@ -177,18 +181,26 @@ class MoodleExport {
         
         foreach ($mapping as $key => $value) {
             if ($profile_field_id = get_field('user_info_field', 'id', 'shortname', $value)) {
+                //profile field join
                 $profile_field_joins .= "LEFT JOIN {$CFG->prefix}user_info_data user_info_data_{$profile_field_num}
                                            ON u.id = user_info_data_{$profile_field_num}.userid
                                            AND user_info_data_{$profile_field_num}.fieldid = {$profile_field_id}
+                                         LEFT JOIN {$CFG->prefix}user_info_field user_info_field_{$profile_field_num}
+                                           ON user_info_field_{$profile_field_num}.id = {$profile_field_id}
                                         ";
             } else {
+                //bogus join to fill in same structure as profile field join
                 $profile_field_join .= "LEFT JOIN {$CFG->prefix}user_info_data user_info_data_{$profile_field_num}
+                                          ON 0 = 1
+                                        LEFT JOIN {$CFG->prefix}user_info_field user_info_field_{$profile_field_num}
                                           ON 0 = 1
                                        ";
             }
             
+            //add the profile field data column to our list of extra columns
             $extra_columns .= ",
-                               user_info_data_{$profile_field_num}.data {$as} value_{$profile_field_num}";
+                               user_info_data_{$profile_field_num}.data {$as} value_{$profile_field_num},
+                               user_info_field_{$profile_field_num}.defaultdata {$as} default_{$profile_field_num}";
             
             $profile_field_num++;
         }
@@ -214,7 +226,7 @@ class MoodleExport {
                 {$profile_field_joins}
                 WHERE itemtype = 'course'
                 AND u.deleted = 0";
-                
+
         $users = get_records_sql($sql);
         $now = time();
 
@@ -246,6 +258,7 @@ class MoodleExport {
                     $gradeletter    = grade_format_gradevalue($userdata->usergrade, $grade_item, true, GRADE_DISPLAY_TYPE_LETTER);
                 }
                 
+                //guaranteed fields
                 $row = array($firstname,
                              $lastname,
                              $username,
@@ -256,13 +269,16 @@ class MoodleExport {
                              $usergrade,
                              $gradeletter);
                              
+                //add profile field data
                 for ($j = 1; $j < $profile_field_num; $j++) {
                     $field_name = "value_{$j}";
                     
                     if (isset($userdata->$field_name)) {
                         $row[] = $userdata->$field_name;
                     } else {
-                        $row[] = '';
+                        //default value
+                        $default_field_name = "default_{$j}";
+                        $row[] = $userdata->$default_field_name;
                     }
                 }                             
                 

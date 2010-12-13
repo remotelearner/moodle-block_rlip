@@ -325,6 +325,8 @@ function block_rlip_handle_export_mapping_reorder($param, $direction) {
 function block_rlip_handle_export_field_form($target) {
     global $CFG;
         
+    require_once($CFG->dirroot . '/blocks/rlip/lib/export_profile_field_form.class.php');
+    
     //construct our config form
     $form = new export_profile_field_form($target->get_moodle_url());
         
@@ -432,8 +434,10 @@ function block_rlip_display_export_field_mappings() {
     //map configured fieldnames to profile field shortnames
     $concat = sql_concat("'profile_field_'", 'infofield.shortname');
         
+    //dynamically determine which table(s) we need for profile fields
     $user_info_field_table = block_rlip_get_profile_field_table('infofield');
     
+    //query that connects configured values to profile fields
     $sql = "SELECT fieldmap.id,
                    fieldmap.fieldmap,
                    infofield.name

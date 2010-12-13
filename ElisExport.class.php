@@ -169,7 +169,9 @@ class ElisExport {
 
         $as = sql_as();
         
+        //for storing extra columns we need to include for profile fields
         $extra_columns = "";
+        //for storing extra instances of the profile field table
         $profile_field_joins = "";
         
         $mapping = block_rlip_get_profile_field_mapping();
@@ -180,6 +182,7 @@ class ElisExport {
             $contextlevel = context_level_base::get_custom_context_level('user', 'block_curr_admin');
             $field = new field(field::get_for_context_level_with_name($contextlevel, $value));
             
+            //main user query to hook into profile fields
             $sql = "SELECT user_field.id
                     FROM
                     {$CFG->prefix}crlm_field user_field
@@ -191,21 +194,33 @@ class ElisExport {
                     WHERE user_field.shortname = '{$value}'";
             
             if ($profile_field_id = get_field_sql($sql)) {
+                //profile field joins
                 $profile_field_joins .= "LEFT JOIN {$CFG->prefix}context context_{$profile_field_num}
                                            ON context_{$profile_field_num}.contextlevel = {$contextlevel}
                                            AND usr.id = context_{$profile_field_num}.instanceid 
                                          LEFT JOIN {$CFG->prefix}{$field->data_table()} user_info_data_{$profile_field_num}
                                            ON context_{$profile_field_num}.id = user_info_data_{$profile_field_num}.contextid
                                            AND user_info_data_{$profile_field_num}.fieldid = {$profile_field_id}
+                                         LEFT JOIN {$CFG->prefix}{$field->data_table()} user_info_default_{$profile_field_num}
+                                           ON user_info_default_{$profile_field_num}.fieldid = {$profile_field_id}
+                                           AND user_info_default_{$profile_field_num}.contextid IS NULL
+                                         LEFT JOIN {$CFG->prefix}crlm_field user_info_field_{$profile_field_num}
+                                           ON user_info_field_{$profile_field_num}.id = {$profile_field_id}
                                         ";
             } else {
+                //bogus join to fill in same structure as profile field joins
                 $profile_field_joins .= "LEFT JOIN {$CFG->prefix}crlm_field_data_int user_info_data_{$profile_field_num}
-                                           ON usr.id = user_info_data_{$profile_field_num}.userid
+                                           ON 0 = 1
+                                         LEFT JOIN {$CFG->prefix}{$field->data_table()} user_info_default_{$profile_field_num}
+                                           ON 0 = 1
                                         ";
             }
             
+            //add the profile field data column to our list of extra columns
             $extra_columns .= ",
-                               user_info_data_{$profile_field_num}.data {$as} value_{$profile_field_num}";
+                               user_info_data_{$profile_field_num}.data {$as} value_{$profile_field_num},
+                               user_info_default_{$profile_field_num}.data {$as} default_{$profile_field_num},
+                               user_info_field_{$profile_field_num}.datatype {$as} datatype_{$profile_field_num}";
             
             $profile_field_num++;
         }
@@ -268,8 +283,10 @@ class ElisExport {
                         get_string('export_header_letter', 'block_rlip')
                        );
                        
+        //retrieve the configured mapping
         $mapping = block_rlip_get_profile_field_mapping();                       
                 
+        //the array keys are the configured column headers
         return array_merge($header, array_keys($mapping));
     }
 
@@ -314,6 +331,7 @@ class ElisExport {
                     $gradeletter    = grade_format_gradevalue($userdata->mdlusergrade, $grade_item, true, GRADE_DISPLAY_TYPE_LETTER);
                 }
 
+                //guaranteed fields
                 $row = array($firstname,
                              $lastname,
                              $username,
@@ -324,14 +342,29 @@ class ElisExport {
                              $userstatus,
                              $usergrade,
                              $gradeletter);
-                             
+
+                //add profile field data
                 for ($j = 1; $j <= count($mapping); $j++) {
                     $field_name = "value_{$j}";
                     
                     if (isset($userdata->$field_name)) {
                         $row[] = $userdata->$field_name;
                     } else {
-                        $row[] = '';
+                        //default value
+                        $default_field_name = "default_{$j}";
+                        
+                        if (is_null($userdata->$default_field_name)) {
+                            //do some datatype-specific default setting
+                            $type_field_name = "datatype_{$j}";
+                            if ('int' == $userdata->$type_field_name || 'bool' == $userdata->$type_field_name) {
+                                $row[] = '0';
+                            } else {
+                                $row[] = '';
+                            }
+                        } else {
+                            //actually a have valid default
+                            $row[] = $userdata->$default_field_name;
+                        }
                     }
                 }                                           
                              

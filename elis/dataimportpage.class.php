@@ -280,10 +280,11 @@ class dataimportpage extends newpage {
         $configform->display();
     }
     
+    /**
+     * Display the page for managing export field mappings
+     */
     function action_export() {
         global $CFG;
-        
-        require_once($CFG->dirroot . '/blocks/rlip/lib/export_profile_field_form.class.php');
         
         //print tabs
         $this->print_tabs('export');
