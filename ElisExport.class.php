@@ -174,7 +174,7 @@ class ElisExport {
         //for storing extra instances of the profile field table
         $profile_field_joins = "";
         
-        $mapping = block_rlip_get_profile_field_mapping();
+        $mapping = block_rlip_get_profile_field_mapping(true);
 
         $profile_field_num = 1;
         
@@ -212,6 +212,8 @@ class ElisExport {
                 $profile_field_joins .= "LEFT JOIN {$CFG->prefix}crlm_field_data_int user_info_data_{$profile_field_num}
                                            ON 0 = 1
                                          LEFT JOIN {$CFG->prefix}{$field->data_table()} user_info_default_{$profile_field_num}
+                                           ON 0 = 1
+                                         LEFT JOIN {$CFG->prefix}crlm_field user_info_field_{$profile_field_num}
                                            ON 0 = 1
                                         ";
             }
@@ -284,7 +286,7 @@ class ElisExport {
                        );
                        
         //retrieve the configured mapping
-        $mapping = block_rlip_get_profile_field_mapping();                       
+        $mapping = block_rlip_get_profile_field_mapping(true);
                 
         //the array keys are the configured column headers
         return array_merge($header, array_keys($mapping));
@@ -302,7 +304,7 @@ class ElisExport {
 
         $userstatus     = 'COMPLETED';
 
-        $mapping = block_rlip_get_profile_field_mapping();
+        $mapping = block_rlip_get_profile_field_mapping(true);
         
         if(!empty($users)) {
             foreach($users as $userdata) {

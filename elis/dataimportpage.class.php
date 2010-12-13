@@ -293,16 +293,16 @@ class dataimportpage extends newpage {
         block_rlip_handle_export_mapping_delete();
         
         //handle moving up
-        block_rlip_handle_export_mapping_reorder('moveupid', 'up');
+        block_rlip_handle_export_mapping_reorder('moveupid', 'up', true);
         
         //handle moving down
-        block_rlip_handle_export_mapping_reorder('movedownid', 'down');
+        block_rlip_handle_export_mapping_reorder('movedownid', 'down', true);
         
         //add form
         block_rlip_handle_export_field_form($this->get_new_page(array('action' => 'export')));
         
         //active listing
-        block_rlip_display_export_field_mappings();
+        block_rlip_display_export_field_mappings(true);
     }
 
     /**

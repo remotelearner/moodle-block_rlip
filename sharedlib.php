@@ -264,7 +264,7 @@ function block_rlip_handle_export_mapping_delete() {
  * @param  string  $param      The parameter to check for the id of the record to be shifted
  * @param  string  $direction  The direction the record is being moved in, either 'up' or 'down'
  */
-function block_rlip_handle_export_mapping_reorder($param, $direction) {
+function block_rlip_handle_export_mapping_reorder($param, $direction, $force_cm = false) {
     global $CFG;
     
     //attempt to retrieve the id of the record to be moved
@@ -287,7 +287,7 @@ function block_rlip_handle_export_mapping_reorder($param, $direction) {
         $concat = sql_concat("'profile_field_'", 'profile_field_info.shortname');
         
         //this allows us to handle the Moodle and CM cases similarly
-        $profile_field_table = block_rlip_get_profile_field_table('profile_field_info');
+        $profile_field_table = block_rlip_get_profile_field_table('profile_field_info', $force_cm);
         
         //query to retrieve the closest entry in the applicable direction
         $sql = "SELECT {$operation}(fieldorder)
@@ -420,8 +420,10 @@ function block_rlip_get_export_icon_html($param_name, $image_name, $record_id, $
 
 /**
  * Displays a table containing the existing mappings between column headers and profile fields
+ * 
+ * @param  boolean  $force_cm  If true, force the usage of CM mappings regardless of any other factors
  */
-function block_rlip_display_export_field_mappings() {
+function block_rlip_display_export_field_mappings($force_cm = false) {
     global $CFG;
     
     //construct our output table
@@ -435,7 +437,7 @@ function block_rlip_display_export_field_mappings() {
     $concat = sql_concat("'profile_field_'", 'infofield.shortname');
         
     //dynamically determine which table(s) we need for profile fields
-    $user_info_field_table = block_rlip_get_profile_field_table('infofield');
+    $user_info_field_table = block_rlip_get_profile_field_table('infofield', $force_cm);
     
     //query that connects configured values to profile fields
     $sql = "SELECT fieldmap.id,
@@ -479,14 +481,15 @@ function block_rlip_display_export_field_mappings() {
  * Specifies a query porition that represent user-based profile field definition
  * for either Moodle or CM, depending on the site setup
  * 
- * @param   string  $alias  A table alias to use in the calculated SQL fragment
+ * @param   string   $alias     A table alias to use in the calculated SQL fragment
+ * @param   boolean  $force_cm  If true, force the usage of the CM tables
  * 
- * @return  string          The appropriate SQL fragment
+ * @return  string              The appropriate SQL fragment
  */
-function block_rlip_get_profile_field_table($alias) {
+function block_rlip_get_profile_field_table($alias, $force_cm = false) {
     global $CFG;
     
-    if (block_rlip_is_elis()) {
+    if (block_rlip_is_elis() || $force_cm) {
         //CM case
         
         //obtain the user context level
@@ -509,15 +512,17 @@ function block_rlip_get_profile_field_table($alias) {
 
 /**
  * Calculates the current mapping between export column headers and profile field names
+ * 
+ * @param  boolean  $force_cm  If true, force the usage of CM mappings regardless of any other factors
  */
-function block_rlip_get_profile_field_mapping() {
+function block_rlip_get_profile_field_mapping($force_cm = false) {
     global $CFG;
     
     //field is generic, so match it specifically with the profile_field prefix
     $concat = sql_concat("'profile_field_'", 'user_info_field.shortname');                       
 
     //retrieve the field info based on linking the configured names up to profile field shortnames
-    $user_info_field_table = block_rlip_get_profile_field_table('user_info_field');
+    $user_info_field_table = block_rlip_get_profile_field_table('user_info_field', $force_cm);
         
     $sql = "SELECT fieldmap.fieldmap,
                    user_info_field.shortname
@@ -548,7 +553,7 @@ function block_rlip_get_base_export_config_url() {
     global $CFG;
     
     //retrieve the current URL to refer back to this page
-    if (block_rlip_is_elis()) {
+    if (strpos(qualified_me(), $CFG->wwwroot . '/curriculum/') !== FALSE) {
         $baseurl = $CFG->wwwroot . '/curriculum/index.php?action=export&s=dim';
     } else {
         $baseurl = $CFG->wwwroot . '/blocks/rlip/moodle/displaypage.php?action=export';

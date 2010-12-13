@@ -47,7 +47,12 @@ class export_profile_field_form extends moodleform {
         
         $concat = sql_concat("'profile_field_'", 'shortname');
         
-        $user_info_field_table = block_rlip_get_profile_field_table('user_info_field');
+        $force_cm = false;
+        if (strpos(qualified_me(), $CFG->wwwroot . '/curriculum/') !== FALSE) {
+            $force_cm = true;
+        }
+        
+        $user_info_field_table = block_rlip_get_profile_field_table('user_info_field', $force_cm);
         
         $sql = "SELECT user_info_field.*
                 FROM
@@ -86,7 +91,12 @@ class export_profile_field_form extends moodleform {
 
         $errors = parent::validation($data, $files);
         
-        $profile_field_table = block_rlip_get_profile_field_table('user_info_field');
+        $force_cm = false;
+        if (strpos(qualified_me(), $CFG->wwwroot . '/curriculum/') !== FALSE) {
+            $force_cm = true;
+        }
+        
+        $profile_field_table = block_rlip_get_profile_field_table('user_info_field', $force_cm);
             
         //field is generic, so match it specifically with the profile_field prefix
         $concat = sql_concat("'profile_field_'", 'user_info_field.shortname'); 
