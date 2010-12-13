@@ -945,7 +945,39 @@ class ipb_course_import extends ipb_import {
         return $this->boolean_get($visible);
     }
 
-    protected function get_category($category, $action = '') {
+    protected function split_category_string($category_string) {
+        $result = array();
+        $current_token = '';
+        $current_token_num = 0;
+        
+        for ($i = 0; $i < strlen($category_string); $i++) {
+            if (!isset($result[$current_token_num])) {
+                $result[$current_token_num] = '';
+            }
+            
+            $current_token .= substr($category_string, $i, 1);
+            
+            if(strpos($current_token, '\\\\\\\\') === strlen($current_token) - strlen('\\\\\\\\')) {
+                $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('\\\\\\\\')) . '\\';
+                $current_token = ''; 
+            } else if(strpos($current_token, '\\\\/') === strlen($current_token) - strlen('\\\\/')) {
+                $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('\\\\/')) . '/';
+                $current_token = '';
+            } else if(strpos($current_token, '/') === strlen($current_token) - strlen('/')) {
+                $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('/'));
+                $current_token = '';
+                $current_token_num++;             
+            }
+        }
+        
+        if (!empty($current_token)) {
+            $result[$current_token_num] .= $current_token;
+        }
+        
+        return $result;
+    }
+    
+    protected function get_category($category, $action = '') {print_object(debug_backtrace());
         $trimmed_category = trim($category);
         
         //check for a leading / for the case where an absolute path is specified
@@ -955,8 +987,7 @@ class ipb_course_import extends ipb_import {
             $trimmed_category = substr($trimmed_category, 1);
         }
         
-        //retrieve all the different "parts" of the category path
-        $parts = explode('/', $trimmed_category);
+        $parts = $this->split_category_string($trimmed_category);
         
         $parentids = array();
         
@@ -992,8 +1023,8 @@ class ipb_course_import extends ipb_import {
                      * There is no API call to do this - this code is roughly copied from course/editcategory.php
                      */
                     $newcategory = new stdClass();
-                    $newcategory->name = $part;
-                    $newcategory->description = $part;
+                    $newcategory->name = addslashes($part);
+                    $newcategory->description = addslashes($part);
                     $newcategory->parent = $effective_parent; // if $data->parent = 0, the new category will be a top-level category
                     // Create a new category.
                     $newcategory->sortorder = 999;
