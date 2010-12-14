@@ -1033,7 +1033,7 @@ class ipb_course_import extends ipb_import {
      *
      * @return  mixed                  Returns null on error, or the integer category id otherwise
      */
-    protected function get_category($category, $action = '', &$error_string = '') {print_object('get_category: ' . $category);
+    protected function get_category($category, $action = '', &$error_string = '') {
         $trimmed_category = trim($category);
         
         //check for a leading / for the case where an absolute path is specified
@@ -1073,7 +1073,7 @@ class ipb_course_import extends ipb_import {
                 }
             } else {
                 //only create the category on the course create action
-                if ($action == 'create' && (count($parentids) == 1 || empty($parentids))) {
+                if (($action == 'create' || $action == 'update') && (count($parentids) == 1 || empty($parentids))) {
                     $effective_parent = 0;
                     if (count($parentids) == 1) {
                         $effective_parent = $parentids[0];
