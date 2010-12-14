@@ -120,8 +120,20 @@ abstract class moodle_import {
             set_time_limit(0);
             while ($data = $this->$method($file)) {
                 $records = $data->records;
-                $items = $import->get_items($records);
-                $this->process($items, $type);
+                
+                //this will be populated with an error message by get_items if applicable
+                $test_error = '';
+                
+                $items = $import->get_items($records, $test_error);
+                
+                if ($items === false) {
+                    //this particular record has an error, so append the error to the log
+                    //instead of processing it
+                    $this->log_filer->add_error_record($test_error);
+                } else {
+                    //no error found, so process the record
+                    $this->process($items, $type);
+                }
             }
 
             if (RLIP_DEBUG_TIME) {
@@ -945,44 +957,87 @@ class ipb_course_import extends ipb_import {
         return $this->boolean_get($visible);
     }
 
+    /**
+     * Intelligently splits a category specification into a list of categories
+     * 
+     * @param   string        $category_string  The category specification string, using \\\\ to represent \, \\/ to represent /,
+     *                                          and / as a category separator
+     * @return  string array                    An array with one entry per category, containing the unescaped category names 
+     */
     protected function split_category_string($category_string) {
+        //in-progress method result
         $result = array();
+        
+        //used to build up the current token before splitting
         $current_token = '';
+        
+        //tracks which token we are currently looking at
         $current_token_num = 0;
         
         for ($i = 0; $i < strlen($category_string); $i++) {
+            //initialize the entry if necessary
             if (!isset($result[$current_token_num])) {
                 $result[$current_token_num] = '';
             }
             
+            //get the ith character from the category string
             $current_token .= substr($category_string, $i, 1);
             
             if(strpos($current_token, '\\\\\\\\') === strlen($current_token) - strlen('\\\\\\\\')) {
+                //backslash character
+                
+                //append the result
                 $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('\\\\\\\\')) . '\\';
+                //reset the token
                 $current_token = ''; 
             } else if(strpos($current_token, '\\\\/') === strlen($current_token) - strlen('\\\\/')) {
+                //forward slash character
+                
+                //append the result
                 $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('\\\\/')) . '/';
+                //reset the token so that the / is not accidentally counted as a category separator
                 $current_token = '';
             } else if(strpos($current_token, '/') === strlen($current_token) - strlen('/')) {
+                //category separator
+                
+                //append the result
                 $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('/'));
+                //reset the token
                 $current_token = '';
+                //move on to the next token
                 $current_token_num++;             
             }
         }
         
-        if (!empty($current_token)) {
-            $result[$current_token_num] .= $current_token;
-        }
+        //append leftovers after the last slash
+        
+        //initialize the entry if necessary
+        if (!isset($result[$current_token_num])) {
+                $result[$current_token_num] = '';
+            }
+        
+        $result[$current_token_num] .= $current_token;
         
         return $result;
     }
     
-    protected function get_category($category, $action = '') {print_object(debug_backtrace());
+    /**
+     * Map the specified category to a record id
+     *
+     * @param  string   $category      The category specification string, using \\\\ to represent \, \\/ to represent /,
+     *                                 and / as a category separator
+     * @param   string  $action        The record's action attribute (this method really only cares whether it's a create
+     *                                 action so that the category path can be created in that case)
+     * @param   string  $error_string  A string to populate with the appropriate error when this method returns null
+     *
+     * @return  mixed                  Returns null on error, or the integer category id otherwise
+     */
+    protected function get_category($category, $action = '', &$error_string = '') {
         $trimmed_category = trim($category);
         
         //check for a leading / for the case where an absolute path is specified
         $absolute_path = false;
-        if (strpos($category, '/') === 0) {
+        if (strpos($trimmed_category, '/') === 0) {
             $absolute_path = true;
             $trimmed_category = substr($trimmed_category, 1);
         }
@@ -992,6 +1047,11 @@ class ipb_course_import extends ipb_import {
         $parentids = array();
         
         foreach($parts as $part) {
+            if (empty($part)) {
+                $error_string = "Category specification {$trimmed_category} contains an empty category name";
+                return null;
+            }
+            
             //the name must match the specified part
             $select = "name = '" . addslashes($part) . "'";
             
@@ -1013,7 +1073,6 @@ class ipb_course_import extends ipb_import {
             } else {
                 //only create the category on the course create action
                 if ($action == 'create' && (count($parentids) == 1 || empty($parentids))) {
-                    print_object('creating: ' . $part);
                     $effective_parent = 0;
                     if (count($parentids) == 1) {
                         $effective_parent = $parentids[0];
@@ -1048,6 +1107,7 @@ class ipb_course_import extends ipb_import {
             return $parentids[0];
         } else if (count($parentids) > 1) {
             //multiple results, so we can't proceed
+            $error_string = "Category specification {$trimmed_category} is ambiguous, as it refers to more than one possible category";
             return null;
         }
         
@@ -1058,6 +1118,8 @@ class ipb_course_import extends ipb_import {
             }
         }
 
+        //at this point, we know the category specification does not refer to a category that exists
+        $error_string = "Category specification {$trimmed_category} does not refer to an existing category";
         return null;
     }
 
@@ -1105,7 +1167,13 @@ abstract class ipb_import {
         }
     }
 
-    protected function get_item($record) {
+    /**
+     * Retrieves an item representing a row from the import file
+     *
+     * @param  array             $record        A record mapping fields to values
+     * @param  string reference  $error_string  Variable to populate with an error if there is one
+     */
+    protected function get_item($record, &$error_string) {
         $retval = array();
         $properties = $this->get_properties_map();
         
@@ -1114,9 +1182,19 @@ abstract class ipb_import {
         foreach($properties as $key=>$p) {
             if(isset($record[$p])) {
                 $method = "get_$p";
+                //NOTE: The second parameter is only defined for the get_category method
+                //so that it knows to create categories on the course create action
                 
-                //NOTE: The second parameter is only defined for 
-                $retval[$key] = $this->$method($record[$p], $record[$action_attribute]);
+                //string that will be populated with an error, if applicable
+                $test_error = '';
+                
+                $retval[$key] = $this->$method($record[$p], $record[$action_attribute], $test_error);
+                
+                if (!empty($test_error)) {
+                    //if we have an error, then set the message variable and bail out
+                    $error_string = $test_error;
+                    return false;
+                }
             }
         }
 
@@ -1172,15 +1250,32 @@ abstract class ipb_import {
     }
 
     /**
+     * Processes records and retrieves the associated items
      *
-     * @param <type> $records
-     * @return <type>
+     * @param   array             $records       Array of records to process
+     * @param   string reference  $error_string  Variable to populate with an error if there is one
+     *
+     * @return  array                            Array of processed items
      */
-    public function get_items($records) {
+    public function get_items($records, &$error_string = '') {
         $retval = array();
 
         foreach($records as $rec) {
-            $retval[] = $this->get_item($rec);
+            //this will we populated with an error if applicable
+            $test_error = '';
+            
+            //attempt to get the item, or have the error string populated
+            //otherwise
+            $test_result = $this->get_item($rec, $test_error);
+            
+            if ($test_result === false) {
+                //set the error string and bail out
+                $error_string = $test_error;
+                return false;
+            }
+            
+            //success
+            $retval[] = $test_result;
         }
 
         return $retval;
