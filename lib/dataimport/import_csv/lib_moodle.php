@@ -50,15 +50,15 @@ class import_csv_moodle extends moodle_import {
         return $this->import_file($file, $header);
     }
 
-    public function import_course($file, $header=false) {
-        return $this->import_file($file, $header);
+    public function import_course($file, $header=false, $properties=null) {
+        return $this->import_file($file, $header, $properties);
     }
 
     private function sanitize_callback(&$value, $key) {
         $value = trim(clean_param($value, PARAM_CLEAN));
     }
 
-    private function import_file($file_name, $header=false) {
+    private function import_file($file_name, $header=false, $properties=null) {
         static $file;
         static $fields;
 
@@ -94,7 +94,20 @@ class import_csv_moodle extends moodle_import {
                     return $retval;
                 }
                 $record_count = count($record);
-                array_walk($record, array($this, 'sanitize_callback'));
+                
+                //get the mapped category name
+                $category_header = $properties['category'];
+                
+                foreach($record as $key => $value) {                    
+                    $position = array_search($category_header, $retval->header);
+                    
+                    //don't clean category names because of escaping
+                    if($key === $position) {
+                        $record[$key] = trim($value);
+                    } else {
+                        $record[$key] = trim(clean_param($value, PARAM_CLEAN));
+                    }
+                }
 
                 if($field_count == $record_count) {
                     $records[] = array_combine($fields, $record);

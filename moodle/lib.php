@@ -118,7 +118,8 @@ abstract class moodle_import {
 
             /// Process each line of the CSV file. THIS CAN TAKE A LOT OF TIME!
             set_time_limit(0);
-            while ($data = $this->$method($file)) {
+            //pass in the properties map for special handling of categories
+            while ($data = $this->$method($file, false, $properties)) {
                 $records = $data->records;
                 
                 //this will be populated with an error message by get_items if applicable
@@ -983,18 +984,18 @@ class ipb_course_import extends ipb_import {
             //get the ith character from the category string
             $current_token .= substr($category_string, $i, 1);
             
-            if(strpos($current_token, '\\\\\\\\') === strlen($current_token) - strlen('\\\\\\\\')) {
+            if(strpos($current_token, '\\\\') === strlen($current_token) - strlen('\\\\')) {
                 //backslash character
                 
                 //append the result
-                $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('\\\\\\\\')) . '\\';
+                $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('\\\\')) . '\\';
                 //reset the token
                 $current_token = ''; 
-            } else if(strpos($current_token, '\\\\/') === strlen($current_token) - strlen('\\\\/')) {
+            } else if(strpos($current_token, '\\/') === strlen($current_token) - strlen('\\/')) {
                 //forward slash character
                 
                 //append the result
-                $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('\\\\/')) . '/';
+                $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('\\/')) . '/';
                 //reset the token so that the / is not accidentally counted as a category separator
                 $current_token = '';
             } else if(strpos($current_token, '/') === strlen($current_token) - strlen('/')) {
@@ -1032,7 +1033,7 @@ class ipb_course_import extends ipb_import {
      *
      * @return  mixed                  Returns null on error, or the integer category id otherwise
      */
-    protected function get_category($category, $action = '', &$error_string = '') {
+    protected function get_category($category, $action = '', &$error_string = '') {print_object('get_category: ' . $category);
         $trimmed_category = trim($category);
         
         //check for a leading / for the case where an absolute path is specified
