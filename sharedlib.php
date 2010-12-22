@@ -229,4 +229,337 @@ function block_rlip_time_string_to_seconds($time_string) {
     return $seconds;
 }
 
+/**
+ * Handles the deletion of a profile field mapping configured
+ * for export purposes
+ */
+function block_rlip_handle_export_mapping_delete() {
+    global $CFG;
+    
+    //attempt to retrieve the id of the record to be deleted
+    $deleteid = optional_param('deleteid', 0, PARAM_INT);
+
+    //make sure the delete action is taking place
+    if ($deleteid != 0) {
+        //get the existing field's order
+        $fieldorder = get_field('block_rlip_export_fieldmap', 'fieldorder', 'id', $deleteid);
+
+        //delete the appropriate item
+        delete_records('block_rlip_export_fieldmap', 'id', $deleteid);
+            
+        //shift higher orders down
+        $sql = "UPDATE {$CFG->prefix}block_rlip_export_fieldmap
+                SET fieldorder = fieldorder - 1
+                WHERE fieldorder > {$fieldorder}";
+            
+        execute_sql($sql, false);
+        
+        redirect(block_rlip_get_base_export_config_url(), '', 0);
+    }
+}
+
+/**
+ * Handle reordering of the profile fields
+ * 
+ * @param  string  $param      The parameter to check for the id of the record to be shifted
+ * @param  string  $direction  The direction the record is being moved in, either 'up' or 'down'
+ */
+function block_rlip_handle_export_mapping_reorder($param, $direction, $force_cm = false) {
+    global $CFG;
+    
+    //attempt to retrieve the id of the record to be moved
+    $moving_record = optional_param($param, 0, PARAM_INT);
+    
+    //make sure the move action is taking place
+    if ($moving_record != 0) {
+        $fieldorder = get_field('block_rlip_export_fieldmap', 'fieldorder', 'id', $moving_record);
+        
+        //set up query parameters to find the closest visible entry in the appropriate direction
+        if ($direction == 'up') {
+            $operation = 'MAX';
+            $compare_operator = '<';
+        } else {
+            $operation = 'MIN';
+            $compare_operator = '>';
+        }
+        
+        //map configured fieldnames to profile field shortnames
+        $concat = sql_concat("'profile_field_'", 'profile_field_info.shortname');
+        
+        //this allows us to handle the Moodle and CM cases similarly
+        $profile_field_table = block_rlip_get_profile_field_table('profile_field_info', $force_cm);
+        
+        //query to retrieve the closest entry in the applicable direction
+        $sql = "SELECT {$operation}(fieldorder)
+                FROM {$CFG->prefix}block_rlip_export_fieldmap
+                WHERE fieldorder {$compare_operator} {$fieldorder}
+                AND fieldname IN (
+                  SELECT {$concat}
+                  FROM {$profile_field_table} 
+                )";
+        
+        if (!($new_position = get_field_sql($sql))) {
+            //nothing to swap with
+            return;
+        }
+        
+        //prevents us from violating the unique constraint on fieldorder
+        set_field('block_rlip_export_fieldmap', 'fieldorder', 0, 'id', $moving_record);
+        
+        //shift the other record in the opposite direction
+        set_field('block_rlip_export_fieldmap', 'fieldorder', $fieldorder, 'fieldorder', $new_position);
+            
+        //move the specified record
+        set_field('block_rlip_export_fieldmap', 'fieldorder', $new_position, 'id', $moving_record);
+        
+        redirect(block_rlip_get_base_export_config_url(), '', 0);
+    }
+}
+
+/**
+ * Handles the processing of the form used to add user profile fields
+ * and also the displaying of that form
+ * 
+ * @param  newpage or ipb_newpage  $target  The page containing info about the form URL
+ */
+function block_rlip_handle_export_field_form($target) {
+    global $CFG;
+        
+    require_once($CFG->dirroot . '/blocks/rlip/lib/export_profile_field_form.class.php');
+    
+    //construct our config form
+    $form = new export_profile_field_form($target->get_moodle_url());
+        
+    $editid = optional_param('editid', 0, PARAM_INT);
+    
+    if ($form->is_cancelled()) {
+        redirect(block_rlip_get_base_export_config_url(), '', 0);
+    }
+    
+    //process the adding of a field, if applicable
+    if ($data = $form->get_data()) {
+
+        if (!empty($data->editid)) {
+            $mapping_record = new stdClass;
+            $mapping_record->id = $data->editid;
+            $mapping_record->fieldname = $data->profile_field;
+            $mapping_record->fieldmap = $data->column_header;
+            update_record('block_rlip_export_fieldmap', $mapping_record);
+            
+            redirect(block_rlip_get_base_export_config_url(), '', 0);
+        } else {
+            $mapping_record = new stdClass;
+            //right now, we only care about the user context
+            $mapping_record->context = 'user';
+            $mapping_record->fieldname = $data->profile_field;
+            $mapping_record->fieldmap = $data->column_header;
+        
+            //determine the sort order insertion position
+            $sql = "SELECT MAX(fieldorder)
+                    FROM {$CFG->prefix}block_rlip_export_fieldmap";
+            
+            if (!($max_sort = get_field_sql($sql))) {
+                $max_sort = 0;
+            }
+            
+            $mapping_record->fieldorder = $max_sort + 1; 
+           
+            //commit to the database
+            insert_record('block_rlip_export_fieldmap', $mapping_record);
+            
+            redirect(block_rlip_get_base_export_config_url(), '', 0);
+        }
+    }
+    
+    if ($editid != 0 and
+        $mapping_record = get_record('block_rlip_export_fieldmap', 'id', $editid)) {
+        
+        $data_object = new stdClass;
+        $data_object->profile_field = $mapping_record->fieldname;
+        $data_object->column_header = $mapping_record->fieldmap;
+        $data_object->editid = $editid;
+        
+        $form->set_data($data_object);
+    }
+    
+    //display the add form
+    $form->display();
+}
+
+/**
+ * Constructs the apropriate HTML for an icon on the profile field export page
+ * 
+ * @param  string   $param_name        Name of the URL parameter the link action will use
+ * @param  string   $image_name        Name of the image to display, not including file extension
+ * @param  int      $record_id         Id to add to the URL action
+ * @param  boolean  $blank             If true, the blank spacer image will be used instead of the supplied image
+ * @param  string   $blank_image_name  Name of the image file used for the spacer image (excluding extension)
+ * @param  string   $image_extension   File extension used for all images (includes "." prefix)
+ */
+function block_rlip_get_export_icon_html($param_name, $image_name, $record_id, $blank = false, $blank_image_name = 'blank', $image_extension = '.png') {
+    global $CFG;
+    
+    //base page url
+    $baseurl = block_rlip_get_base_export_config_url();
+    
+    //base image url path
+    $base_image_path = $CFG->wwwroot . '/blocks/rlip/pix/';
+    
+    if ($blank) {
+        //image tag for the "spacer" image
+        $result = "<img src=\"{$base_image_path}{$blank_image_name}{$image_extension}\"/>";
+    } else {
+        //image url fo rthe supplied image
+        $result = "<img src=\"{$base_image_path}{$image_name}{$image_extension}\"/>";
+        //link to the appropriate URL action
+        $result = "<a href=\"{$baseurl}&{$param_name}={$record_id}\">{$result}</a>";  
+    }
+    
+    return $result;
+}
+
+/**
+ * Displays a table containing the existing mappings between column headers and profile fields
+ * 
+ * @param  boolean  $force_cm  If true, force the usage of CM mappings regardless of any other factors
+ */
+function block_rlip_display_export_field_mappings($force_cm = false) {
+    global $CFG;
+    
+    //construct our output table
+    $table = new stdClass;
+    $table->head = array(get_string('mapping_column_header', 'block_rlip'),
+                         get_string('mapping_profile_field', 'block_rlip'),
+                         '');
+    $table->data = array();
+        
+    //map configured fieldnames to profile field shortnames
+    $concat = sql_concat("'profile_field_'", 'infofield.shortname');
+        
+    //dynamically determine which table(s) we need for profile fields
+    $user_info_field_table = block_rlip_get_profile_field_table('infofield', $force_cm);
+    
+    //query that connects configured values to profile fields
+    $sql = "SELECT fieldmap.id,
+                   fieldmap.fieldmap,
+                   infofield.name
+            FROM
+            {$CFG->prefix}block_rlip_export_fieldmap fieldmap
+            JOIN {$user_info_field_table}
+              ON fieldmap.fieldname = {$concat}
+            ORDER BY fieldmap.fieldorder";
+
+    //retrieve the current URL to refer back to this page
+    $baseurl = block_rlip_get_base_export_config_url();
+    
+    if ($records = get_records_sql($sql)) {
+        
+        //track record number for first / last record special cases
+        $i = 1;
+        
+        foreach ($records as $record) {
+            $action_items  = block_rlip_get_export_icon_html('deleteid', 'delete', $record->id);
+            //display for rows 2 - n
+            $action_items .= block_rlip_get_export_icon_html('moveupid', 'up_arrow', $record->id, $i == 1);
+            //display for rows 1 - (n-1)
+            $action_items .= block_rlip_get_export_icon_html('movedownid', 'down_arrow', $record->id, $i == count($records));
+            $action_items .= block_rlip_get_export_icon_html('editid', 'edit', $record->id);
+                
+            $table->data[] = array($record->fieldmap, $record->name, $action_items);
+            
+            $i++;
+        }
+        
+        print_table($table);
+    } else {
+        print_box(get_string('export_config_instructions', 'block_rlip'));
+    }
+    
+}
+
+/**
+ * Specifies a query porition that represent user-based profile field definition
+ * for either Moodle or CM, depending on the site setup
+ * 
+ * @param   string   $alias     A table alias to use in the calculated SQL fragment
+ * @param   boolean  $force_cm  If true, force the usage of the CM tables
+ * 
+ * @return  string              The appropriate SQL fragment
+ */
+function block_rlip_get_profile_field_table($alias, $force_cm = false) {
+    global $CFG;
+    
+    if (block_rlip_is_elis() || $force_cm) {
+        //CM case
+        
+        //obtain the user context level
+        $user_context_level = context_level_base::get_custom_context_level('user', 'block_curr_admin');
+            
+        //use the category context info to only select user-level fields
+        $user_info_field_table = "({$CFG->prefix}crlm_field {$alias}
+                                   JOIN {$CFG->prefix}crlm_field_category user_info_category
+                                     ON {$alias}.categoryid = user_info_category.id
+                                   JOIN {$CFG->prefix}crlm_field_category_context user_info_category_context
+                                     ON user_info_category.id = user_info_category_context.categoryid
+                                     AND user_info_category_context.contextlevel = {$user_context_level})";
+    } else {
+        //Moodle user info fields are always user-based
+        $user_info_field_table = "{$CFG->prefix}user_info_field {$alias}";
+    }
+    
+    return $user_info_field_table;
+}
+
+/**
+ * Calculates the current mapping between export column headers and profile field names
+ * 
+ * @param  boolean  $force_cm  If true, force the usage of CM mappings regardless of any other factors
+ */
+function block_rlip_get_profile_field_mapping($force_cm = false) {
+    global $CFG;
+    
+    //field is generic, so match it specifically with the profile_field prefix
+    $concat = sql_concat("'profile_field_'", 'user_info_field.shortname');                       
+
+    //retrieve the field info based on linking the configured names up to profile field shortnames
+    $user_info_field_table = block_rlip_get_profile_field_table('user_info_field', $force_cm);
+        
+    $sql = "SELECT fieldmap.fieldmap,
+                   user_info_field.shortname
+            FROM
+            {$CFG->prefix}block_rlip_export_fieldmap fieldmap
+            JOIN {$user_info_field_table}
+              ON fieldmap.fieldname = {$concat}
+            ORDER BY fieldmap.fieldorder";
+
+    $result = array();            
+            
+    if ($records = get_records_sql($sql)) {
+        foreach ($records as $record) {
+            //map the column header to a field shortname
+            $result[$record->fieldmap] = $record->shortname;
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * Calculates the URL used to point to the export page
+ * 
+ * @return  string  The appropriate URL, based on the version of IP installed
+ */
+function block_rlip_get_base_export_config_url() {
+    global $CFG;
+    
+    //retrieve the current URL to refer back to this page
+    if (strpos(qualified_me(), $CFG->wwwroot . '/curriculum/') !== FALSE) {
+        $baseurl = $CFG->wwwroot . '/curriculum/index.php?action=export&s=dim';
+    } else {
+        $baseurl = $CFG->wwwroot . '/blocks/rlip/moodle/displaypage.php?action=export';
+    }
+    
+    return $baseurl;
+}
+
 ?>

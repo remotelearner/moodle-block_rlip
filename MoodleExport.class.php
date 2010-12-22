@@ -140,30 +140,90 @@ class MoodleExport {
     }
 
     private function get_user_data_header() {
-        return $header = array(
-                 'First Name',
-                 'Last Name',
-                 'Username',
-                 'User Idnumber',
-                 'Course Idnumber',
-                 'Start Date',
-                 'End Date',
-                 'Grade'
-               );
+        global $CFG;
+        
+        $header = array(get_string('export_header_firstname', 'block_rlip'),
+                        get_string('export_header_lastname', 'block_rlip'),
+                        get_string('export_header_username', 'block_rlip'),
+                        get_string('export_header_user_idnumber', 'block_rlip'),
+                        get_string('export_header_course_idnumber', 'block_rlip'),
+                        get_string('export_header_start_date', 'block_rlip'),
+                        get_string('export_header_end_date', 'block_rlip'),
+                        get_string('export_header_grade', 'block_rlip'),
+                        get_string('export_header_letter', 'block_rlip')
+                       );
+
+        //retrieve the configured mapping
+        $mapping = block_rlip_get_profile_field_mapping();                       
+                
+        //the array keys are the configured column headers
+        return array_merge($header, array_keys($mapping));
     }
 
     private function get_user_data($manual = false, $include_all = false) {
         global $CFG;
+        
+        require_once($CFG->dirroot . '/lib/gradelib.php');
+        
         $return = array();
         $i      = 0;
 
         $as = sql_as();
         
-        $sql = "SELECT u.id, u.firstname, u.lastname, u.idnumber {$as} usridnumber, u.username, c.shortname {$as} crsidnumber, gg.finalgrade usergrade, c.startdate {$as} timestart
-                FROM {$CFG->prefix}grade_items as gi
-                JOIN {$CFG->prefix}grade_grades as gg ON gg.itemid = gi.id
-                JOIN {$CFG->prefix}user as u ON gg.userid = u.id
-                JOIN {$CFG->prefix}course as c ON c.id = gi.courseid
+        //for storing extra columns we need to include for profile fields
+        $extra_columns = "";
+        //for storing extra instances of the profile field table
+        $profile_field_joins = "";
+        
+        $mapping = block_rlip_get_profile_field_mapping();
+
+        $profile_field_num = 1;
+        
+        foreach ($mapping as $key => $value) {
+            if ($profile_field_id = get_field('user_info_field', 'id', 'shortname', $value)) {
+                //profile field join
+                $profile_field_joins .= "LEFT JOIN {$CFG->prefix}user_info_data user_info_data_{$profile_field_num}
+                                           ON u.id = user_info_data_{$profile_field_num}.userid
+                                           AND user_info_data_{$profile_field_num}.fieldid = {$profile_field_id}
+                                         LEFT JOIN {$CFG->prefix}user_info_field user_info_field_{$profile_field_num}
+                                           ON user_info_field_{$profile_field_num}.id = {$profile_field_id}
+                                        ";
+            } else {
+                //bogus join to fill in same structure as profile field join
+                $profile_field_join .= "LEFT JOIN {$CFG->prefix}user_info_data user_info_data_{$profile_field_num}
+                                          ON 0 = 1
+                                        LEFT JOIN {$CFG->prefix}user_info_field user_info_field_{$profile_field_num}
+                                          ON 0 = 1
+                                       ";
+            }
+            
+            //add the profile field data column to our list of extra columns
+            $extra_columns .= ",
+                               user_info_data_{$profile_field_num}.data {$as} value_{$profile_field_num},
+                               user_info_field_{$profile_field_num}.defaultdata {$as} default_{$profile_field_num}";
+            
+            $profile_field_num++;
+        }
+        
+        //query to retrieve user info and course grade data
+        $sql = "SELECT u.id,
+                       u.firstname,
+                       u.lastname,
+                       u.idnumber {$as} usridnumber,
+                       u.username,
+                       c.shortname {$as} crsidnumber,
+                       gg.finalgrade usergrade,
+                       c.startdate {$as} timestart,
+                       gi.id {$as} gradeitemid
+                {$extra_columns}
+                FROM {$CFG->prefix}grade_items gi
+                JOIN {$CFG->prefix}grade_grades gg
+                  ON gg.itemid = gi.id
+                JOIN {$CFG->prefix}user u
+                  ON gg.userid = u.id
+                JOIN {$CFG->prefix}course c
+                  ON c.id = gi.courseid
+                {$profile_field_joins}
                 WHERE itemtype = 'course'
                 AND u.deleted = 0";
 
@@ -191,17 +251,38 @@ class MoodleExport {
                 $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
                 $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
                 $usergrade      = $userdata->usergrade;
-
-                $return[$i] = array();
-                array_push($return[$i],
-                           $firstname,
-                           $lastname,
-                           $username,
-                           $userno,
-                           $coursecode,
-                           $userstartdate,
-                           $userenddate,
-                           $usergrade);
+                
+                //calculate the Moodle course grade letter from the query result
+                $gradeletter = '-';
+                if ($grade_item = grade_item::fetch(array('id' => $userdata->gradeitemid))) {
+                    $gradeletter    = grade_format_gradevalue($userdata->usergrade, $grade_item, true, GRADE_DISPLAY_TYPE_LETTER);
+                }
+                
+                //guaranteed fields
+                $row = array($firstname,
+                             $lastname,
+                             $username,
+                             $userno,
+                             $coursecode,
+                             $userstartdate,
+                             $userenddate,
+                             $usergrade,
+                             $gradeletter);
+                             
+                //add profile field data
+                for ($j = 1; $j < $profile_field_num; $j++) {
+                    $field_name = "value_{$j}";
+                    
+                    if (isset($userdata->$field_name)) {
+                        $row[] = $userdata->$field_name;
+                    } else {
+                        //default value
+                        $default_field_name = "default_{$j}";
+                        $row[] = $userdata->$default_field_name;
+                    }
+                }                             
+                
+                $return[$i] = $row;
 
                 $i++;
 

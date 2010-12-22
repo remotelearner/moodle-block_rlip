@@ -19,6 +19,29 @@ $string['exportfilelocation'] = 'Export file location';
 $string['exportfiletimestamp'] = 'Unique export file names';
 $string['exportperiod'] = 'Export period';
 
+$string['export_header_firstname'] = 'First Name';
+$string['export_header_lastname'] = 'Last Name';
+$string['export_header_username'] = 'Username';
+$string['export_header_user_idnumber'] = 'User Idnumber';
+$string['export_header_course_idnumber'] = 'Course Idnumber';
+$string['export_header_start_date'] = 'Start Date';
+$string['export_header_end_date'] = 'End Date';
+$string['export_header_status'] = 'Status';
+$string['export_header_grade'] = 'Grade';
+$string['export_header_letter'] = 'Letter';
+
+$string['export_config_form_column_header'] = 'Column Header';
+$string['export_config_form_profile_field'] = 'Profile Field';
+$string['export_config_form_add'] = 'Add';
+$string['export_config_form_update'] = 'Update';
+$string['export_config_duplicate_header_error'] = 'Please choose a unique column name';
+
+$string['export_config_instructions'] = 'Currently, no profile fields are included in the export.
+To add this information to the export, add the desired fields through the interface above.';
+
+$string['mapping_column_header'] = 'Column Header';
+$string['mapping_profile_field'] = 'Profile Field';
+
 $string['filelocation'] = 'Import file location';
 $string['filename'] = 'File name';
 $string['filetype'] = 'File type';

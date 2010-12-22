@@ -4,7 +4,7 @@
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
   <TABLES>
-    <TABLE NAME="block_rlip_fieldmap" COMMENT="a map of the field names to the identifiers used in the import file">
+    <TABLE NAME="block_rlip_fieldmap" COMMENT="a map of the field names to the identifiers used in the import file" NEXT="block_rlip_export_fieldmap">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" NEXT="context"/>
         <FIELD NAME="context" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" ENUM="false" PREVIOUS="id" NEXT="type"/>
@@ -15,6 +15,21 @@
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
       </KEYS>
+    </TABLE>
+    <TABLE NAME="block_rlip_export_fieldmap" COMMENT="mapping table for fields in the export" PREVIOUS="block_rlip_fieldmap">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" ENUM="false" NEXT="context"/>
+        <FIELD NAME="context" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" ENUM="false" PREVIOUS="id" NEXT="fieldname"/>
+        <FIELD NAME="fieldname" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" ENUM="false" PREVIOUS="context" NEXT="fieldmap"/>
+        <FIELD NAME="fieldmap" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" ENUM="false" PREVIOUS="fieldname" NEXT="fieldorder"/>
+        <FIELD NAME="fieldorder" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="fieldmap"/>
+      </FIELDS>    
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="fieldorder_ix" UNIQUE="true" FIELDS="fieldorder"/>
+      </INDEXES>
     </TABLE>
   </TABLES>
 </XMLDB>

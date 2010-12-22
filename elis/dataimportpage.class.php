@@ -40,6 +40,7 @@ class dataimportpage extends newpage {
             array('tab_id' => 'user', 'page' => get_class($this), 'params' => array('action' => 'user'), 'name' => get_string('user', 'block_rlip')),
             array('tab_id' => 'course', 'page' => get_class($this), 'params' => array('action' => 'course'), 'name' => get_string('course', 'block_rlip')),
             array('tab_id' => 'enrolment', 'page' => get_class($this), 'params' => array('action' => 'enrolment'), 'name' => get_string('enrolment', 'block_rlip')),
+            array('tab_id' => 'export', 'page' => get_class($this), 'params' => array('action' => 'export'), 'name' => get_string('export', 'block_rlip'))
         );
 
         parent::__construct($params);
@@ -277,6 +278,31 @@ class dataimportpage extends newpage {
 
         $this->print_tabs('enrolment');
         $configform->display();
+    }
+    
+    /**
+     * Display the page for managing export field mappings
+     */
+    function action_export() {
+        global $CFG;
+        
+        //print tabs
+        $this->print_tabs('export');
+        
+        //handle delete action
+        block_rlip_handle_export_mapping_delete();
+        
+        //handle moving up
+        block_rlip_handle_export_mapping_reorder('moveupid', 'up', true);
+        
+        //handle moving down
+        block_rlip_handle_export_mapping_reorder('movedownid', 'down', true);
+        
+        //add form
+        block_rlip_handle_export_field_form($this->get_new_page(array('action' => 'export')));
+        
+        //active listing
+        block_rlip_display_export_field_mappings(true);
     }
 
     /**
