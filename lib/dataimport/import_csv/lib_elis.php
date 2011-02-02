@@ -25,6 +25,7 @@
  */
 
 require_once($CFG->dirroot . '/blocks/rlip/elis/lib.php');
+require_once($CFG->dirroot . '/blocks/rlip/sharedlib.php');
 
 /*
  Add:
@@ -54,48 +55,104 @@ class import_csv_elis extends elis_import {
         return $this->import_file($file, $header);
     }
 
+    /**
+     * Sanitizes data pulled in from a CSV input file
+     * 
+     * @param   string reference  $value  The value read in (updated in-place)
+     * @param   mixed             $key    Not used
+     */
     private function sanitize_callback(&$value, $key) {
         $value = trim(clean_param($value, PARAM_CLEAN));
     }
 
+    /**
+     * Reads in a single line from an input file
+     * 
+     * @param   string   $file_name  Name of the file we are reading from 
+     * @param   boolean  $header     If true, read in a header row of the return object
+     * 
+     * @return  mixed                Object containing appropriate header and records data
+     *                               (currently for ONLY ONE ACTUAL RECORD), or FALSE if no data left
+     */
     private function import_file($file_name, $header=false) {
+        //static reference to open file
+        //todo: re-write this method so that it doesn't assume the same file and ignore the
+        //      $file_name parameter on subsequent calls
         static $file;
+        //static reference to most recent row read in
         static $fields;
 
+        //the return object, in case of success
         $retval = new object();
         $retval->header = array();
         $retval->records = array();
 
+        //file handle not set, so we need to open the file
         if (empty($file)) {
-            $file = fopen($file_name, 'r');
+
+            //register the filter for correctly handling newlines
+            $filter_set = block_rlip_init_input_filter();
             
+            if (!$filter_set) {
+                //failed to register the filter
+                $this->log_filer->add_error_record("Could not register input filter");
+                return false;
+            }
+
+            //open the file
+            $file = fopen($file_name, 'r');
+            //use the newline filter
+            stream_filter_append($file, 'convert.rlip_newline');
+
+            //lock the input file to prevent concurrent access in case the cron overlaps
             if(!flock($file, LOCK_EX | LOCK_NB)) {
+                //report error and close file
                 $this->log_filer->add_error_record("File $file_name is already in use");
                 fclose($file);
                 return false;
             }
         }
 
+        //file is open - try reading from it
         if (!empty($file) && !feof($file)) {
+
             if ($header) {
-                $retval->header = $fields = fgetcsv($file, 8192, ',', '"');
+                //we are setting the header entry
+                $test_fields = block_rlip_get_csv_entry($file);
+
+                if ($test_fields === FALSE) {
+                    //double-check failed - close file and terminate
+                    flock($file, LOCK_UN);
+                    fclose($file);
+                    $file = null;
+                    return FALSE;
+                }
+
+                //set header and sanitize
+                $retval->header = $fields = $test_fields;
                 array_walk($retval->header, array($this, 'sanitize_callback'));
                 array_walk($fields, array($this, 'sanitize_callback'));
                 return $retval;
             } else {
+                //set header to an empty value?
                 $retval->header = $fields;
             }
 
             $field_count = count($fields);
 
             if (!feof($file)) {
-                $record =  fgetcsv($file, 8192, ',', '"');
+                //retrieve a record
+                $record =  block_rlip_get_csv_entry($file);
                 if (!is_array($record)) {
+                    //failed to load a valid row - row *should* be cleaned up on next call
                     return $retval;
                 }
+                
+                //sanitize data
                 $record_count = count($record);
                 array_walk($record, array($this, 'sanitize_callback'));
 
+                //append record
                 if($field_count == $record_count) {
                     $records[] = array_combine($fields, $record);
                 } else {
@@ -107,10 +164,11 @@ class import_csv_elis extends elis_import {
             }
         }
 
+        //done with file, clean up
         flock($file, LOCK_UN);
         fclose($file);
         $file = null;
-        return false;
+        return FALSE;
     }
 }
 

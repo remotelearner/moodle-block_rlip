@@ -562,4 +562,102 @@ function block_rlip_get_base_export_config_url() {
     return $baseurl;
 }
 
+/**
+ * Filter class that helps fix newlines in a text file during input
+ */
+class rlip_newline_filter extends php_user_filter {
+    //stores state about the special case where an input chunk ends with a newline
+    //so we can trim newlines from the front of the next chunk
+    var $last_char_is_newline = false;
+    
+    /**
+     * Method that implements the filtering mechanism
+     * 
+     * @param  stream resource  $in        The stream we are obtaining data from
+     * @param  stream resource  $out       The stream we are appending data to
+     * @param  int reference    $consumed  Method should update this with the number of characters consumed
+     * @param  boolean          $closing   True if stream is closing, otherwise false
+     */
+    function filter($in, $out, &$consumed, $closing) {
+        
+        while ($bucket = stream_bucket_make_writeable($in)) {
+            //make sure all newlines are in Unix format
+            $bucket->data = str_replace("\r", "\n", $bucket->data);
+
+            //remove obviously empty lines
+            while (strpos($bucket->data, "\n\n") !== FALSE) {
+                $bucket->data = str_replace("\n\n", "\n", $bucket->data);
+            }
+            
+            //if we ended with a newline, remove leading newlines (now reduced to a single one as done above)
+            if ($this->last_char_is_newline) {
+                if (strpos($bucket->data, "\n") === 0) {
+                    $bucket->data = substr($bucket->data, 0);
+                }
+            }
+            
+            //update ending newline state
+            if (substr($bucket->data, strlen($bucket->data) - 1) == "\n") {
+                //ended with a newline, so enable flag
+                $this->last_char_is_newline = true;
+            } else {
+                //did not end with a newline, so disable flag
+                $this->last_char_is_newline = false;
+            }
+            
+            //denote the bucket contents as consumed
+            $consumed = $bucket->datalen;
+            //append fixed data to the stream
+            stream_bucket_append($out, $bucket);
+        }
+
+        return PSFS_PASS_ON;
+    }
+}
+
+/**
+ * Initializes the registration of the input filter that converts
+ * all newlines to be Unix-compatible
+ * 
+ * @return  boolean  true if the filter was successfully registered,
+ *                   otherwise false 
+ */
+function block_rlip_init_input_filter() {
+    //attempt to register the filter if it's not already registered
+    if (!in_array('convert.rlip_newline', stream_get_filters())) {
+        stream_filter_register('convert.rlip_newline', 'rlip_newline_filter');
+    }
+
+    //return whether the filter is registered
+    return in_array('convert.rlip_newline', stream_get_filters());
+}
+
+/**
+ * Obtains a single CSV record from a file, if possible
+ * 
+ * @param   file resource  $file  File we are reading from
+ * 
+ * @return  mixed                 Array of CSV values if available, or FALSE if no valid data can be found
+ */
+function block_rlip_get_csv_entry($file) {
+
+    //keep fetching rows until we get a valid one or run out of file
+    while ($test = fgetcsv($file)) {
+
+        //fgetcsv converts empty lines to an array of a single NULL value
+        if (count($test) !== 1 || $test[0] !== NULL) {
+            //check for whitespace-only lines just in case
+            $test_trim = trim($test[0]);
+            if ($test_trim !== '') {
+                //non-bogus row, so return it
+                return $test;
+            }
+        }
+
+    }
+
+    //ran out of file
+    return FALSE;
+}
+
 ?>
