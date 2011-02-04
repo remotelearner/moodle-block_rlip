@@ -1,4 +1,5 @@
 <?php
+$string['rlip:config'] = 'Configure Integration Point';
 $string['class_properties'] = 'Class properties map';
 $string['couldnotopenexportfile'] = 'Could not open export file: $a';
 $string['course'] = 'Course';
@@ -98,7 +99,7 @@ $string['ip_description'] = 'Integration Point is used to import data in a CSV f
 Integration Point sets input data as profile fields and assigns roles from the imported data, as well as providing a logging interface to enable Remote-Learner support and client side testing and ongoing QA and failure recovery processes. The User, Course, and Enrollment tabs contain a filename input field, which determines the name of the file used for the import, within the “Import File Location” (set in the Integration Point global block configuration options) directory. <br />
 Each tab also specifies the mapping between each moodle fields and the fields within the import file. The import is done on a regular schedule every 24 hours or whenever save and import is selected, and export is run every 24 hours. For sample file formats and examples please contact Remote-Learner.';
 
-$string['blockname'] = 'Course Completion Export';
+$string['blockname'] = 'Integration Point';
 $string['createdata'] = 'Create user completion data';
 $string['createdemptyfile'] = 'Created export file $a with no data';
 $string['creategroups'] = 'Create groups and groupings';
