@@ -16,11 +16,6 @@
 
 
 /*
- * Version section
- */
-$settings->add(new admin_setting_heading('block_rlip_version', '', get_string('version') . ': 1.8.8'));
-
-/*
  * File paths section
  */
 $settings->add(new admin_setting_heading('block_rlip_filepaths', get_string('filepaths', 'block_rlip'), get_string('configfilepaths', 'block_rlip')));
