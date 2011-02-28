@@ -789,6 +789,9 @@ abstract class elis_import {
     public function user_update($user) {
         global $CURMAN;
 
+        //retrieve allowed properties
+        $defined_properties = array_keys(ipe_user_import::get_properties_map());
+        
         if(!empty($user->idnumber)) {
             $old_user = clone($user);
             $user = user::get_by_idnumber($user->idnumber);
@@ -797,8 +800,12 @@ abstract class elis_import {
                 if(!empty($user)) {
                     $properties = get_object_vars($old_user);
                     foreach($properties as $key=>$null) {
-                        if($key != 'id' && isset($old_user->$key) && (!isset($user->$key) || ($old_user->$key != $user->$key))) {
-                            $user->$key = $old_user->$key;
+                        //make sure we only update properties that are allowed
+                        //through the IP property config screen
+                        if (in_array($key, $defined_properties)) {
+                            if($key != 'id' && isset($old_user->$key) && (!isset($user->$key) || ($old_user->$key != $user->$key))) {
+                                $user->$key = $old_user->$key;
+                            }
                         }
                     }
 
