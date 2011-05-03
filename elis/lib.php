@@ -1155,7 +1155,7 @@ class ipe_log_filer extends block_rlip_log_filer {
     function notify_user($idnumber, $subject, $message) {
         global $USER;
         
-        $cmuser = user::get_by_idnumber(trim($idnum));
+        $cmuser = user::get_by_idnumber(trim($idnumber));
 
         if(!empty($cmuser)) {
             $user = cm_get_moodleuser($cmuser->id);
@@ -1352,7 +1352,17 @@ class ipe_student_import extends ipe_import {
 
         $temp->item = null;
 
-        if(!empty($record[$properties_map['role']]) && strcmp($record[$properties_map['role']], 'instructor') === 0) {
+        $is_teacher = false;
+        if (!empty($record[$properties_map['role']])) {
+            $role = strtolower($record[$properties_map['role']]);
+            if (strcmp($role, 'instructor') === 0) {
+                $is_teacher = true;
+            } else if (strcmp($role, 'teacher') === 0) {
+                $is_teacher = true;
+            }
+        }
+
+        if($is_teacher) {
             $cmclass = cmclass::get_by_idnumber($id);
 
             if(!empty($cmclass)) {

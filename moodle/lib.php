@@ -486,7 +486,7 @@ class ipb_log_filer extends block_rlip_log_filer {
     function notify_user($idnumber, $subject, $message) {
         global $USER;
         
-        $user = get_record('user', 'idnumber', $idnum, 'deleted', '0');   //have to assume that idnumbers are unique
+        $user = get_record('user', 'idnumber', $idnumber, 'deleted', '0');   //have to assume that idnumbers are unique
 
         if(!empty($user)) {
             email_to_user($user, $USER, $subject, $message);
