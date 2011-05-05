@@ -1370,7 +1370,7 @@ class ipe_student_import extends ipe_import {
 
                 //allow users to use the same enrolment time field as standard class enrolments
                 if (isset($item_record['enrolmenttime'])) {
-                    $item_record['assignmenttime'] = $item_record['enrolmenttime'];
+                    $item_record['assigntime'] = $item_record['enrolmenttime'];
                 }
 
                 $temp->item = new instructor($item_record);
