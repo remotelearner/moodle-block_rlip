@@ -905,9 +905,29 @@ abstract class elis_import {
             $idnumber = current($context);
             $temp = cmclass::get_by_idnumber($idnumber);
 
+            //determine whether the user is a teacher/instructor, as signaled
+            //by the role field
+            $is_teacher = false;
+            if (!empty($item[$properties['role']])) {
+                $role = strtolower($item[$properties['role']]);
+                if (strcmp($role, 'instructor') === 0) {
+                    $is_teacher = true;
+                } else if (strcmp($role, 'teacher') === 0) {
+                    $is_teacher = true;
+                }
+            }
+
             if(!empty($temp->id)) {
                 $classid = $temp->id;
-                $cmclass = student::get_userclass($userid, $classid);
+
+                if ($is_teacher) {
+                    //try to fetch the "instructor" record
+                    $cmclass = new instructor(array('userid'  => $userid,
+                                                    'classid' => $classid));
+                } else {
+                    //just try to fetch the "student" record
+                    $cmclass = student::get_userclass($userid, $classid);
+                }
 
                 if(!empty($cmclass)) {
                     if($cmclass->has_required_fields() === true) {
@@ -927,7 +947,15 @@ abstract class elis_import {
                         $this->log_filer->add_error_record("missing required fields $required");
                     }
                 } else {
-                    $this->log_filer->add_error_record("no enrolment for student {$item[$properties['user_idnumber']]} in class {$idnumber}");
+                    //association not found
+
+                    if ($is_teacher) {
+                        //message for missing teacher / instructor record
+                        $this->log_filer->add_error_record("no instructor assignment for instructor {$item[$properties['user_idnumber']]} in class {$idnumber}");
+                    } else {
+                        //message for missing student enrolment record
+                        $this->log_filer->add_error_record("no enrolment for student {$item[$properties['user_idnumber']]} in class {$idnumber}");
+                    }
                 }
             } else {
                 $this->log_filer->add_error_record("class $idnumber not found");
