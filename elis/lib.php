@@ -789,8 +789,18 @@ abstract class elis_import {
     public function user_update($user) {
         global $CURMAN;
 
+        //necessary dependencies for getting custom field shortnames
+        require_once(CURMAN_DIRLOCATION . '/lib/customfield.class.php');
+        require_once(CURMAN_DIRLOCATION . '/lib/contexts.php');
+
         //retrieve allowed properties
         $defined_properties = array_keys(ipe_user_import::get_properties_map());
+
+        //allow all user-level custom field data
+        $customfields = field::get_for_context_level('user');
+        foreach ($customfields as $customfield) {
+            $defined_properties[] = 'field_' . $customfield->shortname;
+        }
         
         if(!empty($user->idnumber)) {
             $old_user = clone($user);
