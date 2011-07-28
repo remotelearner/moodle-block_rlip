@@ -987,7 +987,32 @@ abstract class elis_import {
      * @see handle_class_enroll
      */
     public function handle_track_enroll($item) {
-        $this->handle_class_enroll($item);
+        require_once(CURMAN_DIRLOCATION.'/lib/usertrack.class.php');
+
+        $si = new ipe_student_import();
+        $record = $si->get_item($item);
+        if(!empty($record->item)) {
+            $item = $record->item;
+
+            if($item->has_required_fields() === true) {
+                if($item->duplicate_check() === false) {
+                    if (usertrack::enrol($item->userid, $item->trackid)) {
+                        $this->log_filer->add_success("{$item->to_string()} added");
+                    } else {
+                        $this->log_filer->add_error_record("{$item->to_string()} to database");
+                    }
+                } else {
+                    $this->log_filer->add_error_record("{$item->to_string()} already exists");
+                }
+            } else {
+                $required = $item->get_missing_required_fields();
+                $required = implode(', ', $required);
+
+                $this->log_filer->add_error_record("missing required fields $required");
+            }
+        } else {
+            $this->log_filer->add_error_record('unable to get record');
+        }
     }
 
     /**
