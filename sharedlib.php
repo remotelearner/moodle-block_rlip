@@ -35,6 +35,8 @@ abstract class block_rlip_log_filer {
     private $logs = array();
     private $count = 1; //holds the current record being logged to the file
     private $filename = '';
+    private $file;
+    private $empty = true;
 
     /**
      * opens a file to append to with the given file name in the given file location
@@ -44,6 +46,7 @@ abstract class block_rlip_log_filer {
     function __construct($file, $filename) {
         if(!empty($file) && is_dir(addslashes($file))) {
             $this->filename = addslashes($file) . '/' . $filename . '.log';
+            $this->file = fopen($this->filename, 'a');
         }
     }
 
@@ -60,7 +63,8 @@ abstract class block_rlip_log_filer {
      * @param string $str what to print
      */
     function lfprint($str = '') {
-        $this->logs[] = $str;
+        $this->empty = false;
+        fwrite($this->file, $str);
     }
 
     /**
@@ -110,40 +114,47 @@ abstract class block_rlip_log_filer {
      * @global object $USER
      * @param object $file name of the file to log to
      */
-    function output_log($file=null) {
+    function output_log() {
         global $CFG, $USER;
 
-        if(empty($this->logs)) {
+        if($this->empty) {
             return;
         }
 
-        if(empty($file)) {
-            $file = fopen($this->filename, 'a');
+        $idnumbers = explode(',', $CFG->block_rlip_emailnotification);
+
+        $subject = get_string('ip_log', 'block_rlip');
+
+        // email_to_user requires that the attached file be within the
+        // dataroot, so if the log isn't already there, we need to copy it
+        // there.
+        $datarootlen = strlen($CFG->dataroot);
+        if (strncmp($this->filename, $CFG->dirroot, strlen($CFG->dataroot)) == 0) {
+            // filename is part of dataroot
+            $filename = substr($this->filename, $datarootlen);
+            $copied = false;
+        } else {
+            // filename is not part of dataroot, so we need to put it there so
+            // that email_to_student can fetch it
+            $filename = tempnam($CFG->dataroot . '/temp', 'iplog');
+            copy($this->filename, $filename);
+            $copied = true;
+            $filename = substr($filename, $datarootlen);
         }
 
-        if(!empty($file)) {
-            $message = '';
-            foreach($this->logs as $log) {
-                $message .= $log . "\n";
+        foreach($idnumbers as $idnum) {
+            if(!empty($idnum)) {
+                $this->notify_user($idnum, $subject, '', $filename);
             }
+        }
 
-            if(!empty($message)) {
-                fwrite($file, $message);
-
-                $idnumbers = explode(',', $CFG->block_rlip_emailnotification);
-
-                $subject = get_string('ip_log', 'block_rlip');
-
-                foreach($idnumbers as $idnum) {
-                    if(!empty($idnum)) {
-                        $this->notify_user($idnum, $subject, $message);
-                    }
-                }
-            }
+        // remove the copy, if needed
+        if ($copied) {
+            unlink("{$CFG->dataroot}/{$filename}");
         }
     }
-    
-    abstract function notify_user($idnumber, $subject, $message);
+
+    abstract function notify_user($idnumber, $subject, $message, $attachment);
 
     /**
      * close the file when this object loses focus, may not be needed but there

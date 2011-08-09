@@ -6,6 +6,8 @@ class ElisExport {
     function cron($manual = false, $last_cron_time = 0) {
         global $CFG;
 
+        set_time_limit(0);
+
         $include_all = false;
 
         if(!empty($CFG->block_rlip_exportallhistorical)) {
@@ -19,7 +21,7 @@ class ElisExport {
             echo get_string('nopermissions', 'block_rlip') . '<br/>';
             return false;
         }
-        
+
         if(empty($CFG->block_rlip_exportfilelocation)) {
             if($manual !== true) {
                 mtrace(get_string('filenotdefined', 'block_rlip') . "\n");
@@ -50,7 +52,7 @@ class ElisExport {
         } else if(strrpos($exportfilelocation, '/') == strlen($exportfilelocation) - strlen('/')) {
             $exportfilelocation .= 'export.csv';
         }
-        
+
         if(!empty($CFG->block_rlip_exportfiletimestamp)) {
             $exportfilelocation = $this->add_timestamp_to_filename($exportfilelocation);
         }
@@ -127,7 +129,11 @@ class ElisExport {
         }
 
         if (fputcsv($fp, $header)) {
-            foreach ($records as $record) {
+            while (($record = rs_fetch_next_record($records))) {
+                $record = $this->record_to_row($record, $manual);
+                if ($record === null) {
+                    continue;
+                }
                 if (!fputcsv($fp, $record)) {
                     $this->log_filer->lfprintln(get_string('filerecordwriteerror', 'block_rlip', implode(', ', $record)));
                     if($manual !== true) {
@@ -135,6 +141,7 @@ class ElisExport {
                     }
                 }
             }
+            rs_close($records);
         } else {
             $this->log_filer->lfprintln(get_string('filewriteerror', 'block_rlip', $localfile));
             if($manual !== true) {
@@ -146,9 +153,10 @@ class ElisExport {
     }
 
 
-    function get_cm_user_data($manual = false, $include_all = false, $last_cron_time = 0) {
+    function get_user_data($manual = false, $include_all = false, $last_cron_time = 0) {
         global $CFG;
 
+        require_once($CFG->dirroot . '/lib/gradelib.php');
         require_once($CFG->dirroot . '/curriculum/config.php');
         require_once(CURMAN_DIRLOCATION . '/lib/student.class.php');
 
@@ -168,20 +176,20 @@ class ElisExport {
         }
 
         $as = sql_as();
-        
+
         //for storing extra columns we need to include for profile fields
         $extra_columns = "";
         //for storing extra instances of the profile field table
         $profile_field_joins = "";
-        
+
         $mapping = block_rlip_get_profile_field_mapping(true);
 
         $profile_field_num = 1;
-        
+
         foreach ($mapping as $key => $value) {
             $contextlevel = context_level_base::get_custom_context_level('user', 'block_curr_admin');
             $field = new field(field::get_for_context_level_with_name($contextlevel, $value));
-            
+
             //main user query to hook into profile fields
             $sql = "SELECT user_field.id
                     FROM
@@ -192,12 +200,12 @@ class ElisExport {
                       ON user_field_category.id = user_field_category_context.categoryid
                       AND user_field_category_context.contextlevel = {$contextlevel}
                     WHERE user_field.shortname = '{$value}'";
-            
+
             if ($profile_field_id = get_field_sql($sql)) {
                 //profile field joins
                 $profile_field_joins .= "LEFT JOIN {$CFG->prefix}context context_{$profile_field_num}
                                            ON context_{$profile_field_num}.contextlevel = {$contextlevel}
-                                           AND usr.id = context_{$profile_field_num}.instanceid 
+                                           AND usr.id = context_{$profile_field_num}.instanceid
                                          LEFT JOIN {$CFG->prefix}{$field->data_table()} user_info_data_{$profile_field_num}
                                            ON context_{$profile_field_num}.id = user_info_data_{$profile_field_num}.contextid
                                            AND user_info_data_{$profile_field_num}.fieldid = {$profile_field_id}
@@ -217,16 +225,18 @@ class ElisExport {
                                            ON 0 = 1
                                         ";
             }
-            
+
             //add the profile field data column to our list of extra columns
             $extra_columns .= ",
                                user_info_data_{$profile_field_num}.data {$as} value_{$profile_field_num},
                                user_info_default_{$profile_field_num}.data {$as} default_{$profile_field_num},
                                user_info_field_{$profile_field_num}.datatype {$as} datatype_{$profile_field_num}";
-            
+
             $profile_field_num++;
         }
-        
+
+        $this->profile_field_num = $profile_field_num;
+
         //query to return user info, CM class enrolment info,
         //and grade info from the associated Moodle course
         $sql = "SELECT clsenrol.id,
@@ -266,7 +276,7 @@ class ElisExport {
                 {$time_condition}
                 ORDER BY usridnumber DESC";
 
-        $results = get_records_sql($sql);
+        $results = get_recordset_sql($sql);
 
         return !empty($results) ? $results : array();
     }
@@ -284,112 +294,85 @@ class ElisExport {
                         get_string('export_header_grade', 'block_rlip'),
                         get_string('export_header_letter', 'block_rlip')
                        );
-                       
+
         //retrieve the configured mapping
         $mapping = block_rlip_get_profile_field_mapping(true);
-                
+
         //the array keys are the configured column headers
         return array_merge($header, array_keys($mapping));
     }
 
-    private function get_user_data($manual = false, $include_all = false, $last_cron_time = 0) {
-        global $CFG;
-        
-        require_once($CFG->dirroot . '/lib/gradelib.php');
-        
-        $return = array();
-        $i      = 0;
-
-        $users = $this->get_cm_user_data($manual, $include_all, $last_cron_time);
-
+    private function record_to_row($userdata, $manual = false) {
         $userstatus     = 'COMPLETED';
 
-        $mapping = block_rlip_get_profile_field_mapping(true);
-        
-        if(!empty($users)) {
-            foreach($users as $userdata) {
-
-                // Check for required fields
-                if (empty($userdata->usridnumber) or empty($userdata->crsidnumber)) {
-                    $this->log_filer->lfprintln(get_string('skiprecord', 'block_rlip', $userdata));
-                    if($manual !== true) {
-                        mtrace(get_string('skiprecord', 'block_rlip', $userdata));
-                    }
-                    continue;
-                }
-
-                $firstname      = $userdata->firstname;
-                $lastname       = $userdata->lastname;
-                $username       = empty($userdata->username) ? '' : $userdata->username;
-                $userno         = $userdata->usridnumber;
-                $coursecode     = $userdata->crsidnumber;
-                $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
-                $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
-                $usergrade      = $userdata->usergrade;
-                
-                //calculate the Moodle course grade letter from the value provided by get_cm_user_data
-                $gradeletter = '-';
-                if ($grade_item = grade_item::fetch(array('id' => $userdata->gradeitemid))) {
-                    $gradeletter    = grade_format_gradevalue($userdata->mdlusergrade, $grade_item, true, GRADE_DISPLAY_TYPE_LETTER);
-                }
-
-                //guaranteed fields
-                $row = array($firstname,
-                             $lastname,
-                             $username,
-                             $userno,
-                             $coursecode,
-                             $userstartdate,
-                             $userenddate,
-                             $userstatus,
-                             $usergrade,
-                             $gradeletter);
-
-                //add profile field data
-                for ($j = 1; $j <= count($mapping); $j++) {
-                    $field_name = "value_{$j}";
-                    
-                    if (isset($userdata->$field_name)) {
-                        $row[] = $userdata->$field_name;
-                    } else {
-                        //default value
-                        $default_field_name = "default_{$j}";
-                        
-                        if (is_null($userdata->$default_field_name)) {
-                            //do some datatype-specific default setting
-                            $type_field_name = "datatype_{$j}";
-                            if ('int' == $userdata->$type_field_name || 'bool' == $userdata->$type_field_name) {
-                                $row[] = '0';
-                            } else {
-                                $row[] = '';
-                            }
-                        } else {
-                            //actually a have valid default
-                            $row[] = $userdata->$default_field_name;
-                        }
-                    }
-                }                                           
-                             
-                $return[$i] = $row;
-
-                $i++;
-
-                $a = new stdClass;
-                $a->userno = $userno;
-                $a->coursecode = $coursecode;
-
-                $this->log_filer->lfprintln(get_string('recordadded', 'block_rlip', $a));
-            }
-        }
-
-        if (empty($return)) {
+        // Check for required fields
+        if (empty($userdata->usridnumber) or empty($userdata->crsidnumber)) {
+            $this->log_filer->lfprintln(get_string('skiprecord', 'block_rlip', $userdata));
             if($manual !== true) {
-                $this->log_filer->lfprintln(get_string('nouserdata', 'block_rlip'));
-                mtrace(get_string('nouserdata', 'block_rlip'));
+                mtrace(get_string('skiprecord', 'block_rlip', $userdata));
+            }
+            return;
+        }
+
+        $firstname      = $userdata->firstname;
+        $lastname       = $userdata->lastname;
+        $username       = empty($userdata->username) ? '' : $userdata->username;
+        $userno         = $userdata->usridnumber;
+        $coursecode     = $userdata->crsidnumber;
+        $userstartdate  = empty($userdata->timestart) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timestart);
+        $userenddate    = empty($userdata->timeend) ? date("m/d/Y",time()) : date("m/d/Y", $userdata->timeend);
+        $usergrade      = $userdata->usergrade;
+
+        //calculate the Moodle course grade letter from the value provided by get_cm_user_data
+        $gradeletter = '-';
+        if ($grade_item = grade_item::fetch(array('id' => $userdata->gradeitemid))) {
+            $gradeletter    = grade_format_gradevalue($userdata->mdlusergrade, $grade_item, true, GRADE_DISPLAY_TYPE_LETTER);
+        }
+
+        //guaranteed fields
+        $row = array($firstname,
+                     $lastname,
+                     $username,
+                     $userno,
+                     $coursecode,
+                     $userstartdate,
+                     $userenddate,
+                     $userstatus,
+                     $usergrade,
+                     $gradeletter);
+
+        //add profile field data
+        for ($j = 1; $j < $this->profile_field_num; $j++) {
+            $field_name = "value_{$j}";
+
+            if (isset($userdata->$field_name)) {
+                $row[] = $userdata->$field_name;
+            } else {
+                //default value
+                $default_field_name = "default_{$j}";
+
+                if (is_null($userdata->$default_field_name)) {
+                    //do some datatype-specific default setting
+                    $type_field_name = "datatype_{$j}";
+                    if ('int' == $userdata->$type_field_name || 'bool' == $userdata->$type_field_name) {
+                        $row[] = '0';
+                    } else {
+                        $row[] = '';
+                    }
+                } else {
+                    //actually a have valid default
+                    $row[] = $userdata->$default_field_name;
+                }
             }
         }
 
-        return $return;
+        $a = new stdClass;
+        $a->userno = $userno;
+        $a->coursecode = $coursecode;
+
+        $this->log_filer->lfprintln(get_string('recordadded', 'block_rlip', $a));
+
+        return $row;
     }
 
     private function add_timestamp_to_filename($filename) {

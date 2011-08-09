@@ -1215,7 +1215,7 @@ abstract class elis_import {
  */
 class ipe_log_filer extends block_rlip_log_filer {
     
-    function notify_user($idnumber, $subject, $message) {
+    function notify_user($idnumber, $subject, $message, $attachment) {
         global $USER;
         
         $cmuser = user::get_by_idnumber(trim($idnumber));
@@ -1224,7 +1224,7 @@ class ipe_log_filer extends block_rlip_log_filer {
             $user = cm_get_moodleuser($cmuser->id);
 
             if(!empty($user)) {
-                email_to_user($user, $USER, $subject, $message);
+                email_to_user($user, $USER, $subject, $message, '', $attachment, 'ip_log.txt');
             }
         }
     }

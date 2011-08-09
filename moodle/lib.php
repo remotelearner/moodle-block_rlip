@@ -59,6 +59,7 @@ abstract class moodle_import {
         global $CFG;
 
         $this->log_filer = new ipb_log_filer($CFG->block_rlip_logfilelocation, $logfile);
+        $this->fields = get_records('user_info_field');
     }
 
     /**
@@ -286,7 +287,7 @@ abstract class moodle_import {
         $user->id = insert_record('user', $user);
 
         /// Save custom profile fields.
-        if ($fields = get_records('user_info_field')) {
+        if ($fields = $this->fields) {
             foreach ($fields as $field) {
                 require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
                 $newfield = 'profile_field_'.$field->datatype;
@@ -328,10 +329,10 @@ abstract class moodle_import {
         $user['timemodified']   = time();
 
         $user = (object)$user;
-        $user->id = get_field('user', 'id', 'username', $user->username);
+        $user->id = get_field('user', 'id', 'username', $user->username, 'mnethostid', $CFG->mnet_localhost_id);
 
         /// Save custom profile fields.
-        if ($fields = get_records('user_info_field')) {
+        if ($fields = $this->fields) {
             foreach ($fields as $field) {
                 require_once($CFG->dirroot.'/user/profile/field/'.$field->datatype.'/field.class.php');
                 $newfield = 'profile_field_'.$field->datatype;
@@ -357,10 +358,11 @@ abstract class moodle_import {
      * @param object $user user to be deleted
      */
     public function user_disable($user) {
+        global $CFG;
         $ui = new ipb_user_import();
         $ui->check_old($user);
 
-        $userid = get_record('user', 'username', $user['username'], 'deleted', '0');
+        $userid = get_record('user', 'username', $user['username'], 'mnethostid', $CFG->mnet_localhost_id, 'deleted', '0');
 
         delete_user($userid);
         
@@ -381,13 +383,13 @@ abstract class moodle_import {
         $ei->check_new($item);
         $context = $ei->get_context_instance($item);
 
-        $userid = get_field('user', 'id', 'username', $item['username']);
+        $userid = get_field('user', 'id', 'username', $item['username'], 'mnethostid', $CFG->mnet_localhost_id);
         $roleid = get_field('role', 'id', 'shortname', $item['role']);
 
         $timestart = empty($item['timestart'])?0:$item['timestart'];
         $timeend = empty($item['timeend'])?0:$item['timeend'];
         role_assign($roleid, $userid, 0, $context->id, $timestart, $timeend, 0, 'manual');
-        build_context_path();
+        //build_context_path();
 
         /// Handle any groups and groupings...
         if (!empty($item['group'])) {
@@ -440,11 +442,12 @@ abstract class moodle_import {
      * @param array $item record of student to enrol
      */
     public function enrolment_delete($item) {
+        global $CFG;
         $ei = new ipb_enrolment_import();
         $ei->check_old($item);
         $context = $ei->get_context_instance($item);
 
-        $userid = get_field('user', 'id', 'username', $item['username']);
+        $userid = get_field('user', 'id', 'username', $item['username'], 'mnethostid', $CFG->mnet_localhost_id);
         $roleid = get_field('role', 'id', 'shortname', $item['role']);
 
         $timestart = empty($item['timestart'])?0:$item['timestart'];
@@ -461,11 +464,12 @@ abstract class moodle_import {
      * @param <type> $item
      */
     public function enrolment_update($item) {
+        global $CFG;
         $ei = new ipb_enrolment_import();
         $ei->check_old($item);
         $context = $ei->get_context_instance($item);
 
-        $userid = get_field('user', 'id', 'username', $item['username']);
+        $userid = get_field('user', 'id', 'username', $item['username'], 'mnethostid', $CFG->mnet_localhost_id);
         $roleid = get_field('role', 'id', 'shortname', $item['role']);
 
         $timestart = empty($item['timestart'])?0:$item['timestart'];
@@ -483,13 +487,13 @@ abstract class moodle_import {
  */
 class ipb_log_filer extends block_rlip_log_filer {
 
-    function notify_user($idnumber, $subject, $message) {
+    function notify_user($idnumber, $subject, $message, $attachment) {
         global $USER;
         
         $user = get_record('user', 'idnumber', $idnumber, 'deleted', '0');   //have to assume that idnumbers are unique
 
         if(!empty($user)) {
-            email_to_user($user, $USER, $subject, $message);
+            email_to_user($user, $USER, $subject, $message, '', $attachment, 'ip_log.txt');
         }
     }
     
@@ -648,10 +652,11 @@ class ipb_user_import extends ipb_import {
     }
 
     public function check_old($record) {
+        global $CFG;
         $retval = true;
 
         $retval = $retval &&
-                    record_exists('user', 'username', $record['username'], 'deleted', 0) or
+                    record_exists('user', 'username', $record['username'], 'mnethostid', $CFG->mnet_localhost_id, 'deleted', 0) or
                     block_rlip_throwException("user {$record['username']} does not exist");
 
         return $retval;
@@ -698,6 +703,7 @@ class ipb_enrolment_import extends ipb_import {
     }
 
     public function get_context_instance($record) {
+        global $CFG;
          $contexts = array('system', 'user', 'coursecat', 'course', 'module', 'block');
         //check username exists
         //check context exists
@@ -707,13 +713,13 @@ class ipb_enrolment_import extends ipb_import {
                     block_rlip_throwException("invalid context {$record['context']} does not exist");
 
         if(strcmp($record['context'], 'user') === 0) {
-            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $instanceid = get_field('user', 'id', 'username', $record['instance'], 'mnethostid', $CFG->mnet_localhost_id);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'user') === 0) {
-            record_exists('user', 'username', $record['instance']) or
+            record_exists('user', 'username', $record['instance'], 'mnethostid', $CFG->mnet_localhost_id) or
                     block_rlip_throwException("invalid user {$record['instance']} does not exist");
 
-            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $instanceid = get_field('user', 'id', 'username', $record['instance'], 'mnethostid', $CFG->mnet_localhost_id);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'coursecat') === 0) {
             record_exists('course_categories', 'name', $record['instance']) or
@@ -742,13 +748,14 @@ class ipb_enrolment_import extends ipb_import {
         }
 
         $contextid = get_field('context', 'id', 'contextlevel', $contextlevel, 'instanceid', $instanceid);
-        $userid = get_field('user', 'id', 'username', $record['username']);
+        $userid = get_field('user', 'id', 'username', $record['username'], 'mnethostid', $CFG->mnet_localhost_id);
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
 
         return get_context_instance($contextlevel, $instanceid);
     }
 
      public function check_new($record) {
+         global $CFG;
          $contexts = array('system', 'user', 'coursecat', 'course', 'module', 'block');
         //check username exists
         //check context exists
@@ -757,20 +764,20 @@ class ipb_enrolment_import extends ipb_import {
         record_exists('role', 'shortname', $record['role']) or
                     block_rlip_throwException("invalid role {$record['role']} does not exist");
 
-        record_exists('user', 'username', $record['username'], 'deleted', 0) or
+        record_exists('user', 'username', $record['username'], 'mnethostid', $CFG->mnet_localhost_id, 'deleted', 0) or
                     block_rlip_throwException("invalid user {$record['username']} does not exist");
 
         in_array($record['context'], $contexts) or
                     block_rlip_throwException("invalid context {$record['context']} does not exist");
 
         if(strcmp($record['context'], 'user') === 0) {
-            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $instanceid = get_field('user', 'id', 'username', $record['instance'], 'mnethostid', $CFG->mnet_localhost_id);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'user') === 0) {
-            record_exists('user', 'username', $record['instance']) or
+            record_exists('user', 'username', $record['instance'], 'mnethostid', $CFG->mnet_localhost_id) or
                     block_rlip_throwException("invalid user {$record['instance']} does not exist");
 
-            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $instanceid = get_field('user', 'id', 'username', $record['instance'], 'mnethostid', $CFG->mnet_localhost_id);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'coursecat') === 0) {
             record_exists('course_categories', 'name', $record['instance']) or
@@ -799,7 +806,7 @@ class ipb_enrolment_import extends ipb_import {
         }
 
         $contextid = get_field('context', 'id', 'contextlevel', $contextlevel, 'instanceid', $instanceid);
-        $userid = get_field('user', 'id', 'username', $record['username']);
+        $userid = get_field('user', 'id', 'username', $record['username'], 'mnethostid', $CFG->mnet_localhost_id);
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
 
         !record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
@@ -811,20 +818,20 @@ class ipb_enrolment_import extends ipb_import {
     public function check_old($record) {
         $contexts = array('system', 'user', 'coursecat', 'course', 'module', 'block');
 
-        record_exists('user', 'username', $record['username'], 'deleted', 0) or
+        record_exists('user', 'username', $record['username'], 'mnethostid', $CFG->mnet_localhost_id, 'deleted', 0) or
                     block_rlip_throwException("invalid user {$record['username']} does not exist");
 
         in_array($record['context'], $contexts) or
                     block_rlip_throwException("invalid context {$record['context']} does not exist");
 
         if(strcmp($record['context'], 'user') === 0) {
-            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $instanceid = get_field('user', 'id', 'username', $record['instance'], 'mnethostid', $CFG->mnet_localhost_id);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'user') === 0) {
-            record_exists('user', 'username', $record['instance']) or
+            record_exists('user', 'username', $record['instance'], 'mnethostid', $CFG->mnet_localhost_id) or
                     block_rlip_throwException("invalid user {$record['instance']} does not exist");
 
-            $instanceid = get_field('user', 'id', 'username', $record['instance']);
+            $instanceid = get_field('user', 'id', 'username', $record['instance'], 'mnethostid', $CFG->mnet_localhost_id);
             $contextlevel = CONTEXT_USER;
         } else if(strcmp($record['context'], 'coursecat') === 0) {
             record_exists('course_categories', 'name', $record['instance']) or
@@ -853,7 +860,7 @@ class ipb_enrolment_import extends ipb_import {
         }
 
         $contextid = get_field('context', 'id', 'contextlevel', $contextlevel, 'instanceid', $instanceid);
-        $userid = get_field('user', 'id', 'username', $record['username']);
+        $userid = get_field('user', 'id', 'username', $record['username'], 'mnethostid', $CFG->mnet_localhost_id);
         $roleid = get_field('role', 'id', 'shortname', $record['role']);
 
         record_exists('role_assignments', 'contextid', $contextid, 'userid', $userid, 'roleid', $roleid) or
