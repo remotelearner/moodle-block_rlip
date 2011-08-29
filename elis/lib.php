@@ -70,9 +70,15 @@ abstract class elis_import {
      */
     public function import_records($file, $type) {
         $retval = false;
-        $context = get_context_instance(CONTEXT_SYSTEM);
 
-        if(has_capability('block/rlip:config', $context)) {
+        if (defined('FULLME') && FULLME == 'cron') {
+            $cando = true;
+        } else {
+            $context = get_context_instance(CONTEXT_SYSTEM);
+            $cando   = has_capability('block/rlip:config', $context);
+        }
+
+        if ($cando) {
             try {
                 if(is_file($file)) {
 ///................ This processes the $data array, record by record in get_user function.
@@ -797,11 +803,12 @@ abstract class elis_import {
         $defined_properties = array_keys(ipe_user_import::get_properties_map());
 
         //allow all user-level custom field data
-        $customfields = field::get_for_context_level('user');
-        foreach ($customfields as $customfield) {
-            $defined_properties[] = 'field_' . $customfield->shortname;
+        if ($customfields = field::get_for_context_level('user')) {
+            foreach ($customfields as $customfield) {
+                $defined_properties[] = 'field_' . $customfield->shortname;
+            }
         }
-        
+
         if(!empty($user->idnumber)) {
             $old_user = clone($user);
             $user = user::get_by_idnumber($user->idnumber);
@@ -1214,10 +1221,10 @@ abstract class elis_import {
  * used to log messages to a file
  */
 class ipe_log_filer extends block_rlip_log_filer {
-    
+
     function notify_user($idnumber, $subject, $message, $attachment) {
         global $USER;
-        
+
         $cmuser = user::get_by_idnumber(trim($idnumber));
 
         if(!empty($cmuser)) {

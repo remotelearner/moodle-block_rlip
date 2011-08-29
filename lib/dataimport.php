@@ -26,13 +26,17 @@
     define('RLIP_DEBUG_TIME',  false);
 
     require_once($CFG->dirroot . '/blocks/rlip/sharedlib.php');
-    
+
     global $CFG;
 
-    $context = get_context_instance(CONTEXT_SYSTEM);
+    if (defined('FULLME') && FULLME == 'cron') {
+        $cando = true;
+    } else {
+        $context = get_context_instance(CONTEXT_SYSTEM);
+        $cando   = has_capability('block/rlip:config', $context);
+    }
 
-    if (has_capability('block/rlip:config', $context)) {
-
+    if ($cando) {
         if(!isset($action)) {
             $action = optional_param('action', 'default');
         }
@@ -54,7 +58,7 @@
 
             $variable = "block_rlip_imp{$i}_filetype";
             $plugin_name = 'import_' . $CFG->$variable;
-        
+
             //this code is awful but fixes issues for the time being
             if(block_rlip_is_elis()) {
                 $plugin = RLIP_DIRLOCATION . '/lib/dataimport/' . $plugin_name . '/lib_elis.php';
@@ -63,7 +67,7 @@
             }
 
             include_once($plugin);
-        
+
             if(block_rlip_is_elis()) {
                 $plugin_name .= '_elis';
             } else {
@@ -92,7 +96,7 @@
         if($any_success === true) {
             print '<br />view log at <a href="' . $CFG->wwwroot . '/blocks/rlip/lib/viewlog.php?file=' . $logfile . '">log file</a>';
         }
-    
+
     } else {
         print get_string('nopermissions', 'block_rlip');
     }

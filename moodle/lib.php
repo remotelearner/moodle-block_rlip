@@ -70,9 +70,15 @@ abstract class moodle_import {
      */
     public function import_records($file, $type) {
         $retval = false;
-        $context = get_context_instance(CONTEXT_SYSTEM);
 
-        if(has_capability('block/rlip:config', $context)) {
+        if (defined('FULLME') && FULLME == 'cron') {
+            $cando = true;
+        } else {
+            $context = get_context_instance(CONTEXT_SYSTEM);
+            $cando   = has_capability('block/rlip:config', $context);
+        }
+
+        if ($cando) {
             try {
                 is_file($file) OR block_rlip_throwException("file $file not found");
 
@@ -102,7 +108,7 @@ abstract class moodle_import {
         $method = "import_$type";
         method_exists($this, $method) OR block_rlip_throwException("unimplemented import $type");
         $data = $this->$method($file, true);  // Get the header line of the csv file.
-        
+
         if(!empty($data->header)) {
             $columns = $data->header;
 
@@ -122,12 +128,12 @@ abstract class moodle_import {
             //pass in the properties map for special handling of categories
             while ($data = $this->$method($file, false, $properties)) {
                 $records = $data->records;
-                
+
                 //this will be populated with an error message by get_items if applicable
                 $test_error = '';
-                
+
                 $items = $import->get_items($records, $test_error);
-                
+
                 if ($items === false) {
                     //this particular record has an error, so append the error to the log
                     //instead of processing it
@@ -365,7 +371,7 @@ abstract class moodle_import {
         $userid = get_record('user', 'username', $user['username'], 'mnethostid', $CFG->mnet_localhost_id, 'deleted', '0');
 
         delete_user($userid);
-        
+
         //role_unassign changes the current user's stored capabilities, so force a reload
         reload_all_capabilities();
 
@@ -489,14 +495,14 @@ class ipb_log_filer extends block_rlip_log_filer {
 
     function notify_user($idnumber, $subject, $message, $attachment) {
         global $USER;
-        
+
         $user = get_record('user', 'idnumber', $idnumber, 'deleted', '0');   //have to assume that idnumbers are unique
 
         if(!empty($user)) {
             email_to_user($user, $USER, $subject, $message, '', $attachment, 'ip_log.txt');
         }
     }
-    
+
 }
 
 /**
@@ -967,68 +973,68 @@ class ipb_course_import extends ipb_import {
 
     /**
      * Intelligently splits a category specification into a list of categories
-     * 
+     *
      * @param   string        $category_string  The category specification string, using \\\\ to represent \, \\/ to represent /,
      *                                          and / as a category separator
-     * @return  string array                    An array with one entry per category, containing the unescaped category names 
+     * @return  string array                    An array with one entry per category, containing the unescaped category names
      */
     protected function split_category_string($category_string) {
         //in-progress method result
         $result = array();
-        
+
         //used to build up the current token before splitting
         $current_token = '';
-        
+
         //tracks which token we are currently looking at
         $current_token_num = 0;
-        
+
         for ($i = 0; $i < strlen($category_string); $i++) {
             //initialize the entry if necessary
             if (!isset($result[$current_token_num])) {
                 $result[$current_token_num] = '';
             }
-            
+
             //get the ith character from the category string
             $current_token .= substr($category_string, $i, 1);
-            
+
             if(strpos($current_token, '\\\\') === strlen($current_token) - strlen('\\\\')) {
                 //backslash character
-                
+
                 //append the result
                 $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('\\\\')) . '\\';
                 //reset the token
-                $current_token = ''; 
+                $current_token = '';
             } else if(strpos($current_token, '\\/') === strlen($current_token) - strlen('\\/')) {
                 //forward slash character
-                
+
                 //append the result
                 $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('\\/')) . '/';
                 //reset the token so that the / is not accidentally counted as a category separator
                 $current_token = '';
             } else if(strpos($current_token, '/') === strlen($current_token) - strlen('/')) {
                 //category separator
-                
+
                 //append the result
                 $result[$current_token_num] .= substr($current_token, 0, strlen($current_token) - strlen('/'));
                 //reset the token
                 $current_token = '';
                 //move on to the next token
-                $current_token_num++;             
+                $current_token_num++;
             }
         }
-        
+
         //append leftovers after the last slash
-        
+
         //initialize the entry if necessary
         if (!isset($result[$current_token_num])) {
                 $result[$current_token_num] = '';
             }
-        
+
         $result[$current_token_num] .= $current_token;
-        
+
         return $result;
     }
-    
+
     /**
      * Map the specified category to a record id
      *
@@ -1042,27 +1048,27 @@ class ipb_course_import extends ipb_import {
      */
     protected function get_category($category, $action = '', &$error_string = '') {
         $trimmed_category = trim($category);
-        
+
         //check for a leading / for the case where an absolute path is specified
         $absolute_path = false;
         if (strpos($trimmed_category, '/') === 0) {
             $absolute_path = true;
             $trimmed_category = substr($trimmed_category, 1);
         }
-        
+
         $parts = $this->split_category_string($trimmed_category);
-        
+
         $parentids = array();
-        
+
         foreach($parts as $part) {
             if (empty($part)) {
                 $error_string = "Category specification {$trimmed_category} contains an empty category name";
                 return null;
             }
-            
+
             //the name must match the specified part
             $select = "name = '" . addslashes($part) . "'";
-            
+
             if (!empty($parentids)) {
                 //we are chaining down a path, so only include children of the categories
                 //found in the previous category level
@@ -1074,7 +1080,7 @@ class ipb_course_import extends ipb_import {
 
             if ($records = get_records_select('course_categories', $select)) {
                 $parentids = array();
-                
+
                 foreach($records as $record) {
                     $parentids[] = $record->id;
                 }
@@ -1085,7 +1091,7 @@ class ipb_course_import extends ipb_import {
                     if (count($parentids) == 1) {
                         $effective_parent = $parentids[0];
                     }
-                    
+
                     /**
                      * There is no API call to do this - this code is roughly copied from course/editcategory.php
                      */
@@ -1101,7 +1107,7 @@ class ipb_course_import extends ipb_import {
                     $newcategory->context = get_context_instance(CONTEXT_COURSECAT, $newcategory->id);
                     mark_context_dirty($newcategory->context->path);
                     fix_course_sortorder(); // Required to build course_categories.depth and .path.
-                    
+
                     $parentids = array($newcategory->id);
                 } else {
                     $parentids = array();
@@ -1109,7 +1115,7 @@ class ipb_course_import extends ipb_import {
                 }
             }
         }
-        
+
         if (count($parentids) == 1) {
             //if we end up with a single result, that is our category
             return $parentids[0];
@@ -1118,7 +1124,7 @@ class ipb_course_import extends ipb_import {
             $error_string = "Category specification {$trimmed_category} is ambiguous, as it refers to more than one possible category";
             return null;
         }
-        
+
         //if not found, try using the record id
         if(is_numeric($trimmed_category)) {
             if(record_exists('course_categories', 'id', $trimmed_category)) {
@@ -1184,20 +1190,20 @@ abstract class ipb_import {
     protected function get_item($record, &$error_string) {
         $retval = array();
         $properties = $this->get_properties_map();
-        
+
         $action_attribute = $properties['execute'];
-        
+
         foreach($properties as $key=>$p) {
             if(isset($record[$p])) {
                 $method = "get_$p";
                 //NOTE: The second parameter is only defined for the get_category method
                 //so that it knows to create categories on the course create action
-                
+
                 //string that will be populated with an error, if applicable
                 $test_error = '';
-                
+
                 $retval[$key] = $this->$method($record[$p], $record[$action_attribute], $test_error);
-                
+
                 if (!empty($test_error)) {
                     //if we have an error, then set the message variable and bail out
                     $error_string = $test_error;
@@ -1271,17 +1277,17 @@ abstract class ipb_import {
         foreach($records as $rec) {
             //this will we populated with an error if applicable
             $test_error = '';
-            
+
             //attempt to get the item, or have the error string populated
             //otherwise
             $test_result = $this->get_item($rec, $test_error);
-            
+
             if ($test_result === false) {
                 //set the error string and bail out
                 $error_string = $test_error;
                 return false;
             }
-            
+
             //success
             $retval[] = $test_result;
         }

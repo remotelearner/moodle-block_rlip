@@ -16,8 +16,14 @@ class ElisExport {
 
         $this->log_filer = new ipe_log_filer($CFG->block_rlip_logfilelocation, 'export_' . time());
 
-        $context = get_context_instance(CONTEXT_SYSTEM);
-        if (!has_capability('block/rlip:config', $context)) {
+        if (defined('FULLME') && FULLME == 'cron') {
+            $cando = true;
+        } else {
+            $context = get_context_instance(CONTEXT_SYSTEM);
+            $cando   = has_capability('block/rlip:config', $context);
+        }
+
+        if (!$cando) {
             echo get_string('nopermissions', 'block_rlip') . '<br/>';
             return false;
         }
