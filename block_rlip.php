@@ -104,8 +104,21 @@ class block_rlip extends block_base {
         set_config('block_rlip_impenrolment_filetype', 'csv');
     }
 
-    function cron($manual = false) {
+    /**
+     * Executes the block's recurring cron tasks.
+     *
+     * @param bool $manual   Set to true if the cron method is being from manually from the Moodle UI.
+     * @param bool $override Override the disabled cron check (used with the CLI cron script).
+     * @return bool Always returns true, even if execution fails.
+     */
+    function cron($manual = false, $override = false) {
         global $CFG;
+
+        // Check if
+        if (!empty($CFG->block_rlip_nocron) && !$override) {
+            mtrace(get_string('crondisabled', 'block_rlip'));
+            return true;
+        }
 
         $timenow = time();
 
@@ -118,7 +131,7 @@ class block_rlip extends block_base {
 
             $export = new MoodleExport();
         }
-        
+
         /*
          * Export
          */
@@ -126,19 +139,19 @@ class block_rlip extends block_base {
         if(!empty($CFG->block_rlip_last_export_cron)) {
             $last_export = $CFG->block_rlip_last_export_cron;
         }
-        
+
         $export_period = 0;
         if(!empty($CFG->block_rlip_exportperiod)) {
             $export_period = block_rlip_time_string_to_seconds($CFG->block_rlip_exportperiod);
         } else {
             $export_period = block_rlip_time_string_to_seconds('1d');
         }
-        
+
         if($timenow >= ($last_export + $export_period) && !empty($CFG->block_rlip_exportfilelocation)) {
             $export->cron($manual, $last_export);
             set_config('block_rlip_last_export_cron', $timenow);
         }
-        
+
         /*
          * Import
          */
@@ -146,17 +159,21 @@ class block_rlip extends block_base {
         if(!empty($CFG->block_rlip_last_import_cron)) {
             $last_import = $CFG->block_rlip_last_import_cron;
         }
-        
+
         $import_period = 0;
         if(!empty($CFG->block_rlip_importperiod)) {
             $import_period = block_rlip_time_string_to_seconds($CFG->block_rlip_importperiod);
         } else {
             $import_period = block_rlip_time_string_to_seconds('30m');
         }
-        
+
         if($timenow >= ($last_import + $import_period)) {
             include_once(RLIP_DIRLOCATION . '/lib/dataimport.php');
             set_config('block_rlip_last_import_cron', $timenow);
+        }
+
+        if (defined('FULLME') && FULLME == 'cron') {
+            mtrace('done');
         }
 
         return true;

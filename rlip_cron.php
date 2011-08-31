@@ -60,7 +60,7 @@ if (empty($CFG->extramemorylimit)) {
 
 mtrace('Processing cron function for '.$block->name.'....','');
 
-if ($blockobj->cron()) {
+if ($blockobj->cron(false, true)) {
     if (!set_field('block', 'lastcron', $timenow, 'id', $block->id)) {
         mtrace('Error: could not update timestamp for '.$block->name);
     }
@@ -70,6 +70,6 @@ if ($blockobj->cron()) {
 
 // Get performance data and display that in with the standard output
 $perfinfo = get_performance_info();
-mtrace($perfinfo['txt']);
+mtrace("\n\n".$perfinfo['txt']);
 
 ?>

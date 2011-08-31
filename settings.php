@@ -28,20 +28,20 @@ $settings->add(new admin_setting_configtext('block_rlip_exportfilelocation', get
                    get_string('configexportfilelocation', 'block_rlip'), '', PARAM_PATH, 50));
 
 $settings->add(new admin_setting_configtext('block_rlip_logfilelocation', get_string('logfilelocation', 'block_rlip'),
-                   get_string('configlogfilelocation', 'block_rlip'), '', PARAM_PATH, 50));                   
-                   
+                   get_string('configlogfilelocation', 'block_rlip'), '', PARAM_PATH, 50));
+
 /*
  * Notifications section
- */                   
-$settings->add(new admin_setting_heading('block_rlip_notifications', get_string('notifications', 'block_rlip'), get_string('confignotifications', 'block_rlip')));                   
-                   
+ */
+$settings->add(new admin_setting_heading('block_rlip_notifications', get_string('notifications', 'block_rlip'), get_string('confignotifications', 'block_rlip')));
+
 $settings->add(new admin_setting_configtext('block_rlip_emailnotification', get_string('emailnotification', 'block_rlip'),
                    get_string('configemailnotification', 'block_rlip'), '', PARAM_NOTAGS, 50));
 
 /*
  * Import section
- */                                      
-$settings->add(new admin_setting_heading('block_rlip_import', get_string('import', 'block_rlip'), get_string('configimport', 'block_rlip')));                   
+ */
+$settings->add(new admin_setting_heading('block_rlip_import', get_string('import', 'block_rlip'), get_string('configimport', 'block_rlip')));
 
 $import_period_setting = new admin_setting_configtext('block_rlip_importperiod', get_string('importperiod', 'block_rlip'), get_string('configimportperiod', 'block_rlip'), '30m', PARAM_CLEAN, 50);
 $import_period_setting->set_updatedcallback('block_rlip_import_period_updated');
@@ -57,7 +57,7 @@ $settings->add(new admin_setting_configselect('block_rlip_dateformat', get_strin
 /*
  * Export section
  */
-$settings->add(new admin_setting_heading('block_rlip_export', get_string('export', 'block_rlip'), get_string('configexport', 'block_rlip')));                   
+$settings->add(new admin_setting_heading('block_rlip_export', get_string('export', 'block_rlip'), get_string('configexport', 'block_rlip')));
 
 $export_period_setting = new admin_setting_configtext('block_rlip_exportperiod', get_string('exportperiod', 'block_rlip'), get_string('configexportperiod', 'block_rlip'), '1d', PARAM_CLEAN, 50);
 $export_period_setting->set_updatedcallback('block_rlip_export_period_updated');
@@ -69,12 +69,18 @@ $settings->add(new admin_setting_configcheckbox('block_rlip_exportfiletimestamp'
 $settings->add(new admin_setting_configcheckbox('block_rlip_exportallhistorical', get_string('exportallhistorical', 'block_rlip'),
                    get_string('configexportallhistorical', 'block_rlip'), '0'));
 
+// Setting to display running via the standard Moodle cron
+$scriptpath = $CFG->dirroot.'/blocks/rlip/rlip_cron.php';
+
+$settings->add(new admin_setting_configcheckbox('block_rlip_nocron', get_string('nocron', 'block_rlip'),
+               get_string('confignocron', 'block_rlip', $scriptpath), 0));
+
 /*
  * Elis section
- */                   
+ */
 if (block_rlip_is_elis(true)) {
-    $settings->add(new admin_setting_heading('block_rlip_elis', get_string('elis', 'block_rlip'), get_string('configelis', 'block_rlip')));    
-    
+    $settings->add(new admin_setting_heading('block_rlip_elis', get_string('elis', 'block_rlip'), get_string('configelis', 'block_rlip')));
+
     $settings->add(new admin_setting_configcheckbox('block_rlip_overrideelisip', get_string('overrideelisip', 'block_rlip'),
                        get_string('configoverrideelisip', 'block_rlip'), '0'));
 }

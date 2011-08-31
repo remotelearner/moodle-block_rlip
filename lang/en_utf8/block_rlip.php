@@ -1,4 +1,5 @@
 <?php
+
 $string['rlip:config'] = 'Configure Integration Point';
 $string['class_properties'] = 'Class properties map';
 $string['couldnotopenexportfile'] = 'Could not open export file: $a';
@@ -100,9 +101,13 @@ Integration Point sets input data as profile fields and assigns roles from the i
 Each tab also specifies the mapping between each moodle fields and the fields within the import file. The import is done on a regular schedule every 24 hours or whenever save and import is selected, and export is run every 24 hours. For sample file formats and examples please contact Remote-Learner.';
 
 $string['blockname'] = 'Integration Point';
+$string['confignocron'] = 'Disables Integration Point from being run via the normal Moodle cron. If you enable this '.
+                          'setting and still want automated data processing, you will need to setup a separate system '.
+                          'cron process to execute the following script on a recurring interval:<br /><br />$a';
 $string['createdata'] = 'Create user completion data';
 $string['createdemptyfile'] = 'Created export file $a with no data';
 $string['creategroups'] = 'Create groups and groupings';
+$string['crondisabled'] = 'Cron disabled';
 $string['dateformat'] = 'Import date format';
 $string['filenotdefined'] = 'Export file not defined';
 $string['filerecordwriteerror'] = 'Unable to write line $a';
@@ -110,11 +115,13 @@ $string['filewriteerror'] = 'Unable to write header to local file $a';
 $string['localfileexists'] = 'Local file $a exists, removing local file before proceeding';
 $string['localfileremoved'] = 'Local file $a removed';
 $string['localfilenotremoved'] = 'Unable to remove old local file $a';
-$string['nouserdata'] = 'No user data to process';
 $string['nodata'] = 'No user completion data to create';
+$string['nocron'] = 'Disable cron';
 $string['noparams'] = 'Parameters not initialized, cannot create local csv file for upload';
+$string['nouserdata'] = 'No user data to process';
 $string['recordadded'] = 'User Data: User idnumber $a->userno - Course idnumber $a->coursecode has been added';
 $string['skiprecord'] = 'Either the user idnumber $a->usridnumber or course idnumber $a->crsidnumber was empty - skipping record because of missing required field(s)';
 
 $string['nopermissions'] = 'Sorry, you do not have the permissions required to perform this action';
+
 ?>
