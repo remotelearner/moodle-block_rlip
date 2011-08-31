@@ -822,6 +822,8 @@ class ipb_enrolment_import extends ipb_import {
     }
 
     public function check_old($record) {
+        global $CFG;
+
         $contexts = array('system', 'user', 'coursecat', 'course', 'module', 'block');
 
         record_exists('user', 'username', $record['username'], 'mnethostid', $CFG->mnet_localhost_id, 'deleted', 0) or
