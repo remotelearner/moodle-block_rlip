@@ -1278,8 +1278,12 @@ class ipe_user_import extends ipe_import {
             if(!empty($user_record)) {
                 if(!empty($user_record[$properties_map['country']])) {
                     $countries = get_list_of_countries();
-                    $country = array_search($user_record[$properties_map['country']], $countries);
-
+                    // ELIS-4828: support country codes in import file
+                    if (array_key_exists($user_record[$properties_map['country']], $countries)) {
+                        $country = $user_record[$properties_map['country']];
+                    } else {
+                        $country = array_search($user_record[$properties_map['country']], $countries);
+                    }
                     if($country !== false) {
                         $user_record[$properties_map['country']] = $country;
                     } else if(empty($countries[$user_record[$properties_map['country']]])){
