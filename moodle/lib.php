@@ -583,7 +583,10 @@ class ipb_user_import extends ipb_import {
         if (empty($country_list)) {
             $country_list = get_list_of_countries();
         }
-
+        // ELIS-4828: support country codes in import file
+        if (array_key_exists($country, $country_list)) {
+            return $country;
+        }
         if (($ckey = array_search($country, $country_list)) !== false) {
             return $ckey;
         }
