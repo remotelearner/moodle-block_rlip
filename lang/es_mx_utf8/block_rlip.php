@@ -4,7 +4,7 @@ $string['couldnotopenexportfile'] = 'No se pudo abrir el archivo de exportaciÃ�
 $string['course'] = 'Curso';
 $string['course_properties'] = 'Mapa de las propiedades del curso';
 $string['curr_properties'] = 'Mapa de las propiedades del plan de estudio';
-$string['dataimport'] = 'Punto de IntegraciÃ³n';
+$string['dataimport'] = 'Data Hub';
 $string['delete_failed'] = 'No se puede eliminar el archivo de importaciÃ³n<br />';
 $string['disabled'] = 'Disabled';
 $string['emailnotification'] = 'NotificaciÃ³n por correo electrÃ³nico';
@@ -52,22 +52,22 @@ $string['import_location_missing'] = 'UbicaciÃ³n del archivo de importaciÃ³n
 $string['import_save'] = 'Guardar y el procesar';
 $string['importperiod'] = 'PerÃ­odo de ImportaciÃ³n';
 
-$string['ip_disabled_warning'] = 'ADVERTENCIA! IntegraciÃ³n de la funcionalidad de punto es un servicio adicional pagado y no ha sido habilitado en este sitio. Como tal, la configuraciÃ³n en esta secciÃ³n no se utilizarÃ¡. PÃ³ngase en contacto con Remote-alumno para la asistencia sobre este tema a travÃ©s del enlace que aparece a continuaciÃ³n.';
-$string['ip_enabled'] = 'IntegraciÃ³n de la funcionalidad de punto';
-$string['ip_instructions'] = 'IntegraciÃ³n Punto es un servicio adicional de pago que ofrece a distancia-alumno que permite la importaciÃ³n y exportaciÃ³n de datos de cumplimentaciÃ³n. Si esta funcionalidad IntegraciÃ³n punto estÃ¡ deshabilitado, puede ponerse en contacto <a href=\"$a\" target=\"_blank\"> remoto Estudiantes </ a> para registrarse. Una vez activada, los lugares de importaciÃ³n y exportaciÃ³n de archivos puede ser configurado correctamente en esta pantalla de configuraciÃ³n.';
-$string['ip_link'] = 'IntegraciÃ³n Punto pÃ¡gina';
-$string['ip_log'] = 'Registro de IntegraciÃ³n punto';
+$string['ip_disabled_warning'] = 'ADVERTENCIA! Data Hub es un servicio adicional pagado y no ha sido habilitado en este sitio. Como tal, la configuraciÃ³n en esta secciÃ³n no se utilizarÃ¡. PÃ³ngase en contacto con Remote-alumno para la asistencia sobre este tema a travÃ©s del enlace que aparece a continuaciÃ³n.';
+$string['ip_enabled'] = 'Data Hub de la funcionalidad';
+$string['ip_instructions'] = 'Data Hub es un servicio adicional de pago que ofrece a distancia-alumno que permite la importaciÃ³n y exportaciÃ³n de datos de cumplimentaciÃ³n. Si esta funcionalidad Data Hub estÃ¡ deshabilitado, puede ponerse en contacto <a href=\"$a\" target=\"_blank\"> remoto Estudiantes </ a> para registrarse. Una vez activada, los lugares de importaciÃ³n y exportaciÃ³n de archivos puede ser configurado correctamente en esta pantalla de configuraciÃ³n.';
+$string['ip_link'] = 'Data Hub pÃ¡gina';
+$string['ip_log'] = 'Registro de Data Hub';
 
 $string['logfilelocation'] = 'Registro de ubicaciÃ³n del archivo';
-$string['overrideelisip'] = 'Utilizar IP bÃ¡sica';
+$string['overrideelisip'] = 'Utilizar DH bÃ¡sica';
 $string['save'] = 'Guardar';
-$string['title'] = 'IntegraciÃ³n Punto';
+$string['title'] = 'Data Hub';
 $string['track_properties'] = 'Seguir mapa de propriedades';
 $string['user'] = 'User';
 $string['user_properties'] = 'Usar mapa de propriedades';
 
 $string['filepaths'] = 'Rutas de archivos';
-$string['configfilepaths'] = 'Estos caminos deben ser configurados por un miembro del personal a distancia-Aprendizaje para asegurar la correcta funcionalidad de la integraciÃ³n punto.';
+$string['configfilepaths'] = 'Estos caminos deben ser configurados por un miembro del personal a distancia-Aprendizaje para asegurar la correcta funcionalidad de la Data Hub.';
 $string['notifications'] = 'Notificaciones';
 $string['confignotifications'] = '';
 $string['import'] = 'Importar';
@@ -84,20 +84,20 @@ $string['configexportallhistorical'] = 'Al seleccionar esta opciÃ³n se incluye
 $string['configexportfilelocation'] = 'Esto define la ruta de acceso absoluta al archivo de exportaciÃ³n que desea utilizar. Este ' .
                                       'no es una ubicaciÃ³n de directorio, pero la ubicaciÃ³n exacta del archivo de exportaciÃ³n. ' .
                                       'Si no desea crear un archivo de exportaciÃ³n, deje esta opciÃ³n vacÃ­a.';
-$string['configexportfiletimestamp'] = 'Esto permite la exportaciÃ³n de integraciÃ³n punto a aÃ±adir una marca de tiempo Ãºnica para exportar archivos.';
+$string['configexportfiletimestamp'] = 'Esto permite la exportaciÃ³n de Data Hub a aÃ±adir una marca de tiempo Ãºnica para exportar archivos.';
 $string['configexportperiod'] = 'Esta configuraciÃ³n controla la frecuencia con la exportaciÃ³n se ejecuta. Los valores pueden ser introducidos en la forma * d * m * h para representar dÃ­as, horas y minutos. Por favor, establezca este valor en cinco minutos o mÃ¡s para que haya tiempo suficiente para el procesamiento.';
 $string['configfilelocation'] = 'Esto define la ruta absoluta al directorio que estÃ¡ marcada por la importaciÃ³n de archivos.';
 $string['configimportperiod'] = 'Esta configuraciÃ³n controla la frecuencia con la importaciÃ³n se ejecuta. Los valores pueden ser introducidos en la forma * d * m * h para representar dÃ­as, horas y minutos. Por favor, establezca este valor en cinco minutos o mÃ¡s para que haya tiempo suficiente para el procesamiento.';
 $string['configlogfilelocation'] = 'Esto define el directorio para almacenar todo los archivos de registro de importaciÃ³n y exportaciÃ³n de .';
-$string['configoverrideelisip'] = 'No haga caso de ELIS IP y utilizar la IP bÃ¡sica (Moodle solamente)';
+$string['configoverrideelisip'] = 'No haga caso de ELIS DH y utilizar la DH bÃ¡sica (Moodle solamente)';
 
 $string['ip_export_timespan'] = 'Nota: Cuando se ejecuta una exportaciÃ³n de prueba desde esta pÃ¡gina, sÃ³lo las terminaciones de clase hasta hace un dÃ­a se incluirÃ¡, a menos que el \"Guardar y procesar todos los \" botÃ³n se utiliza.';
 
 $string['ip_description'] = 'Nota: Cuando se ejecuta una exportaciÃ³n de prueba desde esta pÃ¡gina, sÃ³lo las terminaciones de clase hasta hace un dÃ­a se incluirÃ¡, a menos que el \"Guardar y procesar todos los \" botÃ³n se utiliza.
-IntegraciÃ³n Punto se ponga los datos de entrada como campos de perfil y asigna funciones a partir de los datos importados, asÃ­ como proporcionar una interfaz de registro para habilitar el soporte remoto-alumno y la prueba del lado del cliente y control de calidad y procesos en curso fracaso de recuperaciÃ³n. Las fichas de usuario, curso, de inscripciÃ³n y contener un campo de entrada Nombre de archivo, que determina el nombre del archivo que se utiliza para la importaciÃ³n, dentro de la \"SituaciÃ³n de importaciÃ³n de archivos\" (situado en el punto de integraciÃ³n global de las opciones de bloque de configuraciÃ³n) de la guÃ­a. <br />
+Data Hub se ponga los datos de entrada como campos de perfil y asigna funciones a partir de los datos importados, asÃ­ como proporcionar una interfaz de registro para habilitar el soporte remoto-alumno y la prueba del lado del cliente y control de calidad y procesos en curso fracaso de recuperaciÃ³n. Las fichas de usuario, curso, de inscripciÃ³n y contener un campo de entrada Nombre de archivo, que determina el nombre del archivo que se utiliza para la importaciÃ³n, dentro de la \"SituaciÃ³n de importaciÃ³n de archivos\" (situado en el punto de integraciÃ³n global de las opciones de bloque de configuraciÃ³n) de la guÃ­a. <br />
 Cada ficha tambiÃ©n especifica la asignaciÃ³n entre cada uno de los campos de moodle y los campos en el archivo de importaciÃ³n. La importaciÃ³n se realiza en un horario regular cada 24 horas o cada vez que guardar e importar estÃ¡ seleccionada, y la exportaciÃ³n se ejecuta cada 24 horas. Por ejemplos de formatos de archivo por favor contacte a distancia -alumno.';
 
-$string['blockname'] = 'ExportaciÃ³n de TerminaciÃ³n de Curso';
+$string['blockname'] = 'Data Hub';
 $string['createdata'] = 'Crear los datos del usuario finalizaciÃ³n';
 $string['createdemptyfile'] = 'Creado el archivo de exportaciÃ³n $ a sin datos';
 $string['creategroups'] = 'Crear grupos y agrupaciones';

@@ -1,12 +1,12 @@
 <?php
 
-$string['rlip:config'] = 'Configure Integration Point';
+$string['rlip:config'] = 'Configure Data Hub';
 $string['class_properties'] = 'Class properties map';
 $string['couldnotopenexportfile'] = 'Could not open export file: $a';
 $string['course'] = 'Course';
 $string['course_properties'] = 'Course properties map';
 $string['curr_properties'] = 'Curriculum properties map';
-$string['dataimport'] = 'Integration Point';
+$string['dataimport'] = 'Data Hub';
 $string['delete_failed'] = 'Unable to remove import file<br />';
 $string['disabled'] = 'Disabled';
 $string['emailnotification'] = 'Email notification';
@@ -55,22 +55,22 @@ $string['import_location_missing'] = 'Import file location is missing. Please en
 $string['import_save'] = 'Save and process';
 $string['importperiod'] = 'Import period';
 
-$string['ip_disabled_warning'] = 'WARNING! Integration Point functionality is an additional paid service and has not been enabled on this site. As such, the settings in this section will not be used. Please contact Remote-Learner for assistance on this topic via the link provided below.';
-$string['ip_enabled'] = 'Integration Point Functionality';
-$string['ip_instructions'] = 'Integration Point is an additional paid service offered by Remote-Learner that allows for the import and export of completion data. If this Integration Point functionality is disabled, you may contact <a href=\"$a\" target=\"_blank\">Remote-Learner</a> to sign up. Once enabled, import and export file locations can be set up appropriately on this configuration screen.';
-$string['ip_link'] = 'Integration Point page';
-$string['ip_log'] = 'Integration point Log';
+$string['ip_disabled_warning'] = 'WARNING! Data Hub functionality is an additional paid service and has not been enabled on this site. As such, the settings in this section will not be used. Please contact Remote-Learner for assistance on this topic via the link provided below.';
+$string['ip_enabled'] = 'Data Hub Functionality';
+$string['ip_instructions'] = 'Data Hub is an additional paid service offered by Remote-Learner that allows for the import and export of completion data. If this Data Hub functionality is disabled, you may contact <a href=\"$a\" target=\"_blank\">Remote-Learner</a> to sign up. Once enabled, import and export file locations can be set up appropriately on this configuration screen.';
+$string['ip_link'] = 'Data Hub page';
+$string['ip_log'] = 'Data Hub Log';
 
 $string['logfilelocation'] = 'Log file location';
-$string['overrideelisip'] = 'Use IP Basic';
+$string['overrideelisip'] = 'Use DH Basic';
 $string['save'] = 'Save';
-$string['title'] = 'Integration Point';
+$string['title'] = 'Data Hub';
 $string['track_properties'] = 'Track properties map';
 $string['user'] = 'User';
 $string['user_properties'] = 'User properties map';
 
 $string['filepaths'] = 'File paths';
-$string['configfilepaths'] = 'These paths should be configured by a Remote-Learner staff member to ensure the correct functionality of Integration Point.';
+$string['configfilepaths'] = 'These paths should be configured by a Remote-Learner staff member to ensure the correct functionality of Data Hub.';
 $string['notifications'] = 'Notifications';
 $string['confignotifications'] = '';
 $string['import'] = 'Import';
@@ -87,23 +87,21 @@ $string['configexportallhistorical'] = 'Selecting this option will include all h
 $string['configexportfilelocation'] = 'This defines the absolute path to the export file that you wish to use. This ' .
                                       'is not a directory location, but the exact location of the export file itself. ' .
                                       'If you do not with to create an export file, leave this option empty.';
-$string['configexportfiletimestamp'] = 'This allows the Integration Point export to append a unique timestamp to export files.';
+$string['configexportfiletimestamp'] = 'This allows the Data Hub export to append a unique timestamp to export files.';
 $string['configexportperiod'] = 'This setting controls how often the export is run. Values can be entered in the form *d*h*m to represent days, hours, and minutes. Please set this value to five minutes or longer to allow ample time for processing.';
 $string['configfilelocation'] = 'This defines the absolute path to the directory that is checked for import files.';
 $string['configimportperiod'] = 'This setting controls how often the import is run. Values can be entered in the form *d*h*m to represent days, hours, and minutes. Please set this value to five minutes or longer to allow ample time for processing.';
 $string['configlogfilelocation'] = 'This defines the directory to store all import and export log files.';
-$string['configoverrideelisip'] = 'Ignore ELIS IP and use IP Basic (Moodle only)';
+$string['configoverrideelisip'] = 'Ignore ELIS DH and use DH Basic (Moodle only)';
 
 $string['ip_export_timespan'] = 'Note: When running a test export from this page, only class completions from up to one day ago will be included, unless the \"Save and process all\" button is used.';
 
-$string['ip_description'] = 'Integration Point is used to import data in a CSV format from a back end system, in a standard, documented, tested, and supported (upgrade safe) manner. Integration Point is pluggable and standardized and enables incremental data import. <br />
-Integration Point sets input data as profile fields and assigns roles from the imported data, as well as providing a logging interface to enable Remote-Learner support and client side testing and ongoing QA and failure recovery processes. The User, Course, and Enrollment tabs contain a filename input field, which determines the name of the file used for the import, within the “Import File Location” (set in the Integration Point global block configuration options) directory. <br />
+$string['ip_description'] = 'Data Hub is used to import data in a CSV format from a back end system, in a standard, documented, tested, and supported (upgrade safe) manner. Data Hub is pluggable and standardized and enables incremental data import. <br />
+Data Hub sets input data as profile fields and assigns roles from the imported data, as well as providing a logging interface to enable Remote-Learner support and client side testing and ongoing QA and failure recovery processes. The User, Course, and Enrollment tabs contain a filename input field, which determines the name of the file used for the import, within the “Import File Location” (set in the Data Hub global block configuration options) directory. <br />
 Each tab also specifies the mapping between each moodle fields and the fields within the import file. The import is done on a regular schedule every 24 hours or whenever save and import is selected, and export is run every 24 hours. For sample file formats and examples please contact Remote-Learner.';
 
-$string['blockname'] = 'Integration Point';
-$string['confignocron'] = 'Disables Integration Point from being run via the normal Moodle cron. If you enable this '.
-                          'setting and still want automated data processing, you will need to setup a separate system '.
-                          'cron process to execute the following script on a recurring interval:<br /><br />$a';
+$string['blockname'] = 'Data Hub';
+$string['confignocron'] = 'Disables Data Hub from being run via the normal Moodle cron. If you enable this setting and still want automated data processing, you will need to setup a separate system cron process to execute the following script on a recurring interval:<br /><br />$a';
 $string['createdata'] = 'Create user completion data';
 $string['createdemptyfile'] = 'Created export file $a with no data';
 $string['creategroups'] = 'Create groups and groupings';
