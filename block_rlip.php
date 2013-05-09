@@ -43,8 +43,8 @@ class block_rlip extends block_base {
      */
     public function init() {
         $this->title   = get_string('title', 'block_rlip');
-        $this->version = 2010120900;
-        $this->release = '1.9.3.1';
+        $this->version = 2010120901;
+        $this->release = '1.9.3.2';
         $this->cron = 5 * MINSECS;
 
         $this->log_filer = null;
