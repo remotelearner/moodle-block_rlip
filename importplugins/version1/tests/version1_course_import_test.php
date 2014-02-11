@@ -2634,12 +2634,14 @@ class version1courseimport_testcase extends rlip_test {
         $ci->add_completion_condition($cmid, COMPLETION_ENABLED);
 
         // Set the block position.
-        $instance = $DB->get_record('block_instances', array('parentcontextid' => $coursecontext->id));
+        $instances = $DB->get_records('block_instances', array('parentcontextid' => $coursecontext->id));
         $page = new stdClass;
         $page->context = $coursecontext;
         $page->pagetype = 'course-view-*';
         $page->subpage = false;
-        blocks_set_visibility($instance, $page, 1);
+        foreach ($instances as $instance) {
+            blocks_set_visibility($instance, $page, 1);
+        }
 
         // Create a group.
         $group = new stdClass;
