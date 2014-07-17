@@ -362,6 +362,10 @@ class rlip_dblogger_import extends rlip_dblogger {
     var $missingcolumns = false;
     var $missingcolumnsmessage = '';
 
+    // Track invalid encoding.
+    public $invalidencoding = false;
+    public $invalidencodingmessage = '';
+
     /**
      * Reset the state of the logger between executions
      */
@@ -371,6 +375,10 @@ class rlip_dblogger_import extends rlip_dblogger {
         //reset state related to missing columns
         $this->missingcolumns = false;
         $this->missingcolumnsmessage = '';
+
+        // Reset state related to invalid encoding.
+        $this->invalidencoding = false;
+        $this->invalidencodingmessage = '';
     }
 
     /**
@@ -390,6 +398,8 @@ class rlip_dblogger_import extends rlip_dblogger {
                                  'totalrecords' => $record->totalrecords));
         } else if ($this->missingcolumns) {
             $record->statusmessage = $this->missingcolumnsmessage;
+        } else if ($this->invalidencoding) {
+            $record->statusmessage = $this->invalidencodingmessage;
         } else if ($this->maxruntimeexceeded) {
             // maxruntime exceeded message
             $record->statusmessage = get_string('dblogimportexceedstimelimit',
@@ -459,6 +469,16 @@ class rlip_dblogger_import extends rlip_dblogger {
     function signal_missing_columns($message) {
         $this->missingcolumns = true;
         $this->missingcolumnsmessage = $message;
+    }
+
+    /**
+     * Signals that we have invalid character encoding in the file.
+     *
+     * @param string $message The message to log related to invalid encoding
+     */
+    public function signal_invalid_encoding($message) {
+        $this->invalidencoding = true;
+        $this->invalidencodingmessage = $message;
     }
 }
 
