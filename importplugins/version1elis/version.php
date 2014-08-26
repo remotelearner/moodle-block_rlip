@@ -24,4 +24,4 @@
  */
 
 $plugin->version = 2013022802;
-$plugin->release = '2.4.3.7 (Build: 20140523)';
+$plugin->release = '2.4.11.1 (Build: 20140826)';
